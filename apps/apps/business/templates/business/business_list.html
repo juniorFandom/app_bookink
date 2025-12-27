@@ -1,0 +1,245 @@
+{% extends "business/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Businesses" %} | {{ block.super }}{% endblock %}
+
+{% block business_content %}
+<div class="business-content-area">
+    <!-- Header Section -->
+    <div class="section-header">
+        <i class="fas fa-building"></i>
+        <h2>{% translate "Tourism Businesses" %}</h2>
+    </div>
+    
+    <!-- Search Form -->
+    <div class="search-section">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="{{ form.query.id_for_label }}" class="form-label">
+                    <i class="fas fa-search me-2"></i>{% translate "Search" %}
+                </label>
+                {{ form.query }}
+            </div>
+            <div class="col-md-2">
+                <label for="{{ form.business_type.id_for_label }}" class="form-label">
+                    <i class="fas fa-tag me-2"></i>{% translate "Type" %}
+                </label>
+                {{ form.business_type }}
+            </div>
+            <div class="col-md-2">
+                <label for="{{ form.city.id_for_label }}" class="form-label">
+                    <i class="fas fa-map-marker-alt me-2"></i>{% translate "City" %}
+                </label>
+                {{ form.city }}
+            </div>
+            <div class="col-md-2">
+                <label for="{{ form.rating.id_for_label }}" class="form-label">
+                    <i class="fas fa-star me-2"></i>{% translate "Rating" %}
+                </label>
+                {{ form.rating }}
+            </div>
+            <div class="col-md-2">
+                <label for="{{ form.sort_by.id_for_label }}" class="form-label">
+                    <i class="fas fa-sort me-2"></i>{% translate "Sort" %}
+                </label>
+                {{ form.sort_by }}
+            </div>
+            <div class="col-12">
+                <div class="form-check">
+                    {{ form.verified_only }}
+                    <label class="form-check-label" for="{{ form.verified_only.id_for_label }}">
+                        <i class="fas fa-check-circle text-success me-2"></i>{{ form.verified_only.label }}
+                    </label>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i> {% translate "Search" %}
+                    </button>
+                    <a href="{% url 'business:business-list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>{% translate "Clear" %}
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Business List -->
+    <div class="business-grid">
+        {% for business in businesses %}
+        <div class="business-item">
+            <div class="business-item-image">
+                {% if business.primary_image %}
+                <img src="{{ business.primary_image.image.url }}" 
+                     alt="{{ business.name }}">
+                {% else %}
+                <i class="fas fa-building"></i>
+                {% endif %}
+            </div>
+            
+            <div class="business-item-content">
+                <h4 class="business-item-title">
+                    <a href="{% url 'business:business-detail' business.pk %}">
+                        {{ business.name }}
+                    </a>
+                    {% if business.is_verified %}
+                    <i class="fas fa-check-circle text-success ms-2" 
+                       title="{% translate 'Verified Business' %}"></i>
+                    {% endif %}
+                </h4>
+                
+                <div class="business-item-meta">
+                    <p class="mb-2">
+                        <i class="fas fa-map-marker-alt text-primary me-2"></i> 
+                        {{ business.city }}, {{ business.state }}
+                    </p>
+                    
+                    <p class="mb-2">
+                        <span class="badge bg-primary">{{ business.get_business_type_display }}</span>
+                    </p>
+                    
+                    {% if business.average_rating %}
+                    <div class="mb-2">
+                        <div class="rating-stars">
+                            {% with ''|center:business.average_rating|make_list as stars %}
+                            {% for _ in stars %}
+                            <i class="fas fa-star"></i>
+                            {% endfor %}
+                            {% endwith %}
+                            {% with ''|center:5|make_list as remaining %}
+                            {% for _ in remaining %}
+                            <i class="far fa-star"></i>
+                            {% endfor %}
+                            {% endwith %}
+                        </div>
+                        <small class="text-muted">
+                            {{ business.average_rating|floatformat:1 }} 
+                            ({{ business.review_count }} {% translate "reviews" %})
+                        </small>
+                    </div>
+                    {% else %}
+                    <p class="mb-0">
+                        <small class="text-muted">
+                            {% translate "No reviews yet" %}
+                        </small>
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="business-item-footer">
+                <a href="{% url 'business:business-detail' business.pk %}" 
+                   class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-eye me-1"></i> {% translate "View Details" %}
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <div class="alert alert-info">
+                    <i class="fas fa-search fa-3x text-info mb-3"></i>
+                    <h4 class="alert-heading">{% translate "No businesses found" %}</h4>
+                    <p class="mb-0">{% translate "No businesses found matching your criteria." %}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if businesses.has_other_pages %}
+    <nav aria-label="{% translate 'Business pagination' %}" class="mt-4">
+        <ul class="pagination">
+            {% if businesses.has_previous %}
+            <li class="page-item">
+                <a class="page-link" 
+                   href="?page={{ businesses.previous_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.business_type %}&business_type={{ request.GET.business_type }}{% endif %}{% if request.GET.city %}&city={{ request.GET.city }}{% endif %}{% if request.GET.rating %}&rating={{ request.GET.rating }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.verified_only %}&verified_only=on{% endif %}">
+                    <i class="fas fa-chevron-left me-1"></i>{% translate "Previous" %}
+                </a>
+            </li>
+            {% endif %}
+            
+            {% for num in businesses.paginator.page_range %}
+            {% if businesses.number == num %}
+            <li class="page-item active">
+                <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num > businesses.number|add:'-3' and num < businesses.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" 
+                   href="?page={{ num }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.business_type %}&business_type={{ request.GET.business_type }}{% endif %}{% if request.GET.city %}&city={{ request.GET.city }}{% endif %}{% if request.GET.rating %}&rating={{ request.GET.rating }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.verified_only %}&verified_only=on{% endif %}">
+                    {{ num }}
+                </a>
+            </li>
+            {% endif %}
+            {% endfor %}
+            
+            {% if businesses.has_next %}
+            <li class="page-item">
+                <a class="page-link" 
+                   href="?page={{ businesses.next_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.business_type %}&business_type={{ request.GET.business_type }}{% endif %}{% if request.GET.city %}&city={{ request.GET.city }}{% endif %}{% if request.GET.rating %}&rating={{ request.GET.rating }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.verified_only %}&verified_only=on{% endif %}">
+                    {% translate "Next" %}<i class="fas fa-chevron-right ms-1"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- Add Business Button (for authenticated users) -->
+{% if user.is_authenticated %}
+<a href="{% url 'business:business-create' %}" class="fab" title="{% translate 'Add Business' %}">
+    <i class="fas fa-plus"></i>
+</a>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    // Initialize form elements with Bootstrap classes and placeholders
+    document.addEventListener('DOMContentLoaded', function() {
+        // Query input
+        const queryInput = document.getElementById('{{ form.query.id_for_label }}');
+        if (queryInput) {
+            queryInput.classList.add('form-control');
+            queryInput.placeholder = '{% translate "Search businesses..." %}';
+        }
+        
+        // Business type select
+        const typeSelect = document.getElementById('{{ form.business_type.id_for_label }}');
+        if (typeSelect) {
+            typeSelect.classList.add('form-select');
+        }
+        
+        // City input
+        const cityInput = document.getElementById('{{ form.city.id_for_label }}');
+        if (cityInput) {
+            cityInput.classList.add('form-control');
+            cityInput.placeholder = '{% translate "Enter city..." %}';
+        }
+        
+        // Rating select
+        const ratingSelect = document.getElementById('{{ form.rating.id_for_label }}');
+        if (ratingSelect) {
+            ratingSelect.classList.add('form-select');
+        }
+        
+        // Sort by select
+        const sortSelect = document.getElementById('{{ form.sort_by.id_for_label }}');
+        if (sortSelect) {
+            sortSelect.classList.add('form-select');
+        }
+        
+        // Verified checkbox
+        const verifiedCheck = document.getElementById('{{ form.verified_only.id_for_label }}');
+        if (verifiedCheck) {
+            verifiedCheck.classList.add('form-check-input');
+        }
+    });
+</script>
+{% endblock %} 

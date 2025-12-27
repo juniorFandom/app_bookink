@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ site.name }} - Sites Touristiques{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem 0;
+        position: relative;
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .site-image-gallery {
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .main-image {
+        height: 400px;
+        object-fit: cover;
+        width: 100%;
+    }
+
+    .thumbnail-gallery {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+        overflow-x: auto;
+    }
+
+    .thumbnail {
+        width: 80px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: opacity 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .thumbnail:hover {
+        opacity: 0.8;
+    }
+
+    .thumbnail.active {
+        border-color: #007bff;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+
+    .category-badge {
+        background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 25px;
+        font-size: 0.9rem;
+        display: inline-block;
+        margin-bottom: 1rem;
+    }
+
+    .coordinates {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 10px;
+        margin: 1rem 0;
+    }
+
+    .back-btn {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+    }
+
+    .back-btn:hover {
+        transform: translateX(-5px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Section héro -->
+    <div class="hero-section">
+        <div class="container">
+            <div class="hero-content">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'tourist_sites:sites_list' %}" class="text-white">
+                                <i class="fas fa-arrow-left me-2"></i>Sites Touristiques
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active text-white" aria-current="page">{{ site.name }}</li>
+                    </ol>
+                </nav>
+
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="display-4 mb-3">{{ site.name }}</h1>
+                        {% if site.category %}
+                        <span class="category-badge">
+                            <i class="fas fa-tag me-2"></i>{{ site.category.name }}
+                        </span>
+                        {% endif %}
+                        <p class="lead mb-0">{{ site.description|truncatewords:30 }}</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a href="{% url 'tourist_sites:sites_list' %}" class="btn back-btn">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Retour à la liste
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Galerie d'images EN DESSOUS DU HERO, AVANT LES INFOS -->
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                {% if site.images.exists %}
+                <div id="carouselSiteDetail" class="carousel slide site-image-gallery mb-5" data-bs-ride="carousel"
+                    style="border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.12);">
+                    <div class="carousel-inner">
+                        {% for image in site.images.all %}
+                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                            <img src="{{ image.image.url }}" class="d-block w-100"
+                                style="height: 520px; object-fit: cover;" alt="{{ image.caption|default:site.name }}">
+                            {% if image.caption %}
+                            <div class="carousel-caption d-none d-md-block">
+                                <p class="bg-dark bg-opacity-50 rounded px-2">{{ image.caption }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if site.images.count > 1 %}
+                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselSiteDetail"
+                        data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#carouselSiteDetail"
+                        data-bs-slide="next">
+                        <span class="carousel-control-next-icon"></span>
+                    </button>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="text-center py-5 site-image-gallery mb-5" style="border-radius: 20px; background: #f8f9fa;">
+                    <i class="fas fa-image fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Aucune image disponible pour ce site</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Infos du site -->
+    <div class="container py-3">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="info-card">
+                    <h3 class="mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Informations
+                    </h3>
+
+                    <div class="mb-4">
+                        <h5>Description</h5>
+                        <p class="text-muted">{{ site.description }}</p>
+                    </div>
+
+                    <div class="coordinates">
+                        <h6><i class="fas fa-map-marker-alt me-2"></i>Coordonnées GPS</h6>
+                        <p class="mb-1"><strong>Latitude:</strong> {{ site.latitude|floatformat:6 }}</p>
+                        <p class="mb-0"><strong>Longitude:</strong> {{ site.longitude|floatformat:6 }}</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6><i class="fas fa-calendar me-2"></i>Date d'ajout</h6>
+                        <p class="text-muted mb-0">{{ site.created_at|date:"d/m/Y à H:i" }}</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6><i class="fas fa-clock me-2"></i>Dernière mise à jour</h6>
+                        <p class="text-muted mb-0">{{ site.updated_at|date:"d/m/Y à H:i" }}</p>
+                    </div>
+
+                    <div class="d-grid">
+                        <a href="{% url 'tourist_sites:sites_map' %}" class="btn btn-primary">
+                            <i class="fas fa-map me-2"></i>
+                            Voir sur la carte
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function changeMainImage(thumbnail, imageUrl) {
+        // Changer l'image principale
+        document.getElementById('mainImage').src = imageUrl;
+
+        // Mettre à jour les classes actives
+        document.querySelectorAll('.thumbnail').forEach(thumb => {
+            thumb.classList.remove('active');
+        });
+        thumbnail.classList.add('active');
+    }
+</script>
+{% endblock %}

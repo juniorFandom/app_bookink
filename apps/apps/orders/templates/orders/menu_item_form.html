@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load widget_tweaks %}
+
+{% block title %}{% if menu_item %}{% translate "Modifier le plat" %}{% else %}{% translate "Créer un plat" %}{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-gradient-primary text-white d-flex align-items-center rounded-top-4" style="background: linear-gradient(90deg, #007bff 0%, #00c6ff 100%);">
+                    <i class="fas fa-hamburger fa-lg me-2"></i>
+                    <h1 class="h4 mb-0">{% if menu_item %}{% translate "Modifier le plat" %}{% else %}{% translate "Créer un plat" %}{% endif %}</h1>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" action="{% if menu_item %}{% url 'orders:menu_item_edit' pk=menu_item.pk %}{% else %}{% url 'orders:menu_item_create' %}{% endif %}" enctype="multipart/form-data" novalidate class="needs-validation">
+                        {% csrf_token %}
+                        <!-- Catégorie -->
+                        <div class="form-floating mb-4">
+                            {{ form.food_category|add_class:'form-select' }}
+                            <label for="id_food_category"><i class="fas fa-layer-group me-1"></i> {% translate "Catégorie" %} <span class="text-danger">*</span></label>
+                            {% for error in form.food_category.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <!-- Nom -->
+                        <div class="form-floating mb-4">
+                            {{ form.name|add_class:'form-control' }}
+                            <label for="id_name"><i class="fas fa-signature me-1"></i> {% translate "Nom du plat" %} <span class="text-danger">*</span></label>
+                            {% for error in form.name.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <!-- Image principale -->
+                        <div class="mb-4">
+                            <label for="id_main_image" class="form-label fw-semibold">
+                                <i class="fas fa-image me-1"></i> {% translate "Image principale" %}
+                            </label>
+                            {{ form.main_image|add_class:'form-control' }}
+                            {% for error in form.main_image.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <!-- Prix -->
+                        <div class="form-floating mb-4">
+                            {{ form.price|add_class:'form-control' }}
+                            <label for="id_price"><i class="fas fa-money-bill-wave me-1"></i> {% translate "Prix (XAF)" %} <span class="text-danger">*</span></label>
+                            {% for error in form.price.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <!-- Description -->
+                        <div class="form-floating mb-4">
+                            {{ form.description|add_class:'form-control' }}
+                            <label for="id_description"><i class="fas fa-align-left me-1"></i> {% translate "Description" %}</label>
+                            {% for error in form.description.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <!-- Ingrédients -->
+                        <div class="form-floating mb-4">
+                            {{ form.ingredients|add_class:'form-control' }}
+                            <label for="id_ingredients"><i class="fas fa-carrot me-1"></i> {% translate "Ingrédients" %}</label>
+                            {% for error in form.ingredients.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <!-- Allergènes -->
+                        <div class="form-floating mb-4">
+                            {{ form.allergens|add_class:'form-control' }}
+                            <label for="id_allergens"><i class="fas fa-exclamation-triangle me-1"></i> {% translate "Allergènes" %}</label>
+                            {% for error in form.allergens.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <!-- Infos diététiques -->
+                        <div class="form-floating mb-4">
+                            {{ form.dietary_info|add_class:'form-control' }}
+                            <label for="id_dietary_info"><i class="fas fa-leaf me-1"></i> {% translate "Infos diététiques" %}</label>
+                            {% for error in form.dietary_info.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <!-- Calories -->
+                        <div class="form-floating mb-4">
+                            {{ form.calories|add_class:'form-control' }}
+                            <label for="id_calories"><i class="fas fa-fire me-1"></i> {% translate "Calories" %}</label>
+                            {% for error in form.calories.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <!-- Temps de préparation -->
+                        <div class="form-floating mb-4">
+                            {{ form.preparation_time_minutes|add_class:'form-control' }}
+                            <label for="id_preparation_time_minutes"><i class="fas fa-clock me-1"></i> {% translate "Temps de préparation (min)" %}</label>
+                            {% for error in form.preparation_time_minutes.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <!-- Disponibilité -->
+                        <div class="form-check form-switch mb-4">
+                            {{ form.is_available|add_class:'form-check-input' }}
+                            <label class="form-check-label" for="id_is_available"><i class="fas fa-check-circle me-1"></i> {% translate "Disponible à la vente" %}</label>
+                            {% for error in form.is_available.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <!-- En vedette -->
+                        <div class="form-check form-switch mb-4">
+                            {{ form.is_featured|add_class:'form-check-input' }}
+                            <label class="form-check-label" for="id_is_featured"><i class="fas fa-star me-1"></i> {% translate "Mettre en avant" %}</label>
+                            {% for error in form.is_featured.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <!-- Stock disponible -->
+                        <div class="form-floating mb-4">
+                            {{ form.stock_quantity|add_class:'form-control' }}
+                            <label for="id_stock_quantity"><i class="fas fa-boxes me-1"></i> {% translate "Nombre de plats disponibles" %} <span class="text-danger">*</span></label>
+                            {% for error in form.stock_quantity.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="submit" class="btn btn-gradient-primary btn-lg px-5 shadow rounded-pill" style="background: linear-gradient(90deg, #007bff 0%, #00c6ff 100%); color: #fff; border: none;">
+                                <i class="fas fa-save me-2"></i> {% if menu_item %}{% translate "Mettre à jour" %}{% else %}{% translate "Enregistrer" %}{% endif %}
+                            </button>
+                            <a href="{% url 'orders:menu_item_list' %}" class="btn btn-outline-secondary btn-lg px-4 rounded-pill">
+                                <i class="fas fa-times me-2"></i> {% translate "Annuler" %}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

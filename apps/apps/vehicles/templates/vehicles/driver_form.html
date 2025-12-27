@@ -1,0 +1,616 @@
+{% extends "vehicles/base.html" %}
+{% load i18n %}
+{% load widget_tweaks %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block vehicle_content %}
+<div class="driver-form-dashboard-bg py-4">
+    <div class="container-xxl">
+        <!-- HERO SECTION -->
+        <div class="driver-form-hero mb-4 p-4 rounded-4 shadow-sm d-flex flex-wrap align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <div class="driver-form-hero-icon bg-gradient-primary text-white rounded-3 d-flex align-items-center justify-content-center">
+                    <i class="fas fa-user-tie fa-2x"></i>
+                </div>
+                <div>
+                    <h1 class="driver-form-title mb-1">
+                        {% if form.instance.pk %}
+                            {% trans "Modifier le Chauffeur" %}
+                        {% else %}
+                            {% trans "Nouveau Chauffeur" %}
+                        {% endif %}
+                    </h1>
+                    <div class="text-white-50 small">{% translate "Driver Management" %}</div>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-3 mt-md-0">
+                <a href="{% url 'vehicles:driver_list' %}" class="btn btn-outline-light driver-form-btn-action">
+                    <i class="fas fa-arrow-left"></i> {% translate "Back to Drivers" %}
+                </a>
+            </div>
+        </div>
+
+        <!-- BREADCRUMB -->
+        <div class="driver-form-breadcrumb mb-4">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb driver-breadcrumb-modern">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'vehicles:driver_list' %}" class="breadcrumb-link">
+                            <i class="fas fa-user-tie me-2"></i>{% translate "Drivers" %}
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        <i class="fas fa-edit me-2"></i>
+                        {% if form.instance.pk %}
+                            {% trans "Edit Driver" %}
+                        {% else %}
+                            {% trans "New Driver" %}
+                        {% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+
+        <!-- MAIN FORM -->
+        <div class="row g-4">
+            <div class="col-12">
+                <div class="driver-form-section-card p-4">
+                    <div class="d-flex align-items-center mb-4 gap-2">
+                        <i class="fas fa-user-tie text-primary"></i>
+                        <h2 class="h5 mb-0">{% translate "Driver Information" %}</h2>
+                    </div>
+                    
+                    <form method="post" enctype="multipart/form-data" novalidate class="driver-form">
+                        {% csrf_token %}
+                        
+                        <div class="row g-4">
+                            <!-- Personal Information -->
+                            <div class="col-md-6">
+                                <div class="driver-form-field">
+                                    <label for="{{ form.first_name.id_for_label }}" class="driver-form-label">
+                                        <i class="fas fa-user me-2"></i>{{ form.first_name.label }}
+                                    </label>
+                                    <div class="driver-form-input-wrapper">
+                                        {{ form.first_name|add_class:"driver-form-input"|attr:"placeholder:Prénom du chauffeur" }}
+                                    </div>
+                                    {% if form.first_name.errors %}
+                                        <div class="driver-form-error">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            {% for error in form.first_name.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="driver-form-field">
+                                    <label for="{{ form.last_name.id_for_label }}" class="driver-form-label">
+                                        <i class="fas fa-user me-2"></i>{{ form.last_name.label }}
+                                    </label>
+                                    <div class="driver-form-input-wrapper">
+                                        {{ form.last_name|add_class:"driver-form-input"|attr:"placeholder:Nom du chauffeur" }}
+                                    </div>
+                                    {% if form.last_name.errors %}
+                                        <div class="driver-form-error">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            {% for error in form.last_name.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="driver-form-field">
+                                    <label for="{{ form.email.id_for_label }}" class="driver-form-label">
+                                        <i class="fas fa-envelope me-2"></i>{{ form.email.label }}
+                                    </label>
+                                    <div class="driver-form-input-wrapper">
+                                        {{ form.email|add_class:"driver-form-input"|attr:"placeholder:email@exemple.com" }}
+                                    </div>
+                                    {% if form.email.errors %}
+                                        <div class="driver-form-error">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            {% for error in form.email.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Contact Information -->
+                            <div class="col-md-6">
+                                <div class="driver-form-field">
+                                    <label for="{{ form.phone.id_for_label }}" class="driver-form-label">
+                                        <i class="fas fa-phone me-2"></i>{{ form.phone.label }}
+                                    </label>
+                                    <div class="driver-form-input-wrapper">
+                                        {{ form.phone|add_class:"driver-form-input"|attr:"placeholder:+237 XXX XXX XXX" }}
+                                    </div>
+                                    {% if form.phone.errors %}
+                                        <div class="driver-form-error">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            {% for error in form.phone.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="driver-form-field">
+                                    <label for="{{ form.license_number.id_for_label }}" class="driver-form-label">
+                                        <i class="fas fa-id-card me-2"></i>{{ form.license_number.label }}
+                                    </label>
+                                    <div class="driver-form-input-wrapper">
+                                        {{ form.license_number|add_class:"driver-form-input"|attr:"placeholder:Numéro de permis de conduire" }}
+                                    </div>
+                                    {% if form.license_number.errors %}
+                                        <div class="driver-form-error">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            {% for error in form.license_number.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="driver-form-field">
+                                    <label for="{{ form.license_expiry.id_for_label }}" class="driver-form-label">
+                                        <i class="fas fa-calendar me-2"></i>{{ form.license_expiry.label }}
+                                    </label>
+                                    <div class="driver-form-input-wrapper">
+                                        {{ form.license_expiry|add_class:"driver-form-input"|attr:"type:date" }}
+                                    </div>
+                                    {% if form.license_expiry.errors %}
+                                        <div class="driver-form-error">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            {% for error in form.license_expiry.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Additional Information -->
+                            <div class="col-12">
+                                <div class="driver-form-field">
+                                    <label for="{{ form.address.id_for_label }}" class="driver-form-label">
+                                        <i class="fas fa-map-marker-alt me-2"></i>{{ form.address.label }}
+                                    </label>
+                                    <div class="driver-form-input-wrapper">
+                                        {{ form.address|add_class:"driver-form-input"|attr:"placeholder:Adresse complète" }}
+                                    </div>
+                                    {% if form.address.errors %}
+                                        <div class="driver-form-error">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            {% for error in form.address.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="driver-form-field">
+                                    <label for="{{ form.notes.id_for_label }}" class="driver-form-label">
+                                        <i class="fas fa-sticky-note me-2"></i>{{ form.notes.label }}
+                                    </label>
+                                    <div class="driver-form-input-wrapper">
+                                        {{ form.notes|add_class:"driver-form-input"|attr:"rows:4"|attr:"placeholder:Notes supplémentaires sur le chauffeur" }}
+                                    </div>
+                                    {% if form.notes.errors %}
+                                        <div class="driver-form-error">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            {% for error in form.notes.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="driver-form-field">
+                                    <div class="driver-form-checkbox">
+                                        {{ form.is_active|add_class:"driver-form-checkbox-input" }}
+                                        <label class="driver-form-checkbox-label" for="{{ form.is_active.id_for_label }}">
+                                            <i class="fas fa-toggle-on me-2"></i>{% trans "Activer ce chauffeur" %}
+                                        </label>
+                                    </div>
+                                    {% if form.is_active.errors %}
+                                        <div class="driver-form-error">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            {% for error in form.is_active.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="driver-form-actions mt-5">
+                            <div class="d-flex gap-3 justify-content-end">
+                                <a href="{% url 'vehicles:driver_list' %}" class="btn btn-outline-secondary driver-form-btn">
+                                    <i class="fas fa-times me-2"></i>{% translate "Cancel" %}
+                                </a>
+                                <button type="submit" class="btn btn-gradient-primary driver-form-btn">
+                                    {% if form.instance.pk %}
+                                        <i class="fas fa-save me-2"></i>{% translate "Update Driver" %}
+                                    {% else %}
+                                        <i class="fas fa-plus me-2"></i>{% translate "Create Driver" %}
+                                    {% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- STYLE DRIVER FORM DASHBOARD -->
+<style>
+.driver-form-dashboard-bg { 
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
+    min-height: 100vh; 
+}
+
+.driver-form-hero { 
+    background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%); 
+    color: #fff; 
+    box-shadow: 0 4px 24px rgba(245, 158, 11, 0.15); 
+}
+
+.driver-form-hero-icon { 
+    width: 56px; 
+    height: 56px; 
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); 
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2); 
+}
+
+.driver-form-title { 
+    font-size: 2.1rem; 
+    font-weight: 700; 
+    letter-spacing: 0.5px; 
+}
+
+.driver-form-btn-action { 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+    border-radius: 0.7rem; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07); 
+    font-weight: 600;
+}
+
+.driver-form-btn-action:hover { 
+    transform: translateY(-2px) scale(1.02); 
+    box-shadow: 0 6px 24px rgba(245, 158, 11, 0.2); 
+}
+
+.btn-gradient-primary {
+    background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-gradient-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(245, 158, 11, 0.4);
+    color: white;
+}
+
+.driver-form-breadcrumb {
+    background: white;
+    border-radius: 1.1rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    padding: 1rem 1.5rem;
+}
+
+.driver-breadcrumb-modern {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+.driver-breadcrumb-modern .breadcrumb-item a {
+    color: #f59e0b;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.driver-breadcrumb-modern .breadcrumb-item a:hover {
+    color: #d97706;
+    transform: translateY(-1px);
+}
+
+.driver-breadcrumb-modern .breadcrumb-item.active {
+    color: #6b7280;
+    font-weight: 600;
+}
+
+.driver-form-section-card { 
+    background: #fff; 
+    border-radius: 1.1rem; 
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07); 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.driver-form-section-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.driver-form-field {
+    margin-bottom: 1.5rem;
+}
+
+.driver-form-label {
+    display: block;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.driver-form-label:hover {
+    color: #f59e0b;
+}
+
+.driver-form-input-wrapper {
+    position: relative;
+}
+
+.driver-form-input {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.7rem;
+    font-size: 0.95rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #f9fafb;
+}
+
+.driver-form-input:focus {
+    outline: none;
+    border-color: #f59e0b;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    transform: translateY(-1px);
+}
+
+.driver-form-input:hover {
+    border-color: #fbbf24;
+    background: white;
+}
+
+/* Date input styling */
+.driver-form-input[type="date"] {
+    background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%);
+    border-color: #f59e0b;
+}
+
+.driver-form-input[type="date"]:focus {
+    background: white;
+}
+
+/* Textarea styling */
+.driver-form-input[rows] {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.driver-form-error {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: #dc2626;
+    background: linear-gradient(90deg, #fef2f2 0%, #fee2e2 100%);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    border-left: 3px solid #dc2626;
+    animation: shake 0.5s ease-in-out;
+}
+
+.driver-form-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%);
+    border-radius: 0.7rem;
+    border: 2px solid #f59e0b;
+    transition: all 0.3s ease;
+}
+
+.driver-form-checkbox:hover {
+    background: linear-gradient(90deg, #fde68a 0%, #fcd34d 100%);
+    transform: translateY(-1px);
+}
+
+.driver-form-checkbox-input {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 0.25rem;
+    border: 2px solid #f59e0b;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.driver-form-checkbox-input:checked {
+    background: #f59e0b;
+    border-color: #d97706;
+}
+
+.driver-form-checkbox-label {
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    margin: 0;
+    flex: 1;
+}
+
+.driver-form-actions {
+    border-top: 2px solid #f3f4f6;
+    padding-top: 2rem;
+    background: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 100%);
+    margin: 0 -1.5rem -1.5rem -1.5rem;
+    padding: 2rem 1.5rem 1.5rem 1.5rem;
+    border-radius: 0 0 1.1rem 1.1rem;
+}
+
+.driver-form-btn {
+    padding: 0.875rem 1.5rem;
+    border-radius: 0.7rem;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid transparent;
+}
+
+.driver-form-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.btn-outline-secondary {
+    border-color: #d1d5db;
+    color: #6b7280;
+}
+
+.btn-outline-secondary:hover {
+    background: #6b7280;
+    border-color: #6b7280;
+    color: white;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+@keyframes fadeInUp { 
+    from { 
+        opacity: 0; 
+        transform: translateY(30px); 
+    } 
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    } 
+}
+
+.driver-form-section-card {
+    animation: fadeInUp 0.7s ease-out;
+}
+
+@media (max-width: 991px) { 
+    .driver-form-hero { 
+        flex-direction: column; 
+        gap: 1.5rem; 
+    } 
+    .driver-form-title { 
+        font-size: 1.5rem; 
+    } 
+}
+
+@media (max-width: 767px) { 
+    .driver-form-title { 
+        font-size: 1.2rem; 
+    }
+    .driver-form-actions {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .driver-form-btn {
+        width: 100%;
+    }
+    .col-md-6 {
+        margin-bottom: 1rem;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation feedback
+    const form = document.querySelector('.driver-form');
+    const inputs = form.querySelectorAll('input, select, textarea');
+    
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.value.trim() === '' && this.hasAttribute('required')) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+        
+        input.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid')) {
+                this.classList.remove('is-invalid');
+            }
+        });
+    });
+
+    // License expiry date validation
+    const licenseExpiryInput = document.querySelector('input[type="date"]');
+    if (licenseExpiryInput) {
+        licenseExpiryInput.addEventListener('change', function() {
+            const selectedDate = new Date(this.value);
+            const today = new Date();
+            
+            if (selectedDate < today) {
+                this.classList.add('is-invalid');
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'driver-form-error';
+                errorDiv.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>La date d\'expiration ne peut pas être dans le passé.';
+                
+                // Remove existing error
+                const existingError = this.parentNode.nextElementSibling;
+                if (existingError && existingError.classList.contains('driver-form-error')) {
+                    existingError.remove();
+                }
+                
+                this.parentNode.parentNode.appendChild(errorDiv);
+            } else {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+                
+                // Remove error message
+                const existingError = this.parentNode.parentNode.querySelector('.driver-form-error');
+                if (existingError) {
+                    existingError.remove();
+                }
+            }
+        });
+    }
+
+    // Smooth animations
+    const formFields = document.querySelectorAll('.driver-form-field');
+    formFields.forEach((field, index) => {
+        field.style.animationDelay = `${index * 0.1}s`;
+        field.classList.add('animate-fade-in');
+    });
+
+    // Checkbox animation
+    const checkbox = document.querySelector('.driver-form-checkbox-input');
+    if (checkbox) {
+        checkbox.addEventListener('change', function() {
+            const label = this.nextElementSibling;
+            if (this.checked) {
+                label.style.color = '#f59e0b';
+                label.style.transform = 'scale(1.02)';
+            } else {
+                label.style.color = '#374151';
+                label.style.transform = 'scale(1)';
+            }
+        });
+    }
+});
+</script>
+{% endblock %} 

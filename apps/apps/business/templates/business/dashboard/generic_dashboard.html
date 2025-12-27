@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Dashboard" %} - {{ location.name }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-bg py-4">
+    <div class="container-xxl">
+        <!-- HERO SECTION -->
+        <div class="dashboard-hero mb-4 p-4 rounded-4 shadow-sm d-flex flex-wrap align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <div class="dashboard-hero-icon bg-gradient-primary text-white rounded-3 d-flex align-items-center justify-content-center">
+                    <i class="fas fa-tachometer-alt fa-2x"></i>
+                </div>
+                <div>
+                    <h1 class="dashboard-title mb-1">{% translate "Dashboard" %}</h1>
+                    <div class="text-muted small">{{ location.name }} &mdash; {{ business.name }}</div>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-3 mt-md-0">
+                <a href="{% url 'business:business_detail' business.pk %}" class="btn btn-outline-light dashboard-btn-action">
+                    <i class="fas fa-arrow-left"></i> {% translate "Retour au business" %}
+                </a>
+            </div>
+        </div>
+        <!-- STATS CARDS -->
+        <div class="row g-3 mb-4 dashboard-stats-row">
+            <div class="col-6 col-md-3">
+                <div class="dashboard-stat-card bg-gradient-primary text-white animate-fade-in">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="stat-value">{{ location.get_business_location_type_display }}</div>
+                            <div class="stat-label">{% translate "Type d'établissement" %}</div>
+                        </div>
+                        <i class="fas fa-building fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="dashboard-stat-card bg-gradient-success text-white animate-fade-in">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="stat-value">{% if location.is_active %}{% translate "Actif" %}{% else %}{% translate "Inactif" %}{% endif %}</div>
+                            <div class="stat-label">{% translate "Statut" %}</div>
+                        </div>
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="dashboard-stat-card bg-gradient-info text-white animate-fade-in">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="stat-value">{% if location.is_verified %}{% translate "Vérifié" %}{% else %}{% translate "Non vérifié" %}{% endif %}</div>
+                            <div class="stat-label">{% translate "Vérification" %}</div>
+                        </div>
+                        <i class="fas fa-shield-alt fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="dashboard-stat-card bg-gradient-warning text-dark animate-fade-in">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="stat-value">{% if location.is_main_location %}{% translate "Principal" %}{% else %}{% translate "Secondaire" %}{% endif %}</div>
+                            <div class="stat-label">{% translate "Type de lieu" %}</div>
+                        </div>
+                        <i class="fas fa-map-marker-alt fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- SYNTHÈSE FINANCIÈRE -->
+        <div class="row g-3 mb-4">
+            <div class="col-12">
+                <div class="dashboard-section-card p-4">
+                    <div class="d-flex align-items-center mb-3 gap-2">
+                        <i class="fas fa-chart-line text-primary"></i>
+                        <h2 class="h5 mb-0">{% translate "Synthèse du jour" %}</h2>
+                    </div>
+                    <div class="row g-3 mb-2">
+                        <div class="col-6 col-md-2">
+                            <div class="dashboard-finance-card border-primary text-primary">
+                                <div class="finance-label">{% translate "Total du jour" %}</div>
+                                <div class="finance-value">{{ total_day|floatformat:0 }} XAF</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <div class="dashboard-finance-card border-success text-success">
+                                <div class="finance-label">Wallet</div>
+                                <div class="finance-value">{{ total_wallet|floatformat:0 }} XAF</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <div class="dashboard-finance-card border-warning text-warning">
+                                <div class="finance-label">Espèces</div>
+                                <div class="finance-value">{{ total_cash|floatformat:0 }} XAF</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <div class="dashboard-finance-card border-info text-info">
+                                <div class="finance-label">Mobile Money</div>
+                                <div class="finance-value">{{ total_mobile|floatformat:0 }} XAF</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <div class="dashboard-finance-card border-secondary text-secondary">
+                                <div class="finance-label">Carte bancaire</div>
+                                <div class="finance-value">{{ total_card|floatformat:0 }} XAF</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- MAIN GRID: INFORMATIONS + ACTIONS RAPIDES -->
+        <div class="row g-3 mb-4">
+            <div class="col-lg-8">
+                <div class="dashboard-section-card p-4 mb-4">
+                    <div class="d-flex align-items-center mb-3 gap-2">
+                        <i class="fas fa-info-circle text-primary"></i>
+                        <h2 class="h5 mb-0">{% translate "Informations de l'établissement" %}</h2>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="dashboard-info-card">
+                                <h6 class="text-primary mb-3">{% translate "Détails" %}</h6>
+                                <div class="info-list">
+                                    <div class="info-item">
+                                        <span class="info-label">{% translate "Nom:" %}</span>
+                                        <span class="info-value">{{ location.name }}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">{% translate "Type:" %}</span>
+                                        <span class="info-value">{{ location.get_business_location_type_display }}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">{% translate "Adresse:" %}</span>
+                                        <span class="info-value">{{ location.address }}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">{% translate "Ville:" %}</span>
+                                        <span class="info-value">{{ location.city }}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">{% translate "Téléphone:" %}</span>
+                                        <span class="info-value">{{ location.phone }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="dashboard-info-card">
+                                <h6 class="text-primary mb-3">{% translate "Statuts" %}</h6>
+                                <div class="status-badges">
+                                    <div class="status-item mb-2">
+                                        {% if location.is_active %}
+                                            <span class="badge bg-success">{% translate "Actif" %}</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">{% translate "Inactif" %}</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="status-item mb-2">
+                                        {% if location.is_verified %}
+                                            <span class="badge bg-primary">{% translate "Vérifié" %}</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark">{% translate "Non vérifié" %}</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="status-item mb-2">
+                                        {% if location.is_main_location %}
+                                            <span class="badge bg-purple">{% translate "Principal" %}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{% translate "Secondaire" %}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if location.description %}
+                        <div class="mt-4">
+                            <h6 class="text-primary mb-2">{% translate "Description" %}</h6>
+                            <div class="dashboard-description">
+                                {{ location.description|linebreaks }}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="dashboard-section-card p-4 mb-4">
+                    <div class="d-flex align-items-center mb-3 gap-2">
+                        <i class="fas fa-bolt text-warning"></i>
+                        <h2 class="h6 mb-0">{% translate "Actions rapides" %}</h2>
+                    </div>
+                    <div class="d-grid gap-3">
+                        <a href="{% url 'business:location_edit' location.pk %}" class="btn btn-outline-primary dashboard-btn-action">
+                            <i class="fas fa-edit me-2"></i>{% translate "Modifier l'établissement" %}
+                        </a>
+                        <a href="{% url 'business:location_hours' location.pk %}" class="btn btn-outline-warning dashboard-btn-action">
+                            <i class="fas fa-clock me-2"></i>{% translate "Gérer les horaires" %}
+                        </a>
+                        <a href="{% url 'business:location_images' location.pk %}" class="btn btn-outline-info dashboard-btn-action">
+                            <i class="fas fa-images me-2"></i>{% translate "Gérer les images" %}
+                        </a>
+                        <a href="{% url 'business:permission_list' location.pk %}" class="btn btn-outline-success dashboard-btn-action">
+                            <i class="fas fa-users-cog me-2"></i>{% translate "Gérer les permissions" %}
+                        </a>
+                        <a href="{{ location.get_absolute_url }}" class="btn btn-outline-secondary dashboard-btn-action">
+                            <i class="fas fa-eye me-2"></i>{% translate "Voir la page publique" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- HORAIRES D'OUVERTURE -->
+        <div class="row g-3 mb-4">
+            <div class="col-12">
+                <div class="dashboard-section-card p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fas fa-clock text-info"></i>
+                            <h2 class="h5 mb-0">{% translate "Horaires d'ouverture" %}</h2>
+                        </div>
+                        <a href="{% url 'business:location_hours' location.pk %}" class="btn btn-outline-primary btn-sm dashboard-btn-action">
+                            <i class="fas fa-edit"></i> {% translate "Modifier" %}
+                        </a>
+                    </div>
+                    <div class="table-responsive dashboard-table-responsive">
+                        <table class="table table-hover align-middle dashboard-table">
+                            <thead>
+                                <tr>
+                                    <th>{% translate "Jour" %}</th>
+                                    <th>{% translate "Horaires" %}</th>
+                                    <th>{% translate "Statut" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for schedule in location.business_hours.all %}
+                                <tr>
+                                    <td><strong>{{ schedule.get_day_display }}</strong></td>
+                                    <td>
+                                        {% if schedule.is_closed %}
+                                            <span class="text-danger">{% translate "Fermé" %}</span>
+                                        {% else %}
+                                            <div>{{ schedule.opening_time|time:"H:i" }} - {{ schedule.closing_time|time:"H:i" }}</div>
+                                            {% if schedule.break_start and schedule.break_end %}
+                                                <small class="text-muted">{% translate "Pause:" %} {{ schedule.break_start|time:"H:i" }} - {{ schedule.break_end|time:"H:i" }}</small>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if schedule.is_closed %}
+                                            <span class="badge bg-danger">{% translate "Fermé" %}</span>
+                                        {% else %}
+                                            <span class="badge bg-success">{% translate "Ouvert" %}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">
+                                        <div class="alert alert-info mb-0">
+                                            <i class="fas fa-info-circle me-2"></i>{% translate "Aucun horaire configuré" %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- TABLEAU TRANSACTIONS DU JOUR -->
+        <div class="row g-3 mb-4">
+            <div class="col-12">
+                <div class="dashboard-section-card p-4">
+                    <div class="d-flex align-items-center mb-3 gap-2">
+                        <i class="fas fa-list text-info"></i>
+                        <h2 class="h5 mb-0">{% translate "Transactions du jour" %}</h2>
+                    </div>
+                    <div class="table-responsive dashboard-table-responsive">
+                        <table class="table table-hover align-middle dashboard-table">
+                            <thead>
+                                <tr>
+                                    <th>{% translate "Heure" %}</th>
+                                    <th>{% translate "Client" %}</th>
+                                    <th>{% translate "Montant" %}</th>
+                                    <th>{% translate "Mode de paiement" %}</th>
+                                    <th>{% translate "Numéro de commande" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders_detail %}
+                                <tr>
+                                    <td>{{ order.created_at|date:"H:i" }}</td>
+                                    <td>{{ order.customer.get_full_name|default:order.customer.username }}</td>
+                                    <td><span class="fw-bold">{{ order.total_amount|floatformat:0 }} XAF</span></td>
+                                    <td>
+                                        {% if order.payment_method == 'CASH' %}
+                                            <span class="badge bg-warning">{% translate "Espèces" %}</span>
+                                        {% elif order.payment_method == 'WALLET' %}
+                                            <span class="badge bg-success">Wallet</span>
+                                        {% elif order.payment_method == 'MOBILE_MONEY' %}
+                                            <span class="badge bg-info">Mobile Money</span>
+                                        {% elif order.payment_method == 'CARD' %}
+                                            <span class="badge bg-secondary">Carte</span>
+                                        {% else %}
+                                            <span class="badge bg-light text-dark">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ order.order_number }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="5"><div class="alert alert-info text-center my-4"><i class="fas fa-info-circle me-2"></i> {% translate "Aucune transaction enregistrée aujourd'hui." %}</div></td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- STYLE DASHBOARD GÉNÉRIQUE -->
+<style>
+.dashboard-bg { background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); min-height: 100vh; }
+.dashboard-hero { background: linear-gradient(90deg, #475569 0%, #334155 100%); color: #fff; box-shadow: 0 4px 24px rgba(71,85,105,0.08); }
+.dashboard-hero-icon { width: 56px; height: 56px; background: linear-gradient(135deg, #475569 0%, #334155 100%); box-shadow: 0 2px 8px rgba(71,85,105,0.13); }
+.dashboard-title { font-size: 2.1rem; font-weight: 700; letter-spacing: 0.5px; }
+.dashboard-btn-action { transition: background 0.2s, box-shadow 0.2s, transform 0.2s; border-radius: 0.7rem; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+.dashboard-btn-action:hover { background: linear-gradient(90deg, #475569 0%, #334155 100%); color: #fff; transform: translateY(-2px) scale(1.03); box-shadow: 0 6px 24px rgba(71,85,105,0.13); }
+.dashboard-stats-row .dashboard-stat-card { border-radius: 1.1rem; box-shadow: 0 2px 12px rgba(0,0,0,0.07); padding: 1.2rem 1.3rem; min-height: 110px; display: flex; flex-direction: column; justify-content: center; animation: fadeInUp 0.7s; }
+.bg-gradient-primary { background: linear-gradient(90deg, #475569 0%, #334155 100%) !important; }
+.bg-gradient-success { background: linear-gradient(90deg, #10b981 0%, #059669 100%) !important; }
+.bg-gradient-info { background: linear-gradient(90deg, #06b6d4 0%, #0891b2 100%) !important; }
+.bg-gradient-warning { background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%) !important; }
+.dashboard-stat-card .stat-value { font-size: 1.8rem; font-weight: 700; }
+.dashboard-stat-card .stat-label { font-size: 1rem; font-weight: 500; opacity: 0.85; }
+.dashboard-section-card { background: #fff; border-radius: 1.1rem; box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+.dashboard-finance-card { border: 2px solid; border-radius: 0.9rem; background: #f8fafc; padding: 1rem 1.2rem; margin-bottom: 0.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.dashboard-finance-card .finance-label { font-size: 0.9rem; font-weight: 500; }
+.dashboard-finance-card .finance-value { font-size: 1.2rem; font-weight: 700; }
+.dashboard-info-card { background: #f8fafc; border-radius: 0.8rem; padding: 1.2rem; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.info-list .info-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0; }
+.info-list .info-item:last-child { border-bottom: none; }
+.info-label { font-weight: 600; color: #475569; }
+.info-value { color: #1e293b; }
+.status-badges .status-item { display: flex; align-items: center; }
+.dashboard-description { background: #f8fafc; border-radius: 0.8rem; padding: 1.2rem; border-left: 4px solid #475569; }
+.dashboard-table-responsive { border-radius: 0.7rem; overflow: hidden; }
+.dashboard-table th, .dashboard-table td { vertical-align: middle; }
+.dashboard-table th { background: #e2e8f0; font-weight: 600; }
+.dashboard-table tr:hover { background: #f1f5f9; transition: background 0.2s; }
+@media (max-width: 991px) { .dashboard-hero { flex-direction: column; gap: 1.5rem; } .dashboard-title { font-size: 1.5rem; } }
+@media (max-width: 767px) { .dashboard-stats-row .dashboard-stat-card { min-height: 90px; padding: 0.8rem 0.7rem; } .dashboard-title { font-size: 1.2rem; } .dashboard-stat-card .stat-value { font-size: 1.4rem; } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-in { animation: fadeInUp 0.7s; }
+</style>
+{% endblock %} 

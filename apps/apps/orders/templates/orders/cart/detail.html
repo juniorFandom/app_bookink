@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2><i class="fas fa-shopping-cart me-2"></i>{% trans "Votre panier" %}</h2>
+    {% if cart %}
+        <table class="table table-bordered mt-4 align-middle" id="cart-table">
+            <thead class="table-light">
+                <tr>
+                    <th>{% trans "Plat" %}</th>
+                    <th>{% trans "Prix" %}</th>
+                    <th>{% trans "Quantité" %}</th>
+                    <th>{% trans "Total" %}</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key, item in cart.items %}
+                <tr id="cart-row-{{ key }}" data-item-id="{{ key }}">
+                    <td>
+                        {% if item.image %}
+                            <img src="{{ item.image }}" alt="{{ item.name }}" style="height:40px;width:40px;object-fit:cover;border-radius:6px;" class="me-2">
+                        {% endif %}
+                        <span class="fw-bold">{{ item.name }}</span>
+                    </td>
+                    <td class="item-price" data-price="{{ item.price|floatformat:0 }}">{{ item.price|floatformat:0 }}</td>
+                    <td style="min-width:120px;">
+                        <form method="post" action="{% url 'orders:cart_update_quantity' key %}" class="d-flex align-items-center cart-qty-form" data-item-id="{{ key }}">
+                            {% csrf_token %}
+                            <button type="button" class="btn btn-outline-secondary btn-sm me-1 btn-qty-minus"><i class="fas fa-minus"></i></button>
+                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control form-control-sm text-center qty-input" style="width:55px;">
+                            <button type="button" class="btn btn-outline-secondary btn-sm ms-1 btn-qty-plus"><i class="fas fa-plus"></i></button>
+                        </form>
+                    </td>
+                    <td>
+                        <span class="item-total fw-bold">0</span> XAF
+                        <div class="text-muted small">
+                            <span class="item-price-formula">0 × 0</span> = <span class="item-total-formula">0</span> XAF<br>
+                            {% trans "Total ligne" %}
+                        </div>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-outline-danger btn-sm btn-remove-item" title="{% trans 'Supprimer' %}"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="table-secondary">
+                    <td colspan="3" class="text-end fw-bold">{% trans "Total général" %}</td>
+                    <td class="fw-bold" colspan="2" id="cart-total">{{ total|floatformat:0 }} XAF</td>
+                </tr>
+            </tfoot>
+        </table>
+        <div class="d-flex justify-content-end gap-2 mt-3">
+            <form method="post" action="{% url 'orders:cart_clear' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="fas fa-trash me-1"></i> {% trans "Vider le panier" %}
+                </button>
+            </form>
+            <form method="post" action="{% url 'orders:valider_commande' %}" id="valider-commande-form">
+                {% csrf_token %}
+                <button type="button" class="btn btn-success" id="btn-ouvrir-modale-commande">
+                    <i class="fas fa-check me-1"></i> {% trans "Valider la commande" %}
+                </button>
+            </form>
+        </div>
+    {% else %}
+        <div class="alert alert-info mt-4">
+            <i class="fas fa-info-circle"></i> {% trans "Votre panier est vide." %}
+        </div>
+    {% endif %}
+</div>
+
+<!-- Modal de confirmation de commande -->
+<div class="modal fade" id="modalConfirmationCommande" tabindex="-1" aria-labelledby="modalConfirmationCommandeLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalConfirmationCommandeLabel">Confirmation de la commande</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body">
+        <p>Êtes-vous sûr de vouloir valider cette commande ?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="button" class="btn btn-success" id="btn-confirmer-commande">Confirmer</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function updateCartTotal() {
+        let total = 0;
+        document.querySelectorAll('#cart-table tbody tr').forEach(row => {
+            let price = Number(row.querySelector('.item-price')?.getAttribute('data-price'));
+            if (isNaN(price)) price = 0;
+            let qtyInput = row.querySelector('.qty-input');
+            let qty = Number(qtyInput?.value);
+            if (isNaN(qty) || qty < 1) qty = 1;
+            const itemTotal = price * qty;
+            const itemTotalSpan = row.querySelector('.item-total');
+            if (itemTotalSpan) itemTotalSpan.textContent = itemTotal.toLocaleString();
+            const priceFormula = row.querySelector('.item-price-formula');
+            if (priceFormula) priceFormula.textContent = price.toLocaleString() + ' × ' + qty;
+            const totalFormula = row.querySelector('.item-total-formula');
+            if (totalFormula) totalFormula.textContent = itemTotal.toLocaleString();
+            total += itemTotal;
+        });
+        const cartTotal = document.getElementById('cart-total');
+        if (cartTotal) cartTotal.textContent = total.toLocaleString() + ' XAF';
+    }
+
+    function showNotification(message, type = 'success') {
+        let notif = document.createElement('div');
+        notif.className = `alert alert-${type} position-fixed top-0 end-0 m-3 fade show`;
+        notif.style.zIndex = 9999;
+        notif.innerHTML = `<i class="fas fa-info-circle me-1"></i> ${message}`;
+        document.body.appendChild(notif);
+        setTimeout(() => {
+            notif.classList.remove('show');
+            notif.classList.add('hide');
+            setTimeout(() => notif.remove(), 500);
+        }, 1800);
+    }
+
+    document.querySelectorAll('.cart-qty-form').forEach(form => {
+        const minus = form.querySelector('.btn-qty-minus');
+        const plus = form.querySelector('.btn-qty-plus');
+        const input = form.querySelector('.qty-input');
+        const itemId = form.getAttribute('data-item-id');
+        minus.addEventListener('click', function(e) {
+            e.preventDefault();
+            let val = parseInt(input.value);
+            if(val > 1) {
+                input.value = val - 1;
+                updateQuantity(form, itemId, input.value);
+            }
+        });
+        plus.addEventListener('click', function(e) {
+            e.preventDefault();
+            let val = parseInt(input.value);
+            input.value = val + 1;
+            updateQuantity(form, itemId, input.value);
+        });
+        input.addEventListener('change', function() {
+            let val = parseInt(input.value);
+            if(val < 1) val = 1;
+            input.value = val;
+            updateQuantity(form, itemId, input.value);
+        });
+    });
+
+    function updateQuantity(form, itemId, quantity) {
+        const csrf = form.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        fetch(`/orders/cart/update/${itemId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrf,
+                'Accept': 'application/json',
+            },
+            body: new URLSearchParams({quantity: quantity})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                updateCartTotal();
+                showNotification('Quantité mise à jour !', 'success');
+            } else {
+                showNotification('Erreur lors de la mise à jour.', 'danger');
+            }
+        })
+        .catch(() => {
+            showNotification('Erreur réseau.', 'danger');
+        });
+    }
+
+    document.querySelectorAll('.btn-remove-item').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            const row = btn.closest('tr');
+            const itemId = row.getAttribute('data-item-id');
+            let csrf = null;
+            const form = row.querySelector('form');
+            if(form) {
+                csrf = form.querySelector('[name=csrfmiddlewaretoken]')?.value;
+            }
+            if(!csrf) {
+                csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+            }
+            fetch(`/orders/cart/remove/${itemId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrf,
+                },
+            }).then(response => {
+                if(response.ok) {
+                    row.remove();
+                    updateCartTotal();
+                    showNotification('Article supprimé.', 'success');
+                    if(document.querySelectorAll('#cart-table tbody tr').length === 0) {
+                        document.getElementById('cart-table').outerHTML = '<div class="alert alert-info mt-4"><i class="fas fa-info-circle"></i> Votre panier est vide.</div>';
+                    }
+                } else {
+                    showNotification('Erreur lors de la suppression.', 'danger');
+                }
+            }).catch(() => {
+                showNotification('Erreur réseau.', 'danger');
+            });
+        });
+    });
+
+    // Gestion de la modale de confirmation de commande
+    const btnOuvrirModale = document.getElementById('btn-ouvrir-modale-commande');
+    const btnConfirmerCommande = document.getElementById('btn-confirmer-commande');
+    const formValiderCommande = document.getElementById('valider-commande-form');
+    if(btnOuvrirModale && btnConfirmerCommande && formValiderCommande) {
+        btnOuvrirModale.addEventListener('click', function(e) {
+            e.preventDefault();
+            const modal = new bootstrap.Modal(document.getElementById('modalConfirmationCommande'));
+            modal.show();
+        });
+        btnConfirmerCommande.addEventListener('click', function() {
+            formValiderCommande.submit();
+        });
+    }
+
+    updateCartTotal();
+});
+</script>
+{% endblock %} 

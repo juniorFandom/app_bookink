@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Payment" %}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="card-title mb-0">{% trans "Payment" %}</h1>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5>{% trans "Booking Information" %}</h5>
+                        <p class="mb-0">
+                            <strong>{% trans "Tour" %}:</strong> {{ booking.tour.name }}<br>
+                            <strong>{% trans "Participants" %}:</strong> {{ booking.number_of_participants }}<br>
+                            <strong>{% trans "Total Amount" %}:</strong> {{ booking.total_amount|floatformat:0 }} XAF
+                        </p>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <h5>{% trans "Payment Required" %}</h5>
+                        <p class="mb-0">
+                            {% trans "Please click the button below to complete your payment using your wallet." %}
+                        </p>
+                    </div>
+
+                    <form method="post" action="{% url 'tours:booking_payment' booking.pk %}">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-credit-card me-2"></i>
+                                {% trans "Complete Payment" %}
+                            </button>
+                            <a href="{% url 'tours:booking_detail' booking.pk %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                {% trans "Back to Booking Details" %}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

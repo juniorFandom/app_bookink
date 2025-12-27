@@ -1,0 +1,186 @@
+/* Business Location Wizard Styles */
+
+.wizard-progress {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    gap: 1rem;
+}
+
+.wizard-step {
+    flex: 1;
+    text-align: center;
+    position: relative;
+}
+
+.wizard-step .step-icon {
+    font-size: 2rem;
+    color: var(--bs-primary);
+    background: #fff;
+    border: 2px solid var(--bs-primary);
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.5rem auto;
+    transition: background 0.2s, color 0.2s;
+}
+
+.wizard-step.active .step-icon, 
+.wizard-step.completed .step-icon {
+    background: var(--bs-primary);
+    color: #fff;
+}
+
+.wizard-step .step-label {
+    font-weight: 500;
+    color: var(--bs-primary);
+}
+
+.wizard-step.completed .step-label {
+    color: #28a745;
+}
+
+.wizard-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 24px;
+    right: -50%;
+    width: 100%;
+    height: 4px;
+    background: #e0e0e0;
+    z-index: 0;
+}
+
+.wizard-step.completed:not(:last-child)::after {
+    background: var(--bs-primary);
+}
+
+/* Form sections */
+.form-section {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    color: var(--bs-primary);
+    border-bottom: 2px solid #f8f9fa;
+    padding-bottom: 0.5rem;
+}
+
+.section-header i {
+    font-size: 1.5rem;
+}
+
+/* Drag and drop zone */
+.drag-drop-zone {
+    transition: all 0.3s ease;
+}
+
+.drag-drop-zone:hover {
+    background-color: #f8f9fa !important;
+}
+
+.drag-drop-zone.bg-primary {
+    background-color: var(--bs-primary) !important;
+    color: white !important;
+}
+
+/* Image preview cards */
+.image-preview-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.image-preview-card img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+}
+
+.image-preview-card .btn-delete {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(220, 53, 69, 0.9);
+    border: none;
+    color: white;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Map modal */
+#leafletMap {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .wizard-progress {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .wizard-step:not(:last-child)::after {
+        display: none;
+    }
+    
+    .wizard-step .step-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.5rem;
+    }
+}
+
+/* Form validation styles */
+.is-invalid {
+    border-color: #dc3545 !important;
+}
+
+.invalid-feedback {
+    display: block;
+}
+
+/* Amenity details input */
+.amenity-details-input {
+    margin-top: 0.5rem;
+    padding-left: 1.5rem;
+}
+
+/* Hours table */
+.table-responsive {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+}
+
+/* Summary styles */
+.list-group-item {
+    border-left: none;
+    border-right: none;
+}
+
+.list-group-item:first-child {
+    border-top: none;
+}
+
+.list-group-item:last-child {
+    border-bottom: none;
+} 

@@ -1,0 +1,151 @@
+{% extends "tours/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block tour_content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-4">{% trans "Activities" %}</h1>
+        <p class="lead">{% trans "Explore exciting activities available in our tours" %}</p>
+    </div>
+</div>
+
+<!-- Activities Grid -->
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for activity in activities %}
+        <div class="col">
+            <div class="card h-100 tour-card">
+                <div class="card-body text-center">
+                    {% if activity.icon %}
+                        <img src="{{ activity.icon.url }}" class="mb-3" alt="{{ activity.name }}"
+                             style="height: 100px; object-fit: contain;">
+                    {% else %}
+                        <i class="fas fa-hiking mb-3" style="font-size: 4rem;"></i>
+                    {% endif %}
+
+                    <h5 class="card-title">{{ activity.name }}</h5>
+                    <p class="card-text text-muted">
+                        <i class="fas fa-route"></i> {{ activity.tours.count }} {% trans "tours available" %}
+                    </p>
+                    <p class="card-text">{{ activity.description }}</p>
+
+                    <!-- Difficulty Level -->
+                    <div class="mb-3">
+                        <h6>{% trans "Difficulty Level" %}</h6>
+                        <div class="progress">
+                            {% with difficulty=activity.get_difficulty_percentage %}
+                                <div class="progress-bar bg-{{ activity.get_difficulty_color }}" 
+                                     role="progressbar" 
+                                     style="width: {{ difficulty }}%"
+                                     aria-valuenow="{{ difficulty }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    {{ activity.get_difficulty_display }}
+                                </div>
+                            {% endwith %}
+                        </div>
+                    </div>
+
+                    <!-- Requirements -->
+                    {% if activity.requirements %}
+                        <div class="mb-3">
+                            <h6>{% trans "Requirements" %}</h6>
+                            <ul class="list-unstyled">
+                                {% for requirement in activity.get_requirements %}
+                                    <li>
+                                        <i class="fas fa-check-circle text-success"></i> {{ requirement }}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <!-- Equipment -->
+                    {% if activity.equipment %}
+                        <div class="mb-3">
+                            <h6>{% trans "Equipment Provided" %}</h6>
+                            <ul class="list-unstyled">
+                                {% for equipment in activity.get_equipment %}
+                                    <li>
+                                        <i class="fas fa-toolbox text-primary"></i> {{ equipment }}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'tours:activity_tours' activity.slug %}" class="btn btn-outline-primary">
+                            {% trans "View Available Tours" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> {% trans "No activities available at the moment." %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="{% trans 'Activity navigation' %}" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                    <i class="fas fa-angle-left"></i>
+                </a>
+            </li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+<!-- Activity Categories -->
+<div class="card mt-4">
+    <div class="card-body">
+        <h4 class="card-title mb-4">{% trans "Activity Categories" %}</h4>
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
+            {% for category in activity_categories %}
+                <div class="col">
+                    <div class="card h-100 text-center">
+                        <div class="card-body">
+                            <i class="fas {{ category.icon }} fa-2x text-primary mb-3"></i>
+                            <h5 class="card-title">{{ category.name }}</h5>
+                            <p class="card-text text-muted">
+                                {{ category.activities.count }} {% trans "activities" %}
+                            </p>
+                            <a href="?category={{ category.slug }}" class="stretched-link"></a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

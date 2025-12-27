@@ -1,0 +1,1212 @@
+{% extends "vehicles/base.html" %}
+{% load i18n %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}{% trans "Create Booking" %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .booking-form-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        min-height: 100vh;
+    }
+
+    .form-section {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        border: 1px solid #e0e0e0;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 3px solid #2c5aa0;
+    }
+
+    .section-header i {
+        font-size: 1.8rem;
+        color: #2c5aa0;
+        margin-right: 1rem;
+    }
+
+    .section-header h3 {
+        margin: 0;
+        color: #2c5aa0;
+        font-weight: 700;
+    }
+
+    .form-floating {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-floating > .form-control,
+    .form-floating > .form-select {
+        height: calc(3.5rem + 2px);
+        padding: 1rem 0.75rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+    }
+
+    .form-floating > .form-control:focus,
+    .form-floating > .form-select:focus {
+        border-color: #2c5aa0;
+        box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+    }
+
+    .vehicle-info-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .vehicle-info-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .vehicle-info-header i {
+        font-size: 2rem;
+        margin-right: 1rem;
+    }
+
+    .vehicle-info-header h4 {
+        margin: 0;
+        font-weight: 700;
+    }
+
+    .vehicle-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .vehicle-detail-item {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        border-radius: 10px;
+        text-align: center;
+    }
+
+    .vehicle-detail-label {
+        font-size: 0.9rem;
+        opacity: 0.8;
+        margin-bottom: 0.5rem;
+    }
+
+    .vehicle-detail-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .price-summary {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .price-amount {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .price-label {
+        font-size: 1rem;
+        opacity: 0.9;
+    }
+
+    .price-total {
+        border-top: 1px solid rgba(255, 255, 255, 0.3);
+        padding-top: 1rem;
+        margin-top: 1rem;
+    }
+
+    .price-amount-total {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .price-label-total {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #2c5aa0, #1e4a8a);
+        color: white;
+        padding: 1rem 2.5rem;
+        border-radius: 50px;
+        border: none;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(44, 90, 160, 0.3);
+        color: white;
+    }
+
+    .btn-cancel {
+        background: linear-gradient(135deg, #6c757d, #495057);
+        color: white;
+        padding: 1rem 2.5rem;
+        border-radius: 50px;
+        border: none;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-cancel:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
+        color: white;
+    }
+
+    .payment-options {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .payment-option {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        border-radius: 8px;
+        background: white;
+        border: 2px solid #e0e0e0;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .payment-option:hover {
+        border-color: #2c5aa0;
+        transform: translateX(5px);
+    }
+
+    .payment-option input[type="radio"] {
+        margin-right: 1rem;
+        transform: scale(1.2);
+    }
+
+    .payment-option-label {
+        flex: 1;
+        font-weight: 600;
+        color: #2c5aa0;
+    }
+
+    .payment-option-description {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+
+    .terms-section {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .terms-section h6 {
+        color: #856404;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .form-check-input:checked {
+        background-color: #2c5aa0;
+        border-color: #2c5aa0;
+    }
+
+    .form-check-input:focus {
+        border-color: #2c5aa0;
+        box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+    }
+
+    /* Styles pour les erreurs de validation */
+    .form-control.is-invalid,
+    .form-select.is-invalid {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+    
+    .form-control.is-invalid:focus,
+    .form-select.is-invalid:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+    
+    .invalid-feedback {
+        display: block;
+        width: 100%;
+        margin-top: 0.25rem;
+        font-size: 0.875em;
+        color: #dc3545;
+    }
+
+    .alert {
+        border-radius: 10px;
+        border: none;
+        padding: 1rem 1.5rem;
+    }
+
+    .alert-danger {
+        background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+        color: white;
+    }
+
+    .alert-info {
+        background: linear-gradient(135deg, #74b9ff, #0984e3);
+        color: white;
+    }
+
+    @media (max-width: 768px) {
+        .booking-form-container {
+            padding: 1rem;
+        }
+        
+        .form-section {
+            padding: 1.5rem;
+        }
+        
+        .vehicle-details {
+            grid-template-columns: 1fr;
+        }
+        
+        .price-amount {
+            font-size: 2rem;
+        }
+    }
+
+    /* Modal Styles */
+    .modal-content {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #2c5aa0, #1e4a8a);
+        color: white;
+        border-radius: 20px 20px 0 0;
+        border-bottom: none;
+        padding: 1.5rem 2rem;
+    }
+
+    .modal-title {
+        font-weight: 700;
+        font-size: 1.3rem;
+    }
+
+    .modal-body {
+        padding: 2rem;
+        background: #f8f9fa;
+    }
+
+    .modal-footer {
+        background: white;
+        border-top: 1px solid #e0e0e0;
+        border-radius: 0 0 20px 20px;
+        padding: 1.5rem 2rem;
+    }
+
+    .confirmation-content {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+
+    .vehicle-summary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .vehicle-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .vehicle-header i {
+        font-size: 1.5rem;
+        margin-right: 1rem;
+    }
+
+    .vehicle-header h6 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.2rem;
+    }
+
+    .vehicle-details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+
+    .section-title {
+        color: #2c5aa0;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e0e0e0;
+    }
+
+    .details-grid,
+    .pricing-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .detail-item,
+    .pricing-item {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 10px;
+        border-left: 4px solid #2c5aa0;
+    }
+
+    .pricing-item.total {
+        background: linear-gradient(135deg, #2c5aa0, #1e4a8a);
+        color: white;
+        border-left-color: #1e4a8a;
+    }
+
+    .label {
+        font-weight: 600;
+        color: #6c757d;
+        display: block;
+        margin-bottom: 0.25rem;
+        font-size: 0.9rem;
+    }
+
+    .value {
+        font-weight: 700;
+        color: #2c5aa0;
+        font-size: 1rem;
+    }
+
+    .pricing-item.total .label,
+    .pricing-item.total .value {
+        color: white;
+    }
+
+    .payment-info {
+        background: #e8f4fd;
+        border-radius: 10px;
+        padding: 1.5rem;
+        border: 2px solid #2c5aa0;
+    }
+
+    .payment-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .payment-item:last-child {
+        margin-bottom: 0;
+        padding-top: 0.5rem;
+        border-top: 1px solid #2c5aa0;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .btn-close {
+        filter: invert(1);
+    }
+
+    .modal-footer .btn {
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+    }
+
+    .modal-footer .btn-primary {
+        background: linear-gradient(135deg, #2c5aa0, #1e4a8a);
+        border: none;
+    }
+
+    .modal-footer .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(44, 90, 160, 0.3);
+    }
+
+    .modal-footer .btn-secondary {
+        background: linear-gradient(135deg, #6c757d, #495057);
+        border: none;
+        color: white;
+    }
+
+    .modal-footer .btn-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="booking-form-container">
+    <div class="section-header mb-4">
+        <i class="fas fa-calendar-plus"></i>
+        <h2 class="mb-0">{% trans "Créer une Réservation" %}</h2>
+    </div>
+
+    <!-- Vehicle Information -->
+    <div class="vehicle-info-card">
+        <div class="vehicle-info-header">
+            <i class="fas fa-car"></i>
+            <h4>{{ vehicle.make }} {{ vehicle.model }} ({{ vehicle.year }})</h4>
+        </div>
+        
+        <div class="vehicle-details">
+            <div class="vehicle-detail-item">
+                <div class="vehicle-detail-label">{% trans "Catégorie" %}</div>
+                <div class="vehicle-detail-value">{{ vehicle.vehicle_category.name }}</div>
+            </div>
+            <div class="vehicle-detail-item">
+                <div class="vehicle-detail-label">{% trans "Transmission" %}</div>
+                <div class="vehicle-detail-value">{{ vehicle.get_transmission_display }}</div>
+            </div>
+            <div class="vehicle-detail-item">
+                <div class="vehicle-detail-label">{% trans "Carburant" %}</div>
+                <div class="vehicle-detail-value">{{ vehicle.get_fuel_type_display }}</div>
+            </div>
+            <div class="vehicle-detail-item">
+                <div class="vehicle-detail-label">{% trans "Passagers" %}</div>
+                <div class="vehicle-detail-value">{{ vehicle.passenger_capacity }}</div>
+            </div>
+        </div>
+        
+        <div class="price-summary">
+            <div class="price-amount">{{ vehicle.daily_rate|floatformat:0 }} FCFA</div>
+            <div class="price-label">{% trans "Prix par jour" %}</div>
+            {% if total_amount %}
+            <div class="price-total mt-2">
+                <div class="price-amount-total">{{ total_amount|floatformat:0 }} FCFA</div>
+                <div class="price-label-total">{% trans "Total estimé" %} ({{ duration_days }} {% trans "jour(s)" %})</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <form method="post" action="{% url 'vehicles:booking_create' vehicle.pk %}" novalidate id="bookingForm">
+        {% csrf_token %}
+        
+        <!-- Hidden fields -->
+        <input type="hidden" name="vehicle" value="{{ vehicle.pk }}" id="debug_vehicle">
+        <input type="hidden" name="customer" value="{{ request.user.pk }}" id="debug_customer">
+        <!-- Debug info -->
+        <div style="display:none;">
+            Vehicle PK: {{ vehicle.pk }}<br>
+            User PK: {{ request.user.pk }}<br>
+            Vehicle: {{ vehicle }}<br>
+            User: {{ request.user }}
+        </div>
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            {% for error in form.non_field_errors %}
+            {{ error }}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Booking Details -->
+        <div class="form-section">
+            <div class="section-header">
+                <i class="fas fa-clock"></i>
+                <h3>{% trans "Détails de la Réservation" %}</h3>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        {{ form.pickup_datetime|add_class:"form-control"|attr:"placeholder: " }}
+                        <label for="{{ form.pickup_datetime.id_for_label }}">
+                            {% trans "Date et heure de prise en charge" %} *
+                        </label>
+                        {% if form.pickup_datetime.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.pickup_datetime.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        {{ form.return_datetime|add_class:"form-control"|attr:"placeholder: " }}
+                        <label for="{{ form.return_datetime.id_for_label }}">
+                            {% trans "Date et heure de retour" %} *
+                        </label>
+                        {% if form.return_datetime.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.return_datetime.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        {{ form.pickup_location|add_class:"form-control"|attr:"placeholder: " }}
+                        <label for="{{ form.pickup_location.id_for_label }}">
+                            {% trans "Lieu de prise en charge" %} *
+                        </label>
+                        {% if form.pickup_location.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.pickup_location.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        {{ form.return_location|add_class:"form-control"|attr:"placeholder: " }}
+                        <label for="{{ form.return_location.id_for_label }}">
+                            {% trans "Lieu de retour" %} *
+                        </label>
+                        {% if form.return_location.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.return_location.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-check form-switch mb-3">
+                {{ form.with_driver }}
+                <label class="form-check-label" for="{{ form.with_driver.id_for_label }}">
+                    {% trans "Avec chauffeur ?" %}
+                </label>
+            </div>
+        </div>
+
+        <!-- Pricing -->
+        <div class="form-section">
+            <div class="section-header">
+                <i class="fas fa-money-bill-wave"></i>
+                <h3>{% trans "Tarification" %}</h3>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-floating mb-3">
+                        {{ form.daily_rate|add_class:"form-control"|attr:"placeholder: " }}
+                        <label for="{{ form.daily_rate.id_for_label }}">
+                            {% trans "Prix journalier" %}
+                        </label>
+                        {% if form.daily_rate.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.daily_rate.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-floating mb-3">
+                        {{ form.driver_fee|add_class:"form-control"|attr:"placeholder: " }}
+                        <label for="{{ form.driver_fee.id_for_label }}">
+                            {% trans "Frais de chauffeur" %}
+                        </label>
+                        {% if form.driver_fee.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.driver_fee.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-floating mb-3">
+                        {{ form.additional_charges|add_class:"form-control"|attr:"placeholder: " }}
+                        <label for="{{ form.additional_charges.id_for_label }}">
+                            {% trans "Charges supplémentaires" %}
+                        </label>
+                        {% if form.additional_charges.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.additional_charges.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Options -->
+        <div class="form-section">
+            <div class="section-header">
+                <i class="fas fa-credit-card"></i>
+                <h3>{% trans "Options de Paiement" %}</h3>
+            </div>
+            
+            <div class="payment-options">
+                <div class="payment-option">
+                    <input type="radio" id="payment_20" name="payment_percentage" value="20" required>
+                    <div>
+                        <div class="payment-option-label">20% - {% trans "Acompte" %}</div>
+                        <div class="payment-option-description">{% trans "Payez 20% maintenant, le reste à la prise en charge" %}</div>
+                    </div>
+                </div>
+                
+                <div class="payment-option">
+                    <input type="radio" id="payment_50" name="payment_percentage" value="50">
+                    <div>
+                        <div class="payment-option-label">50% - {% trans "Paiement partiel" %}</div>
+                        <div class="payment-option-description">{% trans "Payez 50% maintenant, le reste à la prise en charge" %}</div>
+                    </div>
+                </div>
+                
+                <div class="payment-option">
+                    <input type="radio" id="payment_100" name="payment_percentage" value="100">
+                    <div>
+                        <div class="payment-option-label">100% - {% trans "Paiement complet" %}</div>
+                        <div class="payment-option-description">{% trans "Payez la totalité maintenant" %}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Information -->
+        <div class="form-section">
+            <div class="section-header">
+                <i class="fas fa-info-circle"></i>
+                <h3>{% trans "Informations Supplémentaires" %}</h3>
+            </div>
+            
+            <div class="form-floating mb-3">
+                {{ form.notes|add_class:"form-control"|attr:"placeholder: " }}
+                <label for="{{ form.notes.id_for_label }}">
+                    {% trans "Notes spéciales" %}
+                </label>
+                {% if form.notes.errors %}
+                <div class="invalid-feedback d-block">
+                    {{ form.notes.errors }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="terms-section">
+                <h6><i class="fas fa-shield-alt me-2"></i>{% trans "Conditions et Termes" %}</h6>
+                <div class="form-check">
+                    {{ form.terms_accepted }}
+                    <label class="form-check-label" for="{{ form.terms_accepted.id_for_label }}">
+                        {% trans "J'accepte les conditions générales et la politique de confidentialité" %}
+                    </label>
+                    {% if form.terms_accepted.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.terms_accepted.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <a href="{% url 'vehicles:vehicle_detail' vehicle.pk %}" class="btn btn-cancel">
+                <i class="fas fa-arrow-left me-2"></i>{% trans "Annuler" %}
+            </a>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-submit" id="directSubmit">
+                    <i class="fas fa-calendar-check me-2"></i>{% trans "Réserver Maintenant" %}
+                </button>
+                <button type="button" class="btn btn-submit" id="showConfirmationModal">
+                    <i class="fas fa-eye me-2"></i>{% trans "Voir Résumé" %}
+                </button>
+                <button type="button" class="btn btn-info" id="debugForm">
+                    <i class="fas fa-bug me-2"></i>Debug
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmationModalLabel">
+                    <i class="fas fa-clipboard-check text-primary me-2"></i>
+                    {% trans "Confirmation de la Réservation" %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="confirmation-content">
+                    <!-- Vehicle Summary -->
+                    <div class="vehicle-summary mb-4">
+                        <div class="vehicle-header">
+                            <i class="fas fa-car text-primary"></i>
+                            <h6 class="mb-0">{{ vehicle.make }} {{ vehicle.model }} ({{ vehicle.year }})</h6>
+                        </div>
+                        <div class="vehicle-details-grid">
+                            <div class="detail-item">
+                                <span class="label">{% trans "Catégorie" %}:</span>
+                                <span class="value">{{ vehicle.vehicle_category.name }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="label">{% trans "Transmission" %}:</span>
+                                <span class="value">{{ vehicle.get_transmission_display }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="label">{% trans "Passagers" %}:</span>
+                                <span class="value">{{ vehicle.passenger_capacity }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="label">{% trans "Prix/jour" %}:</span>
+                                <span class="value">{{ vehicle.daily_rate|floatformat:0 }} FCFA</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Booking Details -->
+                    <div class="booking-details mb-4">
+                        <h6 class="section-title">
+                            <i class="fas fa-calendar-alt text-success me-2"></i>
+                            {% trans "Détails de la Réservation" %}
+                        </h6>
+                        <div class="details-grid">
+                            <div class="detail-item">
+                                <span class="label">{% trans "Prise en charge" %}:</span>
+                                <span class="value" id="modalPickupDateTime"></span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="label">{% trans "Retour" %}:</span>
+                                <span class="value" id="modalReturnDateTime"></span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="label">{% trans "Lieu de prise en charge" %}:</span>
+                                <span class="value" id="modalPickupLocation"></span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="label">{% trans "Lieu de retour" %}:</span>
+                                <span class="value" id="modalReturnLocation"></span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="label">{% trans "Avec chauffeur" %}:</span>
+                                <span class="value" id="modalWithDriver"></span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="label">{% trans "Durée" %}:</span>
+                                <span class="value" id="modalDuration"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pricing Summary -->
+                    <div class="pricing-summary mb-4">
+                        <h6 class="section-title">
+                            <i class="fas fa-money-bill-wave text-warning me-2"></i>
+                            {% trans "Récapitulatif des Prix" %}
+                        </h6>
+                        <div class="pricing-grid">
+                            <div class="pricing-item">
+                                <span class="label">{% trans "Prix journalier" %}:</span>
+                                <span class="value" id="modalDailyRate"></span>
+                            </div>
+                            <div class="pricing-item">
+                                <span class="label">{% trans "Frais de chauffeur" %}:</span>
+                                <span class="value" id="modalDriverFee"></span>
+                            </div>
+                            <div class="pricing-item">
+                                <span class="label">{% trans "Charges supplémentaires" %}:</span>
+                                <span class="value" id="modalAdditionalCharges"></span>
+                            </div>
+                            <div class="pricing-item total">
+                                <span class="label">{% trans "Total" %}:</span>
+                                <span class="value" id="modalTotalAmount"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Summary -->
+                    <div class="payment-summary">
+                        <h6 class="section-title">
+                            <i class="fas fa-credit-card text-info me-2"></i>
+                            {% trans "Paiement" %}
+                        </h6>
+                        <div class="payment-info">
+                            <div class="payment-item">
+                                <span class="label">{% trans "Option choisie" %}:</span>
+                                <span class="value" id="modalPaymentOption"></span>
+                            </div>
+                            <div class="payment-item">
+                                <span class="label">{% trans "Montant à payer maintenant" %}:</span>
+                                <span class="value" id="modalAmountToPay"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>{% trans "Annuler" %}
+                </button>
+                <button type="button" class="btn btn-primary" id="confirmBooking">
+                    <i class="fas fa-check me-2"></i>{% trans "Confirmer la Réservation" %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    flatpickr('input[type="datetime-local"]', {
+        enableTime: true,
+        dateFormat: "Y-m-d H:i",
+        minDate: "today",
+        time_24hr: true,
+        locale: "fr"
+    });
+
+    // Payment option selection
+    document.querySelectorAll('.payment-option').forEach(option => {
+        option.addEventListener('click', function() {
+            const radio = this.querySelector('input[type="radio"]');
+            radio.checked = true;
+            
+            // Remove active class from all options
+            document.querySelectorAll('.payment-option').forEach(opt => {
+                opt.style.background = 'white';
+                opt.style.borderColor = '#e0e0e0';
+            });
+            
+            // Add active class to selected option
+            this.style.background = '#e8f4fd';
+            this.style.borderColor = '#2c5aa0';
+        });
+    });
+
+    // Form validation for direct submission
+    document.getElementById('bookingForm').addEventListener('submit', function(e) {
+        if (!validateForm()) {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    // Direct submit button handler
+    document.getElementById('directSubmit').addEventListener('click', function(e) {
+        if (!validateForm()) {
+            e.preventDefault();
+            return false;
+        }
+        // If validation passes, let the form submit naturally
+    });
+
+    // Debug button handler
+    document.getElementById('debugForm').addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('Form data:', new FormData(document.getElementById('bookingForm')));
+        
+        // Log all form field values
+        const formData = {};
+        const form = document.getElementById('bookingForm');
+        const formElements = form.elements;
+        
+        for (let i = 0; i < formElements.length; i++) {
+            const element = formElements[i];
+            if (element.name) {
+                if (element.type === 'checkbox') {
+                    formData[element.name] = element.checked;
+                } else if (element.type === 'radio') {
+                    if (element.checked) {
+                        formData[element.name] = element.value;
+                    }
+                } else {
+                    formData[element.name] = element.value;
+                }
+            }
+        }
+        
+        console.log('Form field values:', formData);
+        
+        // Check specific hidden fields
+        const vehicleField = document.getElementById('debug_vehicle');
+        const customerField = document.getElementById('debug_customer');
+        console.log('Vehicle field element:', vehicleField);
+        console.log('Customer field element:', customerField);
+        console.log('Vehicle field value:', vehicleField ? vehicleField.value : 'NOT FOUND');
+        console.log('Customer field value:', customerField ? customerField.value : 'NOT FOUND');
+        
+        // Check for empty required fields
+        const requiredFields = ['vehicle', 'customer', 'pickup_datetime', 'return_datetime', 'pickup_location', 'return_location'];
+        const emptyFields = requiredFields.filter(field => !formData[field] || formData[field] === '');
+        console.log('Empty required fields:', emptyFields);
+        
+        alert('Check console for form data debug info. Empty fields: ' + emptyFields.join(', '));
+    });
+
+    // Update payment option descriptions when dates change
+    function updatePaymentDescriptions() {
+        const pickupDate = new Date(document.getElementById('id_pickup_datetime').value);
+        const returnDate = new Date(document.getElementById('id_return_datetime').value);
+        
+        if (pickupDate && returnDate && returnDate > pickupDate) {
+            const daysDiff = Math.ceil((returnDate - pickupDate) / (1000 * 60 * 60 * 24));
+            const dailyRate = parseFloat(document.getElementById('id_daily_rate').value) || 0;
+            const driverFee = parseFloat(document.getElementById('id_driver_fee').value) || 0;
+            const additionalCharges = parseFloat(document.getElementById('id_additional_charges').value) || 0;
+            
+            const totalPrice = (dailyRate * daysDiff) + driverFee + additionalCharges;
+            
+            // Update payment option descriptions with calculated amounts
+            const payment20 = document.getElementById('payment_20');
+            const payment50 = document.getElementById('payment_50');
+            const payment100 = document.getElementById('payment_100');
+            
+            if (payment20) {
+                payment20.nextElementSibling.querySelector('.payment-option-description').textContent = 
+                    `Payez ${(totalPrice * 0.2).toFixed(0)} FCFA maintenant, le reste à la prise en charge`;
+            }
+            if (payment50) {
+                payment50.nextElementSibling.querySelector('.payment-option-description').textContent = 
+                    `Payez ${(totalPrice * 0.5).toFixed(0)} FCFA maintenant, le reste à la prise en charge`;
+            }
+            if (payment100) {
+                payment100.nextElementSibling.querySelector('.payment-option-description').textContent = 
+                    `Payez ${totalPrice.toFixed(0)} FCFA maintenant`;
+            }
+        }
+    }
+
+    // Add event listeners for payment description updates
+    ['id_pickup_datetime', 'id_return_datetime', 'id_daily_rate', 'id_driver_fee', 'id_additional_charges'].forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('change', updatePaymentDescriptions);
+        }
+    });
+
+    // Modal functionality
+    const showConfirmationModal = document.getElementById('showConfirmationModal');
+    const modalElement = document.getElementById('confirmationModal');
+    const confirmBooking = document.getElementById('confirmBooking');
+
+    // Initialiser la modal Bootstrap
+    let confirmationModal;
+    if (modalElement && typeof bootstrap !== 'undefined') {
+        confirmationModal = new bootstrap.Modal(modalElement);
+    }
+
+    showConfirmationModal.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Validate form first
+        if (!validateForm()) {
+            return;
+        }
+        
+        // Populate modal with form data
+        populateModal();
+        
+        // Show modal
+        if (confirmationModal) {
+            confirmationModal.show();
+        } else {
+            // Fallback si Bootstrap n'est pas disponible
+            alert('Modal non disponible. Soumission directe du formulaire...');
+            document.getElementById('bookingForm').submit();
+        }
+    });
+
+    confirmBooking.addEventListener('click', function() {
+        // Submit the form
+        document.getElementById('bookingForm').submit();
+    });
+
+    function validateForm() {
+        let hasErrors = false;
+        
+        // Reset previous errors
+        document.querySelectorAll('.is-invalid').forEach(el => {
+            el.classList.remove('is-invalid');
+        });
+        
+        // Validate required fields
+        const requiredFields = [
+            'pickup_datetime',
+            'return_datetime',
+            'pickup_location',
+            'return_location'
+        ];
+        
+        requiredFields.forEach(fieldName => {
+            const field = document.getElementById(`id_${fieldName}`);
+            if (!field || !field.value.trim()) {
+                if (field) field.classList.add('is-invalid');
+                hasErrors = true;
+            }
+        });
+        
+        // Validate payment percentage
+        const paymentPercentage = document.querySelector('input[name="payment_percentage"]:checked');
+        if (!paymentPercentage) {
+            const paymentOptions = document.querySelector('.payment-options');
+            if (paymentOptions) {
+                paymentOptions.style.border = '2px solid #dc3545';
+            }
+            hasErrors = true;
+        } else {
+            const paymentOptions = document.querySelector('.payment-options');
+            if (paymentOptions) {
+                paymentOptions.style.border = '';
+            }
+        }
+        
+        // Validate terms acceptance
+        const termsAccepted = document.getElementById('id_terms_accepted');
+        if (!termsAccepted || !termsAccepted.checked) {
+            if (termsAccepted) termsAccepted.classList.add('is-invalid');
+            hasErrors = true;
+        }
+        
+        // Validate dates
+        const pickupDateTime = document.getElementById('id_pickup_datetime');
+        const returnDateTime = document.getElementById('id_return_datetime');
+        
+        if (pickupDateTime && returnDateTime && pickupDateTime.value && returnDateTime.value) {
+            const pickupDate = new Date(pickupDateTime.value);
+            const returnDate = new Date(returnDateTime.value);
+            
+            if (returnDate <= pickupDate) {
+                returnDateTime.classList.add('is-invalid');
+                hasErrors = true;
+            }
+        }
+        
+        if (hasErrors) {
+            alert('{% trans "Veuillez corriger les erreurs dans le formulaire." %}');
+            return false;
+        }
+        
+        return true;
+    }
+
+    function populateModal() {
+        // Get form values
+        const pickupDateTime = document.getElementById('id_pickup_datetime').value;
+        const returnDateTime = document.getElementById('id_return_datetime').value;
+        const pickupLocation = document.getElementById('id_pickup_location').value;
+        const returnLocation = document.getElementById('id_return_location').value;
+        const withDriver = document.getElementById('id_with_driver').checked;
+        const dailyRate = parseFloat(document.getElementById('id_daily_rate').value) || 0;
+        const driverFee = parseFloat(document.getElementById('id_driver_fee').value) || 0;
+        const additionalCharges = parseFloat(document.getElementById('id_additional_charges').value) || 0;
+        const paymentPercentage = document.querySelector('input[name="payment_percentage"]:checked');
+        
+        // Calculate duration
+        let duration = '';
+        if (pickupDateTime && returnDateTime) {
+            const pickupDate = new Date(pickupDateTime);
+            const returnDate = new Date(returnDateTime);
+            const daysDiff = Math.ceil((returnDate - pickupDate) / (1000 * 60 * 60 * 24));
+            duration = `${daysDiff} jour${daysDiff > 1 ? 's' : ''}`;
+        }
+        
+        // Calculate total
+        let totalAmount = 0;
+        if (pickupDateTime && returnDateTime) {
+            const pickupDate = new Date(pickupDateTime);
+            const returnDate = new Date(returnDateTime);
+            const daysDiff = Math.ceil((returnDate - pickupDate) / (1000 * 60 * 60 * 24));
+            totalAmount = (dailyRate * daysDiff) + driverFee + additionalCharges;
+        }
+        
+        // Calculate amount to pay
+        let amountToPay = 0;
+        let paymentOptionText = '';
+        if (paymentPercentage) {
+            const percentage = parseInt(paymentPercentage.value);
+            amountToPay = (totalAmount * percentage) / 100;
+            
+            if (percentage === 20) {
+                paymentOptionText = '20% - Acompte';
+            } else if (percentage === 50) {
+                paymentOptionText = '50% - Paiement partiel';
+            } else if (percentage === 100) {
+                paymentOptionText = '100% - Paiement complet';
+            }
+        }
+        
+        // Format dates
+        const formatDateTime = (dateTimeStr) => {
+            if (!dateTimeStr) return '';
+            const date = new Date(dateTimeStr);
+            return date.toLocaleString('fr-FR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        };
+        
+        // Populate modal fields
+        document.getElementById('modalPickupDateTime').textContent = formatDateTime(pickupDateTime);
+        document.getElementById('modalReturnDateTime').textContent = formatDateTime(returnDateTime);
+        document.getElementById('modalPickupLocation').textContent = pickupLocation;
+        document.getElementById('modalReturnLocation').textContent = returnLocation;
+        document.getElementById('modalWithDriver').textContent = withDriver ? 'Oui' : 'Non';
+        document.getElementById('modalDuration').textContent = duration;
+        document.getElementById('modalDailyRate').textContent = `${dailyRate.toLocaleString()} FCFA`;
+        document.getElementById('modalDriverFee').textContent = `${driverFee.toLocaleString()} FCFA`;
+        document.getElementById('modalAdditionalCharges').textContent = `${additionalCharges.toLocaleString()} FCFA`;
+        document.getElementById('modalTotalAmount').textContent = `${totalAmount.toLocaleString()} FCFA`;
+        document.getElementById('modalPaymentOption').textContent = paymentOptionText;
+        document.getElementById('modalAmountToPay').textContent = `${amountToPay.toLocaleString()} FCFA`;
+    }
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Demandes de permissions reçues" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-inbox me-2"></i>{% translate "Demandes de permissions reçues" %}
+                    </h1>
+                    <p class="text-muted mb-0">{% translate "Gérez les demandes d'accès à vos établissements" %}</p>
+                </div>
+                <a href="{% url 'business:my_permissions' %}" class="btn btn-outline-secondary mt-2 mt-md-0">
+                    <i class="fas fa-arrow-left"></i> {% translate "Retour à mes permissions" %}
+                </a>
+            </div>
+
+            <!-- Résumé Statistiques -->
+            <div class="row mb-4 g-3">
+                <div class="col-md-4">
+                    <div class="card border-primary shadow-sm">
+                        <div class="card-body text-center">
+                            <h5 class="card-title mb-1"><i class="fas fa-inbox text-primary"></i> {% translate "Total demandes" %}</h5>
+                            <span class="display-6 fw-bold">{{ all_requests.paginator.count }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-warning shadow-sm">
+                        <div class="card-body text-center">
+                            <h5 class="card-title mb-1"><i class="fas fa-hourglass-half text-warning"></i> {% translate "En attente" %}</h5>
+                            <span class="display-6 fw-bold text-warning">{{ requests|length }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-success shadow-sm">
+                        <div class="card-body text-center">
+                            <h5 class="card-title mb-1"><i class="fas fa-check-circle text-success"></i> {% translate "Traitées" %}</h5>
+                            <span class="display-6 fw-bold text-success">{{ all_requests.paginator.count|add:"-"|add:requests|length }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtres avancés -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label for="status" class="form-label">{% translate "Statut" %}</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="">{% translate "Tous" %}</option>
+                                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>{% translate "En attente" %}</option>
+                                <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>{% translate "Approuvées" %}</option>
+                                <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>{% translate "Rejetées" %}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-filter"></i> {% translate "Filtrer" %}
+                            </button>
+                            <a href="{% url 'business:permission_request_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> {% translate "Effacer" %}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Liste des demandes -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>{% translate "Demandes reçues" %}
+                        <span class="badge bg-primary ms-2">{{ all_requests.paginator.count }}</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if all_requests %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% translate "Établissement" %}</th>
+                                    <th>{% translate "Demandeur" %}</th>
+                                    <th>{% translate "Permission demandée" %}</th>
+                                    <th>{% translate "Expiration souhaitée" %}</th>
+                                    <th>{% translate "Statut" %}</th>
+                                    <th>{% translate "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for req in all_requests %}
+                                <tr {% if req.status == 'pending' %}class="table-warning"{% elif req.status == 'approved' %}class="table-success"{% elif req.status == 'rejected' %}class="table-danger"{% endif %}>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                                <i class="fas fa-building"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0">{{ req.business_location.name }}</h6>
+                                                <small class="text-muted">{{ req.business_location.business.name }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0">{{ req.requester.get_full_name|default:req.requester.username }}</h6>
+                                                <small class="text-muted">{{ req.requester.email }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ req.get_permission_type_display }}</span>
+                                    </td>
+                                    <td>
+                                        {% if req.requested_expires_at %}
+                                            <small class="text-muted">{{ req.requested_expires_at|date:"d/m/Y H:i" }}</small>
+                                        {% else %}
+                                            <span class="badge bg-success">{% translate "Permanente" %}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if req.status == 'pending' %}
+                                            <span class="badge bg-warning text-dark">{% translate "En attente" %}</span>
+                                        {% elif req.status == 'approved' %}
+                                            <span class="badge bg-success">{% translate "Approuvée" %}</span>
+                                        {% elif req.status == 'rejected' %}
+                                            <span class="badge bg-danger">{% translate "Rejetée" %}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'business:permission_request_detail' req.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> {% translate "Voir / Traiter" %}
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">{% translate "Aucune demande reçue" %}</h5>
+                        <p class="text-muted">{% translate "Aucune demande de permission n'a été reçue pour vos établissements." %}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            {% if all_requests.has_other_pages %}
+            <nav aria-label="{% translate 'Pagination des demandes' %}" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if all_requests.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ all_requests.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in all_requests.paginator.page_range %}
+                    {% if all_requests.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > all_requests.number|add:'-3' and num < all_requests.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if all_requests.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ all_requests.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-control, .form-select {
+    border-radius: 0.375rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.table-warning {
+    background-color: #fff3cd !important;
+}
+.table-success {
+    background-color: #d1e7dd !important;
+}
+.table-danger {
+    background-color: #f8d7da !important;
+}
+</style>
+{% endblock %} 

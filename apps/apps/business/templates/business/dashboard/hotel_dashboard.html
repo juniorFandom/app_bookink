@@ -1,0 +1,475 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Dashboard Hôtel" %} - {{ location.name }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-bg py-4">
+    <div class="container-xxl">
+        <!-- HERO SECTION -->
+        <div class="dashboard-hero mb-4 p-4 rounded-4 shadow-sm d-flex flex-wrap align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <div class="dashboard-hero-icon bg-gradient-primary text-white rounded-3 d-flex align-items-center justify-content-center">
+                    <i class="fas fa-bed fa-2x"></i>
+                </div>
+                <div>
+                    <h1 class="dashboard-title mb-1">{% translate "Dashboard Hôtel" %}</h1>
+                    <div class="text-muted small">{{ location.name }} &mdash; {{ business.name }}</div>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-3 mt-md-0">
+                <a href="{% url 'business:business_detail' business.pk %}" class="btn btn-outline-light dashboard-btn-action">
+                    <i class="fas fa-arrow-left"></i> {% translate "Retour au business" %}
+                </a>
+            </div>
+        </div>
+        <!-- STATS CARDS -->
+        <div class="row g-3 mb-4 dashboard-stats-row">
+            <div class="col-6 col-md-3">
+                <div class="dashboard-stat-card bg-gradient-primary text-white animate-fade-in">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="stat-value">{{ total_rooms }}</div>
+                            <div class="stat-label">{% translate "Chambres" %}</div>
+                        </div>
+                        <i class="fas fa-bed fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="dashboard-stat-card bg-gradient-success text-white animate-fade-in">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="stat-value">{{ total_bookings }}</div>
+                            <div class="stat-label">{% translate "Réservations totales" %}</div>
+                        </div>
+                        <i class="fas fa-calendar-check fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="dashboard-stat-card bg-gradient-info text-white animate-fade-in">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="stat-value">{{ recent_bookings.count }}</div>
+                            <div class="stat-label">{% translate "Réservations récentes" %}</div>
+                        </div>
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="dashboard-stat-card bg-gradient-warning text-dark animate-fade-in">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="stat-value">{{ location.get_business_location_type_display }}</div>
+                            <div class="stat-label">{% translate "Type d'établissement" %}</div>
+                        </div>
+                        <i class="fas fa-hotel fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- SYNTHÈSE FINANCIÈRE -->
+        <div class="row g-3 mb-4">
+            <div class="col-12">
+                <div class="dashboard-section-card p-4">
+                    <div class="d-flex align-items-center mb-3 gap-2">
+                        <i class="fas fa-chart-line text-primary"></i>
+                        <h2 class="h5 mb-0">{% translate "Synthèse du jour" %}</h2>
+                    </div>
+                    <div class="row g-3 mb-2">
+                        <div class="col-6 col-md-4">
+                            <div class="dashboard-finance-card border-primary text-primary">
+                                <div class="finance-label">{% translate "Total du jour" %}</div>
+                                <div class="finance-value">{{ total_day|floatformat:0 }} XAF</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <div class="dashboard-finance-card border-success text-success">
+                                <div class="finance-label">Wallet</div>
+                                <div class="finance-value">{{ total_wallet|floatformat:0 }} XAF</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <div class="dashboard-finance-card border-warning text-warning">
+                                <div class="finance-label">Espèces</div>
+                                <div class="finance-value">{{ total_cash|floatformat:0 }} XAF</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Tables transactions -->
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <div class="dashboard-table-card">
+                                <div class="table-title text-success mb-2">Transactions Wallet du jour</div>
+                                <div class="table-responsive dashboard-table-responsive">
+                                    <table class="table table-sm table-hover align-middle dashboard-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Heure</th>
+                                                <th>Type</th>
+                                                <th>Montant</th>
+                                                <th>Description</th>
+                                                <th>Statut</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% if transactions_wallet %}
+                                                {% for t in transactions_wallet %}
+                                                <tr>
+                                                    <td>{{ t.created_at|date:"H:i" }}</td>
+                                                    <td>{{ t.get_transaction_type_display }}</td>
+                                                    <td>{{ t.amount|floatformat:0 }} XAF</td>
+                                                    <td>{{ t.description }}</td>
+                                                    <td><span class="badge bg-{% if t.status == 'PENDING' %}warning{% elif t.status == 'COMPLETED' %}success{% else %}secondary{% endif %}">{{ t.status }}</span></td>
+                                                </tr>
+                                                {% endfor %}
+                                            {% else %}
+                                                <tr><td colspan="5"><div class="alert alert-info mb-0">Aucune transaction wallet aujourd'hui.</div></td></tr>
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="dashboard-table-card">
+                                <div class="table-title text-warning mb-2">Transactions Espèces du jour</div>
+                                <div class="table-responsive dashboard-table-responsive">
+                                    <table class="table table-sm table-hover align-middle dashboard-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Heure</th>
+                                                <th>Type</th>
+                                                <th>Montant</th>
+                                                <th>Description</th>
+                                                <th>Statut</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% if transactions_cash %}
+                                                {% for t in transactions_cash %}
+                                                <tr>
+                                                    <td>{{ t.created_at|date:"H:i" }}</td>
+                                                    <td>{{ t.get_transaction_type_display }}</td>
+                                                    <td>{{ t.amount|floatformat:0 }} XAF</td>
+                                                    <td>{{ t.description }}</td>
+                                                    <td><span class="badge bg-{% if t.status == 'PENDING' %}warning{% elif t.status == 'COMPLETED' %}success{% else %}secondary{% endif %}">{{ t.status }}</span></td>
+                                                </tr>
+                                                {% endfor %}
+                                            {% else %}
+                                                <tr><td colspan="5"><div class="alert alert-info mb-0">Aucune transaction espèces aujourd'hui.</div></td></tr>
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- TABLEAU TRANSACTIONS DU JOUR -->
+        <div class="row g-3 mb-4">
+            <div class="col-12">
+                <div class="dashboard-section-card p-4">
+                    <div class="d-flex align-items-center mb-3 gap-2">
+                        <i class="fas fa-list text-info"></i>
+                        <h2 class="h5 mb-0">{% translate "Transactions du jour" %}</h2>
+                    </div>
+                    <div class="table-responsive dashboard-table-responsive">
+                        <table class="table table-hover align-middle dashboard-table">
+                            <thead>
+                                <tr>
+                                    <th>{% translate "Heure" %}</th>
+                                    <th>{% translate "Client" %}</th>
+                                    <th>{% translate "Montant" %}</th>
+                                    <th>{% translate "Mode de paiement" %}</th>
+                                    <th>{% translate "Numéro de réservation" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders_detail %}
+                                <tr>
+                                    <td>{{ order.created_at|date:"H:i" }}</td>
+                                    <td>{{ order.customer.get_full_name|default:order.customer.username }}</td>
+                                    <td><span class="fw-bold">{{ order.total_amount|floatformat:0 }} XAF</span></td>
+                                    <td>
+                                        {% if order.payment_method == 'CASH' %}
+                                            <span class="badge bg-warning">{% translate "Espèces" %}</span>
+                                        {% elif order.payment_method == 'WALLET' %}
+                                            <span class="badge bg-success">Wallet</span>
+                                        {% elif order.payment_method == 'MOBILE_MONEY' %}
+                                            <span class="badge bg-info">Mobile Money</span>
+                                        {% elif order.payment_method == 'CARD' %}
+                                            <span class="badge bg-secondary">Carte</span>
+                                        {% else %}
+                                            <span class="badge bg-light text-dark">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ order.booking_number }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="5"><div class="alert alert-info text-center my-4"><i class="fas fa-info-circle me-2"></i> {% translate "Aucune transaction enregistrée aujourd'hui." %}</div></td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- MAIN GRID: CHAMBRES + RÉSERVATIONS RÉCENTES -->
+        <div class="row g-3">
+            <div class="col-lg-8">
+                <div class="dashboard-section-card p-4 mb-4">
+                    <div class="d-flex align-items-center mb-3 gap-2">
+                        <i class="fas fa-bed text-primary"></i>
+                        <h2 class="h5 mb-0">{% translate "Chambres" %}</h2>
+                    </div>
+                    <div class="table-responsive dashboard-table-responsive">
+                        <table class="table table-hover align-middle dashboard-table">
+                            <thead>
+                                <tr>
+                                    <th>{% translate "Numéro" %}</th>
+                                    <th>{% translate "Type" %}</th>
+                                    <th>{% translate "Prix" %}</th>
+                                    <th>{% translate "Statut" %}</th>
+                                    <th>{% translate "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for room in rooms|slice:":5" %}
+                                <tr>
+                                    <td>{{ room.room_number }}</td>
+                                    <td>{{ room.room_type.name }}</td>
+                                    <td>{{ room.price }} XAF</td>
+                                    <td>
+                                        {% if room.is_available %}
+                                            <span class="badge bg-success">{% translate "Disponible" %}</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">{% translate "Occupée" %}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'rooms:room_detail' room.pk %}" class="btn btn-sm btn-outline-info dashboard-btn-action">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="5"><div class="alert alert-info text-center my-4"><i class="fas fa-info-circle me-2"></i> {% translate "Aucune chambre pour le moment." %}</div></td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if rooms.count > 5 %}
+                        <div class="text-center mt-3">
+                            <a href="{% url 'rooms:room_list' %}" class="btn btn-outline-primary dashboard-btn-action">
+                                {% translate "Voir toutes les chambres" %}
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="dashboard-section-card p-4 mb-4">
+                    <div class="d-flex align-items-center mb-3 gap-2">
+                        <i class="fas fa-calendar-check text-success"></i>
+                        <h2 class="h6 mb-0">{% translate "Réservations récentes" %}</h2>
+                    </div>
+                    {% if recent_bookings %}
+                        <div class="list-group dashboard-list-group">
+                            {% for booking in recent_bookings %}
+                            <div class="list-group-item dashboard-list-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-semibold">{{ booking.room.room_number }}</div>
+                                    <div class="small text-muted">{{ booking.customer.get_full_name }}</div>
+                                </div>
+                                <span class="badge bg-{% if booking.status == 'PENDING' %}warning{% elif booking.status == 'CONFIRMED' %}info{% elif booking.status == 'CHECKED_IN' %}success{% else %}secondary{% endif %}">{{ booking.get_status_display }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-calendar-check fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">{% translate "Aucune réservation récente" %}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <!-- ACTIONS RAPIDES -->
+        <div class="row g-3 mb-4">
+            <div class="col-12">
+                <div class="dashboard-section-card p-4">
+                    <div class="d-flex align-items-center mb-3 gap-2">
+                        <i class="fas fa-bolt text-warning"></i>
+                        <h2 class="h6 mb-0">{% translate "Gestion de l'hôtel" %}</h2>
+                    </div>
+                    <div class="row g-3 dashboard-actions-row">
+                        <div class="col-6 col-md-2">
+                            <a href="{% url 'rooms:room_create' location.pk %}" class="btn btn-outline-primary w-100 dashboard-btn-action">
+                                <i class="fas fa-plus mb-2"></i><br>
+                                {% translate "Nouvelle chambre" %}
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <a href="{% url 'rooms:room_list' location.pk %}" class="btn btn-outline-info w-100 dashboard-btn-action">
+                                <i class="fas fa-bed mb-2"></i><br>
+                                {% translate "Gérer chambres" %}
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <a href="{% url 'rooms:room_type_list' location.pk %}" class="btn btn-outline-secondary w-100 dashboard-btn-action">
+                                <i class="fas fa-tags mb-2"></i><br>
+                                {% translate "Types de chambres" %}
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <a href="{% url 'rooms:booking_list' location.pk %}" class="btn btn-outline-success w-100 dashboard-btn-action">
+                                <i class="fas fa-calendar-check mb-2"></i><br>
+                                {% translate "Réservations" %}
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <a href="{% url 'business:location_edit' location.pk %}" class="btn btn-outline-warning w-100 dashboard-btn-action">
+                                <i class="fas fa-edit mb-2"></i><br>
+                                {% translate "Modifier hôtel" %}
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <a href="{% url 'business:location_hours' location.pk %}" class="btn btn-outline-dark w-100 dashboard-btn-action">
+                                <i class="fas fa-clock mb-2"></i><br>
+                                {% translate "Horaires" %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation -->
+<div class="modal fade" id="finalizeTransactionModal" tabindex="-1" aria-labelledby="finalizeTransactionModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="finalizeTransactionModalLabel">Confirmer le paiement en espèces</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Voulez-vous vraiment marquer cette transaction comme payée en espèces&nbsp;?</p>
+        <div id="finalize-transaction-error" class="alert alert-danger d-none"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="button" class="btn btn-success" id="confirmFinalizeTransactionBtn">Terminer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STYLE DASHBOARD HÔTEL -->
+<style>
+.dashboard-bg { background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%); min-height: 100vh; }
+.dashboard-hero { background: linear-gradient(90deg, #f97316 0%, #ea580c 100%); color: #fff; box-shadow: 0 4px 24px rgba(249,115,22,0.08); }
+.dashboard-hero-icon { width: 56px; height: 56px; background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); box-shadow: 0 2px 8px rgba(249,115,22,0.13); }
+.dashboard-title { font-size: 2.1rem; font-weight: 700; letter-spacing: 0.5px; }
+.dashboard-btn-action { transition: background 0.2s, box-shadow 0.2s, transform 0.2s; border-radius: 0.7rem; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+.dashboard-btn-action:hover { background: linear-gradient(90deg, #f97316 0%, #ea580c 100%); color: #fff; transform: translateY(-2px) scale(1.03); box-shadow: 0 6px 24px rgba(249,115,22,0.13); }
+.dashboard-stats-row .dashboard-stat-card { border-radius: 1.1rem; box-shadow: 0 2px 12px rgba(0,0,0,0.07); padding: 1.2rem 1.3rem; min-height: 110px; display: flex; flex-direction: column; justify-content: center; animation: fadeInUp 0.7s; }
+.bg-gradient-primary { background: linear-gradient(90deg, #f97316 0%, #ea580c 100%) !important; }
+.bg-gradient-success { background: linear-gradient(90deg, #10b981 0%, #059669 100%) !important; }
+.bg-gradient-info { background: linear-gradient(90deg, #06b6d4 0%, #0891b2 100%) !important; }
+.bg-gradient-warning { background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%) !important; }
+.dashboard-stat-card .stat-value { font-size: 2.1rem; font-weight: 700; }
+.dashboard-stat-card .stat-label { font-size: 1.1rem; font-weight: 500; opacity: 0.85; }
+.dashboard-section-card { background: #fff; border-radius: 1.1rem; box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+.dashboard-finance-card { border: 2px solid; border-radius: 0.9rem; background: #fff7ed; padding: 1rem 1.2rem; margin-bottom: 0.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.dashboard-finance-card .finance-label { font-size: 1rem; font-weight: 500; }
+.dashboard-finance-card .finance-value { font-size: 1.4rem; font-weight: 700; }
+.dashboard-table-card { background: #fff7ed; border-radius: 0.8rem; box-shadow: 0 1px 4px rgba(0,0,0,0.04); padding: 1rem; }
+.dashboard-table-responsive { border-radius: 0.7rem; overflow: hidden; }
+.dashboard-table th, .dashboard-table td { vertical-align: middle; }
+.dashboard-table th { background: #fed7aa; font-weight: 600; }
+.dashboard-table tr:hover { background: #fdba74; transition: background 0.2s; }
+.dashboard-list-group .dashboard-list-item { border: none; border-radius: 0.7rem; margin-bottom: 0.5rem; background: #fff7ed; box-shadow: 0 1px 4px rgba(0,0,0,0.04); transition: box-shadow 0.2s, background 0.2s; }
+.dashboard-list-group .dashboard-list-item:hover { background: #fdba74; box-shadow: 0 4px 16px rgba(249,115,22,0.09); }
+.dashboard-actions-row .dashboard-btn-action { min-height: 70px; font-size: 1rem; font-weight: 500; }
+@media (max-width: 991px) { .dashboard-hero { flex-direction: column; gap: 1.5rem; } .dashboard-title { font-size: 1.5rem; } }
+@media (max-width: 767px) { .dashboard-stats-row .dashboard-stat-card { min-height: 90px; padding: 0.8rem 0.7rem; } .dashboard-title { font-size: 1.2rem; } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-in { animation: fadeInUp 0.7s; }
+</style>
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+function refreshWalletData() {
+    fetch("{% url 'business:business_location_wallet_api' location.pk %}")
+        .then(response => response.json())
+        .then(data => {
+            // Mettre à jour le solde
+            document.querySelectorAll('.solde-wallet-xaf').forEach(el => {
+                el.textContent = data.solde_wallet.toLocaleString('fr-FR', {maximumFractionDigits: 0}) + ' XAF';
+            });
+            // Mettre à jour la table des transactions
+            let tbody = document.getElementById('wallet-transactions-tbody');
+            if (tbody) {
+                tbody.innerHTML = '';
+                if (data.transactions.length > 0) {
+                    data.transactions.forEach(t => {
+                        let row = `<tr><td>${t.heure}</td><td>${t.type}</td><td>${t.montant.toLocaleString('fr-FR', {maximumFractionDigits: 0})} XAF</td><td>${t.description}</td><td><span class="badge bg-${t.status === 'PENDING' ? 'warning' : t.status === 'COMPLETED' ? 'success' : 'secondary'}">${t.status}</span></td><td><span class="text-muted">-</span></td></tr>`;
+                        tbody.innerHTML += row;
+                    });
+                } else {
+                    tbody.innerHTML = `<tr><td colspan='6'><div class='alert alert-info mb-0'>Aucune transaction wallet aujourd'hui.</div></td></tr>`;
+                }
+            }
+        });
+}
+setInterval(refreshWalletData, 10000); // toutes les 10 secondes
+window.addEventListener('DOMContentLoaded', refreshWalletData);
+
+let transactionToFinalize = null;
+
+// Ouvre la modal au clic sur le bouton
+$(document).on('click', '.finalize-transaction-btn', function() {
+    transactionToFinalize = $(this).data('transaction-id');
+    $('#finalize-transaction-error').addClass('d-none').text('');
+    $('#finalizeTransactionModal').modal('show');
+});
+
+// Confirme la finalisation
+$('#confirmFinalizeTransactionBtn').on('click', function() {
+    if (!transactionToFinalize) return;
+    $.ajax({
+        url: "{% url 'business:finalize_wallet_transaction' %}",
+        type: 'POST',
+        data: {
+            transaction_id: transactionToFinalize,
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        },
+        dataType: 'json',
+        success: function(data) {
+            if (data.success) {
+                $('#finalizeTransactionModal').modal('hide');
+                // Rafraîchir la page ou la section AJAX (ici, on recharge la page pour simplicité)
+                location.reload();
+            } else {
+                $('#finalize-transaction-error').removeClass('d-none').text(data.error || 'Erreur inconnue.');
+            }
+        },
+        error: function(xhr) {
+            let msg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : 'Erreur serveur.';
+            $('#finalize-transaction-error').removeClass('d-none').text(msg);
+        }
+    });
+});
+</script>
+{% endblock %}
+
+{% endblock %} 

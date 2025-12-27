@@ -1,0 +1,954 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    .itinerary-container {
+        min-height: 80vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .map-container {
+        height: 80vh;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .form-container {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        height: fit-content;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .form-title {
+        color: #2c3e50;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        font-size: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #34495e;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 10px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .destination-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .destination-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .destination-name {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .destination-tour {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .destination-day {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .leaflet-popup-content {
+        margin: 0.5rem;
+    }
+
+    .popup-title {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .popup-tour {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .popup-day {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .danger-zone-card {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 8px;
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .business-card {
+        background: #d1edff;
+        border: 1px solid #bee5eb;
+        border-radius: 8px;
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .vote-buttons {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .vote-btn {
+        padding: 0.25rem 0.5rem;
+        border: none;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .vote-btn.like {
+        background: #28a745;
+        color: white;
+    }
+
+    .vote-btn.dislike {
+        background: #dc3545;
+        color: white;
+    }
+
+    .vote-btn:hover {
+        opacity: 0.8;
+    }
+
+    .vote-count {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-left: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="itinerary-container">
+    <div class="container-fluid py-4">
+        <div class="row">
+            <!-- Carte Leaflet à gauche -->
+            <div class="col-lg-8 mb-4">
+                <div class="map-container position-relative" id="itineraryMap">
+                    <!-- Bouton flottant pour signaler une zone dangereuse -->
+                    <button id="reportDangerZoneBtn" class="btn btn-danger position-absolute"
+                        style="top: 30px; right: 40px; z-index: 1000;">
+                        <i class="fas fa-exclamation-triangle me-2"></i> Signaler une zone dangereuse
+                    </button>
+                </div>
+
+                <!-- Modale de signalement de zone dangereuse -->
+                <div class="modal fade" id="dangerZoneModal" tabindex="-1" aria-labelledby="dangerZoneModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <form id="dangerZoneForm" enctype="multipart/form-data">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="dangerZoneModalLabel"><i
+                                            class="fas fa-exclamation-triangle text-danger me-2"></i>Signaler une zone
+                                        dangereuse</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label for="dz-nom" class="form-label">Nom de la zone</label>
+                                        <input type="text" class="form-control" id="dz-nom" name="nom_zone" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="dz-type" class="form-label">Type de danger</label>
+                                        <select class="form-control" id="dz-type" name="type_danger" required>
+                                            <option value="">Choisir…</option>
+                                            <option value="sanitaire">Risque sanitaire</option>
+                                            <option value="naturel">Naturel</option>
+                                            <option value="accident">Accident fréquent</option>
+                                            <option value="criminalite">Criminalité</option>
+                                            <option value="conflit">Conflit</option>
+                                            <option value="autre">Autre</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="dz-description" class="form-label">Description</label>
+                                        <textarea class="form-control" id="dz-description" name="description_danger"
+                                            rows="3" required></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="dz-image" class="form-label">Image (optionnelle)</label>
+                                        <input type="file" class="form-control" id="dz-image" name="image"
+                                            accept="image/*">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Position</label>
+                                        <div class="input-group mb-2">
+                                            <input type="text" class="form-control" id="dz-search-place"
+                                                placeholder="Rechercher un lieu (ville, quartier, ...)"
+                                                autocomplete="off">
+                                            <button type="button" class="btn btn-outline-primary" id="dz-search-btn"><i
+                                                    class="fas fa-search"></i></button>
+                                        </div>
+                                        <div id="dz-map"
+                                            style="height: 400px; border-radius: 8px; margin-bottom: 0.5rem;"></div>
+                                        <div class="d-flex gap-2">
+                                            <input type="number" step="any" class="form-control" id="dz-lat"
+                                                name="latitude" placeholder="Latitude" required>
+                                            <input type="number" step="any" class="form-control" id="dz-lng"
+                                                name="longitude" placeholder="Longitude" required>
+                                        </div>
+                                        <small class="text-muted">Cliquez sur la carte ou recherchez un lieu pour
+                                            choisir la position, ou modifiez les champs manuellement.</small>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Annuler</button>
+                                    <button type="submit" class="btn btn-danger">Envoyer</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulaire à droite -->
+            <div class="col-lg-4">
+                <div class="form-container">
+                    <h3 class="form-title">
+                        <i class="fas fa-route text-primary me-2"></i>
+                        Planifier votre itinéraire
+                    </h3>
+
+                    <form id="itineraryForm">
+                        <div class="form-group">
+                            <label for="destinationInput" class="form-label">
+                                <i class="fas fa-map-marker-alt me-2"></i>
+                                Où souhaitez-vous vous rendre ?
+                            </label>
+                            <input type="text" class="form-control" id="destinationInput"
+                                placeholder="Ex: Douala, Yaoundé, Kribi..." required>
+                        </div>
+
+
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-route me-2"></i>
+                            Calculer l'itinéraire
+                        </button>
+                    </form>
+
+                    <div id="routeInfo" class="mt-3" style="display: none;">
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle me-2"></i>Informations de l'itinéraire</h6>
+                            <div id="routeDetails"></div>
+                        </div>
+                    </div>
+
+                    <div id="routeAlerts" class="mt-3" style="display: none;">
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-exclamation-triangle me-2"></i>Zones dangereuses sur le trajet</h6>
+                            <div id="dangerZonesList"></div>
+                        </div>
+                    </div>
+
+                    <div id="routeBusinesses" class="mt-3" style="display: none;">
+                        <div class="alert alert-success">
+                            <h6><i class="fas fa-store me-2"></i>Établissements sur le trajet</h6>
+                            <div id="businessesList"></div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h5 class="mb-3">
+                        <i class="fas fa-map-pin text-primary me-2"></i>
+                        Destinations disponibles
+                    </h5>
+
+                    <div id="destinationsList">
+                        {% for destination in destinations %}
+                        <div class="destination-card" data-lat="{{ destination.latitude }}"
+                            data-lng="{{ destination.longitude }}" data-name="{{ destination.name }}">
+                            <div class="destination-name">{{ destination.name }}</div>
+                            <div class="destination-tour">{{ destination.tour.name }}</div>
+                            <div class="destination-day">Jour {{ destination.day_number }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    // Fonction utilitaire pour récupérer le CSRF depuis les cookies
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            let cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                let cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Fonction utilitaire pour afficher une notification Bootstrap en haut à droite
+    function showNavbarNotification(message, type) {
+        let notif = document.createElement('div');
+        notif.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-4`;
+        notif.style.zIndex = 2000;
+        notif.innerHTML = `<i class="fas fa-info-circle me-2"></i>${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+        document.body.appendChild(notif);
+        setTimeout(() => { notif.remove(); }, 4000);
+    }
+
+    let dangerZoneModalInstance;
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialiser la carte
+        const map = L.map('itineraryMap').setView([7.3697, 12.3547], 6);
+
+        // Ajouter la couche de tuiles OpenStreetMap
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a> | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            subdomains: 'abcd',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Variables globales
+        let userLocation = null;
+        let routeLayer = null;
+        let userMarker = null;
+        let destinationMarker = null;
+        let dangerZoneMarkers = [];
+        let businessMarkers = [];
+        let zonesData = JSON.parse('{{ zones_data|escapejs }}');
+        console.log('[DEBUG] zonesData:', zonesData);
+        let businessData = JSON.parse('{{ business_data|escapejs }}');
+
+        // --- Mini-carte Leaflet dans la modale ---
+        let dzMap, dzMarker;
+        const dzMapDiv = document.getElementById('dz-map');
+        const dzLat = document.getElementById('dz-lat');
+        const dzLng = document.getElementById('dz-lng');
+        const dzSearchInput = document.getElementById('dz-search-place');
+        const dzSearchBtn = document.getElementById('dz-search-btn');
+        if (dzMapDiv && dzLat && dzLng) {
+            dzMap = L.map('dz-map').setView([7.3697, 12.3547], 6);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a> | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(dzMap);
+            dzMap.on('click', function (e) {
+                dzLat.value = e.latlng.lat.toFixed(6);
+                dzLng.value = e.latlng.lng.toFixed(6);
+                if (dzMarker) dzMap.removeLayer(dzMarker);
+                dzMarker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(dzMap);
+            });
+            // Synchroniser les inputs avec la carte
+            function updateMarkerFromInputs() {
+                const lat = parseFloat(dzLat.value);
+                const lng = parseFloat(dzLng.value);
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    dzMap.setView([lat, lng], 13);
+                    if (dzMarker) dzMap.removeLayer(dzMarker);
+                    dzMarker = L.marker([lat, lng]).addTo(dzMap);
+                }
+            }
+            dzLat.addEventListener('change', updateMarkerFromInputs);
+            dzLng.addEventListener('change', updateMarkerFromInputs);
+            // Préremplir avec la position courante si dispo
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (pos) {
+                    dzLat.value = pos.coords.latitude.toFixed(6);
+                    dzLng.value = pos.coords.longitude.toFixed(6);
+                    updateMarkerFromInputs();
+                });
+            }
+            // Recherche de lieu avec Nominatim
+            if (dzSearchBtn && dzSearchInput) {
+                dzSearchBtn.addEventListener('click', function () {
+                    const query = dzSearchInput.value.trim();
+                    if (!query) return;
+                    dzSearchBtn.disabled = true;
+                    dzSearchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ', Cameroun')}&limit=1`)
+                        .then(res => res.json())
+                        .then(data => {
+                            dzSearchBtn.disabled = false;
+                            dzSearchBtn.innerHTML = '<i class="fas fa-search"></i>';
+                            if (data.length > 0) {
+                                const lat = parseFloat(data[0].lat);
+                                const lng = parseFloat(data[0].lon);
+                                dzLat.value = lat.toFixed(6);
+                                dzLng.value = lng.toFixed(6);
+                                dzMap.setView([lat, lng], 15);
+                                if (dzMarker) dzMap.removeLayer(dzMarker);
+                                dzMarker = L.marker([lat, lng]).addTo(dzMap);
+                            } else {
+                                showNavbarNotification('Lieu non trouvé.', 'danger');
+                            }
+                        })
+                        .catch(() => {
+                            dzSearchBtn.disabled = false;
+                            dzSearchBtn.innerHTML = '<i class="fas fa-search"></i>';
+                            showNavbarNotification('Erreur lors de la recherche.', 'danger');
+                        });
+                });
+            }
+        }
+
+        // Fonction pour obtenir la position actuelle de l'utilisateur
+        function getUserLocation() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    reject('La géolocalisation n\'est pas supportée par ce navigateur.');
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        resolve(userLocation);
+                    },
+                    (error) => {
+                        console.error('Erreur de géolocalisation:', error);
+                        reject('Impossible d\'obtenir votre position actuelle.');
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 300000
+                    }
+                );
+            });
+        }
+
+        // Fonction pour ajouter le marqueur de position utilisateur
+        function addUserMarker() {
+            if (userMarker) {
+                map.removeLayer(userMarker);
+            }
+
+            userMarker = L.marker([userLocation.lat, userLocation.lng], {
+                icon: L.divIcon({
+                    className: 'user-marker',
+                    html: '<div style="background-color: #007bff; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                })
+            }).addTo(map);
+
+            userMarker.bindPopup('<b>Votre position actuelle</b>').openPopup();
+        }
+
+        // Fonction pour ajouter le marqueur de destination
+        function addDestinationMarker(destination) {
+            // Supprimer l'ancien marqueur de destination s'il existe
+            if (destinationMarker) {
+                map.removeLayer(destinationMarker);
+            }
+
+            destinationMarker = L.marker([destination.lat, destination.lng], {
+                icon: L.divIcon({
+                    className: 'destination-marker',
+                    html: '<div style="background-color: #dc3545; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                })
+            }).addTo(map);
+
+            destinationMarker.bindPopup(`<b>Destination: ${destination.name}</b>`);
+        }
+
+        // Fonction pour calculer la distance entre deux points
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Rayon de la Terre en km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        // Fonction pour vérifier si un point est proche d'un itinéraire
+        function isPointNearRoute(pointLat, pointLng, routeGeometry, maxDistance = 2) {
+            // Distance maximale en km pour considérer un point comme "sur le trajet"
+            for (let i = 0; i < routeGeometry.coordinates.length; i++) {
+                const routePoint = routeGeometry.coordinates[i];
+                const distance = calculateDistance(pointLat, pointLng, routePoint[1], routePoint[0]);
+                if (distance <= maxDistance) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Fonction pour ajouter les marqueurs de zones dangereuses sur le trajet (sans supprimer les marqueurs globaux)
+        function addDangerZoneMarkers(routeGeometry) {
+            // Ne supprime plus les dangerZoneMarkers globaux
+            const zonesOnRoute = [];
+            zonesData.forEach(zone => {
+                if (isPointNearRoute(zone.latitude, zone.longitude, routeGeometry)) {
+                    zonesOnRoute.push(zone);
+                }
+            });
+            // Afficher la liste des zones dangereuses sur le trajet
+            displayDangerZones(zonesOnRoute);
+        }
+
+        // Fonction pour ajouter les marqueurs de business locations
+        function addBusinessMarkers(routeGeometry) {
+            // Supprimer les anciens marqueurs
+            businessMarkers.forEach(marker => map.removeLayer(marker));
+            businessMarkers = [];
+
+            const businessesOnRoute = [];
+
+            businessData.forEach(business => {
+                if (isPointNearRoute(business.latitude, business.longitude, routeGeometry)) {
+                    const marker = L.marker([business.latitude, business.longitude], {
+                        icon: L.divIcon({
+                            className: 'business-marker',
+                            html: '<div style="background-color: #28a745; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>',
+                            iconSize: [16, 16],
+                            iconAnchor: [8, 8]
+                        })
+                    }).addTo(map);
+
+                    const verifiedBadge = business.is_verified ? '<span style="color: #28a745;">✓ Vérifié</span>' : '';
+                    const ratingStars = '⭐'.repeat(Math.round(business.rating));
+
+                    marker.bindPopup(`
+                    <div style="min-width: 200px;">
+                        <h6 style="color: #28a745; margin-bottom: 0.5rem;">🏪 ${business.name}</h6>
+                        <p style="margin-bottom: 0.5rem; font-size: 0.9rem;">${business.description}</p>
+                        <p style="margin-bottom: 0.5rem; font-size: 0.8rem;"><strong>Type:</strong> ${business.business_type}</p>
+                        <p style="margin-bottom: 0.5rem; font-size: 0.8rem;"><strong>Note:</strong> ${ratingStars} (${business.rating}/5)</p>
+                        <p style="margin-bottom: 0.5rem; font-size: 0.8rem;">${verifiedBadge}</p>
+                    </div>
+                `);
+
+                    businessMarkers.push(marker);
+                    businessesOnRoute.push(business);
+                }
+            });
+
+            // Afficher la liste des business locations
+            displayBusinesses(businessesOnRoute);
+        }
+
+        // Fonction pour afficher les zones dangereuses
+        function displayDangerZones(zones) {
+            const container = document.getElementById('dangerZonesList');
+            if (zones.length === 0) {
+                container.innerHTML = '<p class="text-muted">Aucune zone dangereuse sur ce trajet.</p>';
+            } else {
+                container.innerHTML = zones.map(zone => `
+                <div class="danger-zone-card">
+                    <strong>${zone.name}</strong><br>
+                    <small>${zone.description}</small><br>
+                    <small><strong>Type:</strong> ${zone.type_danger}</small><br>
+                    <div class="vote-buttons">
+                        <button class="vote-btn like" onclick="voteZone(${zone.id}, 'like', this)">
+                            👍 Like (<span class="like-count">${zone.likes || 0}</span>)
+                        </button>
+                        <button class="vote-btn dislike" onclick="voteZone(${zone.id}, 'dislike', this)">
+                            👎 Dislike (<span class="dislike-count">${zone.dislikes || 0}</span>)
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            }
+            document.getElementById('routeAlerts').style.display = 'block';
+        }
+
+        // Fonction pour afficher les business locations
+        function displayBusinesses(businesses) {
+            const container = document.getElementById('businessesList');
+            if (businesses.length === 0) {
+                container.innerHTML = '<p class="text-muted">Aucun établissement sur ce trajet.</p>';
+            } else {
+                container.innerHTML = businesses.map(business => `
+                <div class="business-card">
+                    <strong>${business.name}</strong>
+                    ${business.is_verified ? ' <span style="color: #28a745;">✓ Vérifié</span>' : ''}<br>
+                    <small>${business.description}</small><br>
+                    <small><strong>Type:</strong> ${business.business_type}</small><br>
+                    <small><strong>Note:</strong> ${'⭐'.repeat(Math.round(business.rating))} (${business.rating}/5)</small>
+                </div>
+            `).join('');
+            }
+            document.getElementById('routeBusinesses').style.display = 'block';
+        }
+
+        // Fonction pour voter sur une zone dangereuse (doit être globale)
+        window.voteZone = function (zoneId, voteType, btn) {
+            console.log('[DEBUG] Vote zone - Zone ID:', zoneId, 'Vote type:', voteType, 'Button:', btn);
+
+            // Désactiver les boutons après vote
+            if (btn) {
+                btn.disabled = true;
+                if (btn.parentNode) {
+                    Array.from(btn.parentNode.querySelectorAll('button')).forEach(b => b.disabled = true);
+                }
+            }
+
+            const requestData = { vote: voteType };
+            console.log('[DEBUG] Données envoyées:', requestData);
+
+            fetch(`/tourist-sites/api/zones/${zoneId}/vote/`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData)
+            })
+                .then(response => {
+                    console.log('[DEBUG] Réponse HTTP:', response.status, response.statusText);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('[DEBUG] Données reçues:', data);
+                    if (data.success) {
+                        // Mettre à jour les compteurs
+                        if (btn && btn.classList.contains('like')) {
+                            btn.querySelector('.like-count').textContent = data.likes;
+                            btn.parentNode.querySelector('.dislike-count').textContent = data.dislikes;
+                        } else if (btn && btn.classList.contains('dislike')) {
+                            btn.querySelector('.dislike-count').textContent = data.dislikes;
+                            btn.parentNode.querySelector('.like-count').textContent = data.likes;
+                        }
+                        showNavbarNotification(data.message || 'Merci pour votre vote !', 'success');
+                    } else {
+                        showNavbarNotification(data.error || 'Erreur lors du vote.', 'danger');
+                    }
+                })
+                .catch((error) => {
+                    console.error('[DEBUG] Erreur fetch:', error);
+                    showNavbarNotification('Erreur lors du vote.', 'danger');
+                });
+        }
+
+        // Fonction pour calculer l'itinéraire
+        async function calculateRoute(destination) {
+            try {
+                // Obtenir la position de l'utilisateur si pas encore obtenue
+                if (!userLocation) {
+                    await getUserLocation();
+                    addUserMarker();
+                }
+
+                // Ajouter le marqueur de destination
+                addDestinationMarker(destination);
+
+                // Utiliser l'API de routage OSRM (Open Source Routing Machine)
+                const transportModeElem = document.getElementById('transportMode');
+                const transportMode = transportModeElem ? transportModeElem.value : 'driving';
+                const profile = transportMode === 'driving' ? 'driving' :
+                    transportMode === 'walking' ? 'foot' :
+                        transportMode === 'bicycling' ? 'cycling' : 'driving';
+
+                const url = `https://router.project-osrm.org/route/v1/${profile}/${userLocation.lng},${userLocation.lat};${destination.lng},${destination.lat}?overview=full&geometries=geojson`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.code === 'Ok' && data.routes.length > 0) {
+                    const route = data.routes[0];
+
+                    // Supprimer l'ancien itinéraire s'il existe
+                    if (routeLayer) {
+                        map.removeLayer(routeLayer);
+                    }
+
+                    // Ajouter le nouvel itinéraire
+                    routeLayer = L.geoJSON(route.geometry, {
+                        style: {
+                            color: '#007bff',
+                            weight: 6,
+                            opacity: 0.8
+                        }
+                    }).addTo(map);
+
+                    // Ajouter les marqueurs de zones dangereuses et business locations
+                    addDangerZoneMarkers(route.geometry);
+                    addBusinessMarkers(route.geometry);
+
+                    // Ajuster la vue pour montrer tout l'itinéraire
+                    map.fitBounds(routeLayer.getBounds(), { padding: [20, 20] });
+
+                    // Afficher les informations de l'itinéraire
+                    const duration = Math.round(route.duration / 60); // en minutes
+                    const distance = Math.round(route.distance / 1000 * 10) / 10; // en km
+
+                    document.getElementById('routeDetails').innerHTML = `
+                    <div class="row">
+                        <div class="col-6">
+                            <strong>Durée:</strong> ${duration} min
+                        </div>
+                        <div class="col-6">
+                            <strong>Distance:</strong> ${distance} km
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <strong>Destination:</strong> ${destination.name}
+                    </div>
+                `;
+                    document.getElementById('routeInfo').style.display = 'block';
+
+                } else {
+                    throw new Error('Impossible de calculer l\'itinéraire');
+                }
+
+            } catch (error) {
+                console.error('Erreur lors du calcul de l\'itinéraire:', error);
+                alert('Erreur lors du calcul de l\'itinéraire. Veuillez réessayer.');
+            }
+        }
+
+        // Gérer la soumission du formulaire
+        document.getElementById('itineraryForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const destinationName = document.getElementById('destinationInput').value.trim();
+            if (!destinationName) {
+                alert('Veuillez saisir une destination.');
+                return;
+            }
+
+            // Rechercher la destination dans les données disponibles
+            const mapData = JSON.parse('{{ map_data|escapejs }}');
+            const destination = mapData.find(d =>
+                d.name.toLowerCase().includes(destinationName.toLowerCase()) ||
+                d.tour_name.toLowerCase().includes(destinationName.toLowerCase())
+            );
+
+            if (destination) {
+                await calculateRoute(destination);
+            } else {
+                // Si la destination n'est pas trouvée, essayer de géocoder
+                try {
+                    const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(destinationName + ', Cameroun')}&limit=1`;
+                    const response = await fetch(geocodeUrl);
+                    const data = await response.json();
+
+                    if (data.length > 0) {
+                        const geocodedDestination = {
+                            name: destinationName,
+                            lat: parseFloat(data[0].lat),
+                            lng: parseFloat(data[0].lon)
+                        };
+                        await calculateRoute(geocodedDestination);
+                    } else {
+                        alert('Destination non trouvée. Veuillez essayer un autre nom.');
+                    }
+                } catch (error) {
+                    alert('Erreur lors de la recherche de la destination.');
+                }
+            }
+        });
+
+        // Ajouter des événements de clic sur les cartes de destinations
+        document.querySelectorAll('.destination-card').forEach(function (card) {
+            card.addEventListener('click', function () {
+                const lat = parseFloat(card.dataset.lat);
+                const lng = parseFloat(card.dataset.lng);
+                const name = card.dataset.name;
+
+                if (lat && lng) {
+                    const destination = { lat, lng, name };
+                    calculateRoute(destination);
+                }
+            });
+        });
+
+        // Demander la permission de géolocalisation au chargement
+        getUserLocation().then(() => {
+            addUserMarker();
+        }).catch((error) => {
+            console.log('Géolocalisation non disponible:', error);
+        });
+
+        // --- OUVERTURE MODALE SIGNALER ZONE DANGEREUSE ---
+        const dangerZoneModalEl = document.getElementById('dangerZoneModal');
+        if (dangerZoneModalEl) {
+            dangerZoneModalInstance = new bootstrap.Modal(dangerZoneModalEl);
+        }
+        const reportBtn = document.getElementById('reportDangerZoneBtn');
+        if (reportBtn && dangerZoneModalInstance) {
+            reportBtn.addEventListener('click', function () {
+                dangerZoneModalInstance.show();
+            });
+        }
+
+        // Envoi AJAX du formulaire
+        const dzForm = document.getElementById('dangerZoneForm');
+        if (dzForm) {
+            dzForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                let formData = new FormData(dzForm);
+                fetch("{% url 'tourist_sites:signaler_zone_dangereuse' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('[DEBUG] Réponse du serveur signalement zone:', data);
+                        if (data.success) {
+                            if (dangerZoneModalInstance) dangerZoneModalInstance.hide();
+                            dzForm.reset();
+                            showNavbarNotification('Votre signalement a bien été pris en compte.', 'success');
+                            addDangerZoneToMapAndList(data.zone);
+                            console.log('[DEBUG] Zone ajoutée sur la carte:', data.zone);
+                        } else {
+                            showNavbarNotification(data.error || 'Erreur lors du signalement.', 'danger');
+                            console.error('[DEBUG] Erreur lors du signalement:', data.error);
+                        }
+                    })
+                    .catch((err) => {
+                        showNavbarNotification('Erreur lors du signalement.', 'danger');
+                        console.error('[DEBUG] Erreur AJAX:', err);
+                    });
+            });
+        }
+
+        // Afficher tous les marqueurs de zones dangereuses dès le chargement
+        zonesData.forEach(zone => {
+            if (zone.latitude && zone.longitude) {
+                const marker = L.marker([zone.latitude, zone.longitude], {
+                    icon: L.divIcon({
+                        className: 'danger-zone-marker',
+                        html: '<div style="background-color: #dc3545; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>',
+                        iconSize: [16, 16],
+                        iconAnchor: [8, 8]
+                    })
+                }).addTo(map);
+                marker.bindPopup(`
+                    <div style="min-width: 200px;">
+                        <h6 style="color: #dc3545; margin-bottom: 0.5rem;">⚠️ ${zone.name}</h6>
+                        <p style="margin-bottom: 0.5rem; font-size: 0.9rem;">${zone.description}</p>
+                        <p style="margin-bottom: 0.5rem; font-size: 0.8rem;"><strong>Type:</strong> ${zone.type_danger}</p>
+                        <div class="vote-buttons">
+                            <button class="vote-btn like" onclick="voteZone(${zone.id}, 'like', this)">👍 Like (<span class="like-count">${zone.likes || 0}</span>)</button>
+                            <button class="vote-btn dislike" onclick="voteZone(${zone.id}, 'dislike', this)">👎 Dislike (<span class="dislike-count">${zone.dislikes || 0}</span>)</button>
+                        </div>
+                    </div>
+                `);
+                dangerZoneMarkers.push(marker);
+            }
+        });
+    });
+
+    // Fonction pour centrer et zoomer sur une zone dangereuse depuis une notification
+    window.focusZone = function (zoneId) {
+        const zone = zonesData.find(z => z.id === zoneId || z.id === parseInt(zoneId));
+        if (zone && map) {
+            map.setView([zone.latitude, zone.longitude], 14);
+            // Ouvre le popup du marqueur correspondant
+            const marker = dangerZoneMarkers.find(m => {
+                const latlng = m.getLatLng();
+                return Math.abs(latlng.lat - zone.latitude) < 1e-5 && Math.abs(latlng.lng - zone.longitude) < 1e-5;
+            });
+            if (marker) marker.openPopup();
+        }
+    }
+
+    // Branche le clic sur les notifications (nécessite jQuery ou vanilla JS)
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.notification-item[data-zone-id]').forEach(function (item) {
+            item.addEventListener('click', function (e) {
+                e.preventDefault();
+                const zoneId = this.getAttribute('data-zone-id');
+                if (zoneId) {
+                    focusZone(zoneId);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

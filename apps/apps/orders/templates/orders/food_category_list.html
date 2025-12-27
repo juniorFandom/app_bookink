@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Food Categories" %}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2 mb-0">{% translate "Food Categories" %}</h1>
+        <a href="{% url 'orders:food_category_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> {% translate "Add Category" %}
+        </a>
+    </div>
+
+    {% if categories %}
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for category in categories %}
+                <div class="col">
+                    <div class="card h-100">
+                        {% if category.image %}
+                            <img src="{{ category.image.url }}" class="card-img-top" alt="{{ category.name }}"
+                                 style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center"
+                                 style="height: 200px;">
+                                <i class="fas fa-utensils fa-3x text-muted"></i>
+                            </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ category.name }}</h5>
+                            {% if category.description %}
+                                <p class="card-text">{{ category.description|truncatewords:30 }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge {% if category.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                    {% if category.is_active %}
+                                        {% translate "Active" %}
+                                    {% else %}
+                                        {% translate "Inactive" %}
+                                    {% endif %}
+                                </span>
+                                <a href="{% url 'orders:food_category_edit' category.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i> {% translate "Edit" %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> {% translate "No food categories found." %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

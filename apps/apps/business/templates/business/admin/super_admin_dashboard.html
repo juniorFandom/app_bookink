@@ -1,0 +1,2311 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Super Administrateur{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #667eea;
+        --secondary-color: #764ba2;
+        --success-color: #48bb78;
+        --warning-color: #ed8936;
+        --danger-color: #f56565;
+        --dark-color: #2d3748;
+        --light-color: #f7fafc;
+        --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --gradient-success: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        --gradient-warning: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+        --gradient-danger: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+    }
+
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .dashboard-header {
+        background: var(--gradient-primary);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .stats-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        border: none;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .stats-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--gradient-primary);
+    }
+
+    .stats-card.success::before {
+        background: var(--gradient-success);
+    }
+
+    .stats-card.warning::before {
+        background: var(--gradient-warning);
+    }
+
+    .stats-card.danger::before {
+        background: var(--gradient-danger);
+    }
+
+    .stats-number {
+        font-size: 3rem;
+        font-weight: 700;
+        color: var(--dark-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .stats-label {
+        font-size: 1.1rem;
+        color: #718096;
+        font-weight: 500;
+    }
+
+    .stats-icon {
+        font-size: 2.5rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+
+    .chart-container {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .recent-activity {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .activity-item {
+        padding: 1rem 0;
+        border-bottom: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+
+    .activity-item:hover {
+        background: #f7fafc;
+        border-radius: 10px;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .approval-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        border-left: 4px solid var(--warning-color);
+    }
+
+    .approval-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-approve {
+        background: var(--gradient-success);
+        border: none;
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-approve:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+    }
+
+    .btn-reject {
+        background: var(--gradient-danger);
+        border: none;
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-reject:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(245, 101, 101, 0.4);
+    }
+
+    .nav-tabs {
+        border: none;
+        margin-bottom: 2rem;
+    }
+
+    .nav-tabs .nav-link {
+        border: none;
+        border-radius: 25px;
+        margin-right: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        color: #718096;
+        transition: all 0.3s ease;
+    }
+
+    .nav-tabs .nav-link.active {
+        background: var(--gradient-primary);
+        color: white;
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .nav-tabs .nav-link:hover {
+        background: #f7fafc;
+        color: var(--primary-color);
+    }
+
+    .fade-in {
+        animation: fadeIn 0.6s ease-in;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .slide-in-left {
+        animation: slideInLeft 0.6s ease-out;
+    }
+
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .pulse {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.05);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .commission-highlight {
+        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+        color: #2d3748;
+        padding: 1rem;
+        border-radius: 15px;
+        text-align: center;
+        font-weight: 700;
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="dashboard-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-4 mb-2">
+                    <i class="fas fa-crown me-3"></i>
+                    Dashboard Administrateur
+                </h1>
+                <p class="lead mb-0">Gestion globale de la plateforme et des commissions</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="commission-highlight">
+                    <i class="fas fa-coins me-2"></i>
+                    Commission du mois: {{ monthly_commission|floatformat:0 }} XAF
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview"
+                type="button" role="tab">
+                <i class="fas fa-chart-line me-2"></i>Vue d'ensemble
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="approvals-tab" data-bs-toggle="tab" data-bs-target="#approvals" type="button"
+                role="tab">
+                <i class="fas fa-check-circle me-2"></i>Approbations
+                {% if pending_approvals > 0 %}
+                <span class="badge bg-warning ms-2 pulse">{{ pending_approvals }}</span>
+                {% endif %}
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="wallet-tab" data-bs-toggle="tab" data-bs-target="#wallet" type="button"
+                role="tab">
+                <i class="fas fa-wallet me-2"></i>Wallet & Commissions
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tourist-sites-tab" data-bs-toggle="tab" data-bs-target="#tourist-sites"
+                type="button" role="tab">
+                <i class="fas fa-map-marker-alt me-2"></i>Sites touristiques
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories" type="button"
+                role="tab">
+                <i class="fas fa-tags me-2"></i>Catégories touristiques
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="zones-dangereuses-tab" data-bs-toggle="tab" data-bs-target="#zones-dangereuses"
+                type="button" role="tab">
+                <i class="fas fa-exclamation-triangle me-2"></i>Zones dangereuses
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="dashboardTabContent">
+        <!-- Overview Tab -->
+        <div class="tab-pane fade show active" id="overview" role="tabpanel">
+            <div class="row fade-in">
+                <!-- Statistiques principales -->
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="stats-card">
+                        <div class="stats-icon">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="stats-number">{{ total_businesses }}</div>
+                        <div class="stats-label">Business Locations</div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="stats-card success">
+                        <div class="stats-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stats-number">{{ total_users }}</div>
+                        <div class="stats-label">Utilisateurs</div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="stats-card warning">
+                        <div class="stats-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stats-number">{{ pending_approvals }}</div>
+                        <div class="stats-label">En attente</div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="stats-card">
+                        <div class="stats-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div class="stats-number">{{ total_monthly_amount|floatformat:0 }}</div>
+                        <div class="stats-label">XAF ce mois</div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="stats-card">
+                        <div class="stats-icon">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <div class="stats-number">{{ total_wallets_balance|floatformat:0 }}</div>
+                        <div class="stats-label">Montant total wallets</div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="stats-card warning">
+                        <div class="stats-icon">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="stats-number">{{ commission_wallets|floatformat:0 }}</div>
+                        <div class="stats-label">5% de commission</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Graphiques -->
+                <div class="col-lg-8 mb-4">
+                    <div class="chart-container">
+                        <h4 class="mb-3">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Activité des 7 derniers jours
+                        </h4>
+                        <canvas id="activityChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Types de business -->
+                <div class="col-lg-4 mb-4">
+                    <div class="chart-container">
+                        <h4 class="mb-3">
+                            <i class="fas fa-pie-chart me-2"></i>
+                            Types de Business
+                        </h4>
+                        <canvas id="businessTypesChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activité récente -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="recent-activity">
+                        <h4 class="mb-3">
+                            <i class="fas fa-history me-2"></i>
+                            Transactions Récentes
+                        </h4>
+                        {% for transaction in recent_transactions %}
+                        <div class="activity-item">
+                            <div class="row align-items-center">
+                                <div class="col-md-3">
+                                    <strong>{{ transaction.reference }}</strong>
+                                </div>
+                                <div class="col-md-3">
+                                    <span class="badge bg-success">{{ transaction.get_transaction_type_display }}</span>
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>{{ transaction.amount|floatformat:0 }} XAF</strong>
+                                </div>
+                                <div class="col-md-3 text-end">
+                                    <small class="text-muted">{{ transaction.created_at|date:"d/m/Y H:i" }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-3x mb-3"></i>
+                            <p>Aucune transaction récente</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approvals Tab -->
+        <div class="tab-pane fade" id="approvals" role="tabpanel">
+            <div class="row slide-in-left">
+                <div class="col-12">
+                    <h3 class="mb-4">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Business Locations en attente d'approbation
+                    </h3>
+
+                    {% for business in pending_businesses %}
+                    <div class="approval-card">
+                        <div class="row align-items-center">
+                            <div class="col-md-4">
+                                <h5 class="mb-1">{{ business.name }}</h5>
+                                <p class="text-muted mb-0">{{ business.business.name }}</p>
+                                <small class="text-muted">Créé le {{ business.created_at|date:"d/m/Y" }}</small>
+                            </div>
+                            <div class="col-md-3">
+                                <span class="badge bg-primary">{{ business.get_business_location_type_display }}</span>
+                                <br>
+                                <small class="text-muted">Propriétaire: {% if business.owner %}{{
+                                    business.owner.get_full_name|default:business.owner.username }}{% else %}Non
+                                    défini{% endif %}</small>
+                            </div>
+                            <div class="col-md-3">
+                                <p class="mb-1"><strong>{{ business.phone }}</strong></p>
+                                <p class="text-muted mb-0">{{ business.email }}</p>
+                            </div>
+                            <div class="col-md-2 text-end">
+                                <button class="btn btn-approve btn-sm mb-2 w-100"
+                                    onclick="approveBusiness({{ business.id }})">
+                                    <i class="fas fa-check me-1"></i>Approuver
+                                </button>
+                                <button class="btn btn-reject btn-sm w-100" onclick="rejectBusiness({{ business.id }})">
+                                    <i class="fas fa-times me-1"></i>Rejeter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-check-circle fa-3x mb-3 text-success"></i>
+                        <h4>Aucune demande d'approbation en attente</h4>
+                        <p>Tous les business locations ont été traités !</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Wallet Tab -->
+        <div class="tab-pane fade" id="wallet" role="tabpanel">
+            <div class="row slide-in-left">
+                <div class="col-12">
+                    <div class="text-center mb-4">
+                        <a href="{% url 'business:super_admin:wallet' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-wallet me-2"></i>
+                            Gérer le Wallet & Commissions
+                        </a>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="stats-card">
+                                <h4>Commission Totale</h4>
+                                <div class="stats-number text-success">{{ monthly_commission|floatformat:0 }}</div>
+                                <div class="stats-label">XAF ce mois</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stats-card">
+                                <h4>Transactions du mois</h4>
+                                <div class="stats-number">{{ total_monthly_amount|floatformat:0 }}</div>
+                                <div class="stats-label">XAF total</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tourist Sites Tab -->
+        <div class="tab-pane fade" id="tourist-sites" role="tabpanel">
+            <div class="row slide-in-left">
+                <div class="col-12">
+                    <h3 class="mb-4">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        Gestion des sites touristiques
+                    </h3>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <a href="{% url 'tourist_sites:sites_map' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-map me-2"></i>Voir sur la carte
+                        </a>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSiteModal">
+                            <i class="fas fa-plus me-2"></i>Ajouter un site
+                        </button>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Nom</th>
+                                            <th>Catégorie</th>
+                                            <th>Statut</th>
+                                            <th>Date d'ajout</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="touristSitesTableBody">
+                                        {% for site in tourist_sites %}
+                                        <tr>
+                                            <td><strong>{{ site.name }}</strong></td>
+                                            <td>
+                                                {% if site.category %}
+                                                <span class="badge bg-info">{{ site.category.name }}</span>
+                                                {% else %}
+                                                -
+                                                {% endif %}
+                                            </td>
+
+                                            <td>
+                                                {% if site.is_active %}
+                                                <span class="badge bg-success">Actif</span>
+                                                {% else %}
+                                                <span class="badge bg-secondary">Inactif</span>
+                                                {% endif %}
+                                            </td>
+                                            <td><small>{{ site.created_at|date:"d/m/Y" }}</small></td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <button class="btn btn-sm btn-outline-warning"
+                                                        data-bs-toggle="modal" data-bs-target="#editSiteModal"
+                                                        data-site-id="{{ site.id }}">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger"
+                                                        onclick="deleteSite({{ site.id }})">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                    {% if site.id and site.id > 0 %}
+                                                    <a href="{% url 'tourist_sites:site_detail' site.id %}"
+                                                        class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted py-4">
+                                                <i class="fas fa-search fa-2x mb-2"></i><br>
+                                                Aucun site touristique trouvé.
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Ajout Site -->
+            <div class="modal fade" id="addSiteModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title fw-bold"><i class="fas fa-plus me-2"></i>Ajouter un site touristique
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form id="addSiteForm">
+                            <div class="modal-body p-4">
+                                <div id="addSiteAlert"></div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="siteName" class="form-label">Nom *</label>
+                                        <input type="text" class="form-control" id="siteName" name="name" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="siteCategory" class="form-label">Catégorie</label>
+                                        <select class="form-select" id="siteCategory" name="category">
+                                            <option value="">Sélectionner une catégorie</option>
+                                            {% for category in categories %}
+                                            <option value="{{ category.id }}">{{ category.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="siteDescription" class="form-label">Description *</label>
+                                    <textarea class="form-control" id="siteDescription" name="description" rows="3"
+                                        required></textarea>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="siteLatitude" class="form-label">Latitude *</label>
+                                        <input type="number" class="form-control" id="siteLatitude" name="latitude"
+                                            step="0.000001" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="siteLongitude" class="form-label">Longitude *</label>
+                                        <input type="number" class="form-control" id="siteLongitude" name="longitude"
+                                            step="0.000001" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Choisir sur la carte</label>
+                                    <div id="addSiteMap" style="height: 250px; border-radius: 10px; overflow: hidden;">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="siteImages" class="form-label">Images</label>
+                                    <input type="file" class="form-control" id="siteImages" name="images"
+                                        accept="image/*" multiple>
+                                    <div class="mt-2" id="siteImagesPreview"
+                                        style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="siteIsActive" name="is_active"
+                                        checked>
+                                    <label class="form-check-label" for="siteIsActive">Site actif</label>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                <button type="submit" class="btn btn-primary" id="addSiteSubmitBtn">
+                                    <span class="spinner-border spinner-border-sm d-none" id="addSiteSpinner"></span>
+                                    <span>Ajouter</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Modification Site (sera rempli dynamiquement) -->
+            <div class="modal fade" id="editSiteModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Modifier le site touristique</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form id="editSiteForm">
+                            <div class="modal-body" id="editSiteModalBody">
+                                <!-- Le contenu du formulaire sera injecté en JS -->
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                <button type="submit" class="btn btn-primary">Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Categories Tab -->
+        <div class="tab-pane fade" id="categories" role="tabpanel">
+            <div class="row slide-in-left">
+                <div class="col-12">
+                    <h3 class="mb-4">
+                        <i class="fas fa-tags me-2"></i>
+                        Gestion des catégories de sites touristiques
+                    </h3>
+                    <div class="d-flex justify-content-end mb-3">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                            <i class="fas fa-plus me-2"></i>Ajouter une catégorie
+                        </button>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Nom</th>
+                                            <th>Description</th>
+                                            <th>Nombre de sites</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="categoriesTableBody">
+                                        {% for category in categories %}
+                                        <tr>
+                                            <td><strong>{{ category.name }}</strong></td>
+                                            <td>{{ category.description|truncatewords:15 }}</td>
+                                            <td><span class="badge bg-primary">{{ category.sites.count }}</span></td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <button class="btn btn-sm btn-outline-warning"
+                                                        data-bs-toggle="modal" data-bs-target="#editCategoryModal"
+                                                        data-category-id="{{ category.id }}">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger"
+                                                        onclick="deleteCategory({{ category.id }})">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted py-4">
+                                                <i class="fas fa-search fa-2x mb-2"></i><br>
+                                                Aucune catégorie trouvée.
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Ajout Catégorie -->
+            <div class="modal fade" id="addCategoryModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title fw-bold"><i class="fas fa-plus me-2"></i>Ajouter une catégorie</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form id="addCategoryForm">
+                            <div class="modal-body p-4">
+                                <div id="addCategoryAlert"></div>
+                                <div class="mb-3">
+                                    <label for="categoryName" class="form-label">Nom *</label>
+                                    <input type="text" class="form-control" id="categoryName" name="name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="categoryDescription" class="form-label">Description</label>
+                                    <textarea class="form-control" id="categoryDescription" name="description"
+                                        rows="3"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                <button type="submit" class="btn btn-primary" id="addCategorySubmitBtn">
+                                    <span class="spinner-border spinner-border-sm d-none"
+                                        id="addCategorySpinner"></span>
+                                    <span>Ajouter</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Modification Catégorie (rempli dynamiquement) -->
+            <div class="modal fade" id="editCategoryModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Modifier la catégorie</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form id="editCategoryForm">
+                            <div class="modal-body" id="editCategoryModalBody">
+                                <!-- Le contenu du formulaire sera injecté en JS -->
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                <button type="submit" class="btn btn-primary">Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Zones Dangereuses Tab -->
+        <div class="tab-pane fade" id="zones-dangereuses" role="tabpanel">
+            <div class="row slide-in-left">
+                <div class="col-12">
+                    <h3 class="mb-4">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Gestion des zones dangereuses
+                    </h3>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <a href="{% url 'tourist_sites:super_admin_zones_dangereuses_list' %}"
+                            class="btn btn-outline-primary">
+                            <i class="fas fa-list me-2"></i>Voir toutes les zones
+                        </a>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-outline-info" data-bs-toggle="modal"
+                                data-bs-target="#zonesStatsModal">
+                                <i class="fas fa-chart-bar me-2"></i>Statistiques détaillées
+                            </button>
+                            <button class="btn btn-outline-warning" data-bs-toggle="modal"
+                                data-bs-target="#zonesFilterModal">
+                                <i class="fas fa-filter me-2"></i>Filtrer
+                            </button>
+                            <button class="btn btn-outline-success" onclick="exportZonesData()">
+                                <i class="fas fa-download me-2"></i>Exporter
+                            </button>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addZoneModal">
+                                <i class="fas fa-plus me-2"></i>Ajouter une zone dangereuse
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Statistiques des zones dangereuses -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="stats-card">
+                                <div class="stats-icon">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="stats-number">{{ total_zones|default:0 }}</div>
+                                <div class="stats-label">Total zones</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stats-card warning">
+                                <div class="stats-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="stats-number">{{ zones_signalees|default:0 }}</div>
+                                <div class="stats-label">Signalées</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stats-card success">
+                                <div class="stats-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="stats-number">{{ zones_verifiees|default:0 }}</div>
+                                <div class="stats-label">Vérifiées</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stats-card danger">
+                                <div class="stats-icon">
+                                    <i class="fas fa-times-circle"></i>
+                                </div>
+                                <div class="stats-number">{{ zones_resolues|default:0 }}</div>
+                                <div class="stats-label">Résolues</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Liste des zones récentes -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">Zones dangereuses récentes</h5>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Zone</th>
+                                            <th>Type de danger</th>
+                                            <th>Statut</th>
+                                            <th>Site concerné</th>
+                                            <th>Date signalement</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="zonesDangereusesTableBody">
+                                        {% for zone in recent_zones|default:"" %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ zone.nom_zone }}</strong>
+                                                <br><small class="text-muted">{{
+                                                    zone.description_danger|truncatewords:10 }}</small>
+                                            </td>
+                                            <td>
+                                                <span
+                                                    class="badge bg-{% if zone.type_danger == 'sanitaire' %}danger{% elif zone.type_danger == 'naturel' %}warning{% elif zone.type_danger == 'accident' %}info{% else %}secondary{% endif %}">
+                                                    {{ zone.get_type_danger_display }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span
+                                                    class="badge bg-{% if zone.statut == 'SIGNALEE' %}warning{% elif zone.statut == 'VERIFIEE' %}info{% elif zone.statut == 'RESOLUE' %}success{% else %}danger{% endif %}">
+                                                    {{ zone.get_statut_display }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if zone.site %}
+                                                <span class="badge bg-primary">{{ zone.site.name }}</span>
+                                                {% else %}
+                                                <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td><small>{{ zone.date_signalement|date:"d/m/Y H:i" }}</small></td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <button class="btn btn-sm btn-outline-primary"
+                                                        onclick="viewZone({{ zone.id_zonedangereuse }})"
+                                                        title="Voir les détails">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-info"
+                                                        onclick="viewZoneImages({{ zone.id_zonedangereuse }})"
+                                                        title="Voir les images">
+                                                        <i class="fas fa-images"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-warning"
+                                                        onclick="editZone({{ zone.id_zonedangereuse }})"
+                                                        title="Modifier">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-success"
+                                                        onclick="validateZone({{ zone.id_zonedangereuse }})"
+                                                        title="Valider">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-secondary"
+                                                        onclick="resolveZone({{ zone.id_zonedangereuse }})"
+                                                        title="Marquer comme résolue">
+                                                        <i class="fas fa-flag-checkered"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger"
+                                                        onclick="deleteZone({{ zone.id_zonedangereuse }})"
+                                                        title="Supprimer">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted py-4">
+                                                <i class="fas fa-shield-alt fa-2x mb-2"></i><br>
+                                                Aucune zone dangereuse signalée.
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Ajout Zone Dangereuse -->
+            <div class="modal fade" id="addZoneModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title fw-bold">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Ajouter une zone dangereuse
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form id="addZoneForm">
+                            <div class="modal-body p-4">
+                                <div id="addZoneAlert"></div>
+
+                                <!-- Champs de gestion du formset (OBLIGATOIRES) -->
+                                <input type="hidden" name="images-TOTAL_FORMS" value="1" id="id_images-TOTAL_FORMS">
+                                <input type="hidden" name="images-INITIAL_FORMS" value="0" id="id_images-INITIAL_FORMS">
+                                <input type="hidden" name="images-MIN_NUM_FORMS" value="0" id="id_images-MIN_NUM_FORMS">
+                                <input type="hidden" name="images-MAX_NUM_FORMS" value="1000"
+                                    id="id_images-MAX_NUM_FORMS">
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="zoneName" class="form-label">Nom de la zone *</label>
+                                        <input type="text" class="form-control" id="zoneName" name="nom_zone" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="zoneType" class="form-label">Type de danger *</label>
+                                        <select class="form-select" id="zoneType" name="type_danger" required>
+                                            <option value="">Sélectionner un type</option>
+                                            <option value="sanitaire">Risque sanitaire</option>
+                                            <option value="naturel">Naturel</option>
+                                            <option value="accident">Accident fréquent</option>
+                                            <option value="criminalite">Criminalité</option>
+                                            <option value="conflit">Conflit</option>
+                                            <option value="autre">Autre</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="zoneDescription" class="form-label">Description du danger *</label>
+                                    <textarea class="form-control" id="zoneDescription" name="description_danger"
+                                        rows="3" required></textarea>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="zoneLatitude" class="form-label">Latitude</label>
+                                        <input type="number" class="form-control" id="zoneLatitude" name="latitude"
+                                            step="0.000001">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="zoneLongitude" class="form-label">Longitude</label>
+                                        <input type="number" class="form-control" id="zoneLongitude" name="longitude"
+                                            step="0.000001">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="zoneSite" class="form-label">Site touristique concerné</label>
+                                    <select class="form-select" id="zoneSite" name="site">
+                                        <option value="">Aucun site spécifique</option>
+                                        {% for site in tourist_sites %}
+                                        <option value="{{ site.id }}">{{ site.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="zoneImages" class="form-label">Images (optionnel)</label>
+                                    <input type="file" class="form-control" id="zoneImages" name="images-0-image"
+                                        accept="image/*" multiple>
+                                    <div class="mt-2" id="zoneImagesPreview"
+                                        style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Choisir sur la carte</label>
+                                    <div id="addZoneMap" style="height: 250px; border-radius: 10px; overflow: hidden;">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                <button type="submit" class="btn btn-danger" id="addZoneSubmitBtn">
+                                    <span class="spinner-border spinner-border-sm d-none" id="addZoneSpinner"></span>
+                                    <span>Ajouter</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Édition Zone Dangereuse -->
+            <div class="modal fade" id="editZoneModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning text-dark">
+                            <h5 class="modal-title fw-bold">
+                                <i class="fas fa-edit me-2"></i>Modifier la zone dangereuse
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form id="editZoneForm">
+                            <div class="modal-body p-4" id="editZoneModalBody">
+                                <!-- Le contenu du formulaire sera injecté dynamiquement en JS -->
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                <button type="submit" class="btn btn-warning">Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de rejet -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Rejeter le Business Location</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="rejectForm">
+                    <div class="mb-3">
+                        <label for="rejectReason" class="form-label">Raison du rejet</label>
+                        <textarea class="form-control" id="rejectReason" rows="3" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger" onclick="confirmReject()">Rejeter</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Statistiques détaillées des zones dangereuses -->
+<div class="modal fade" id="zonesStatsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-chart-bar me-2"></i>Statistiques détaillées des zones dangereuses
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Par type de danger</h6>
+                        <canvas id="zonesTypeChart" width="300" height="200"></canvas>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Par statut</h6>
+                        <canvas id="zonesStatusChart" width="300" height="200"></canvas>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <h6>Évolution mensuelle</h6>
+                        <canvas id="zonesEvolutionChart" width="600" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Filtres des zones dangereuses -->
+<div class="modal fade" id="zonesFilterModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-filter me-2"></i>Filtrer les zones dangereuses
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="zonesFilterForm">
+                    <div class="mb-3">
+                        <label class="form-label">Recherche</label>
+                        <input type="text" class="form-control" name="search"
+                            placeholder="Nom de zone ou description...">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Type de danger</label>
+                        <select class="form-select" name="type_danger">
+                            <option value="">Tous les types</option>
+                            <option value="sanitaire">Risque sanitaire</option>
+                            <option value="naturel">Naturel</option>
+                            <option value="accident">Accident fréquent</option>
+                            <option value="criminalite">Criminalité</option>
+                            <option value="conflit">Conflit</option>
+                            <option value="autre">Autre</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Statut</label>
+                        <select class="form-select" name="statut">
+                            <option value="">Tous les statuts</option>
+                            <option value="SIGNALEE">Signalée</option>
+                            <option value="VERIFIEE">Vérifiée</option>
+                            <option value="RESOLUE">Résolue</option>
+                            <option value="REJETEE">Rejetée</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Site touristique</label>
+                        <select class="form-select" name="site">
+                            <option value="">Tous les sites</option>
+                            {% for site in tourist_sites %}
+                            <option value="{{ site.id }}">{{ site.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Date de début</label>
+                            <input type="date" class="form-control" name="date_debut">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Date de fin</label>
+                            <input type="date" class="form-control" name="date_fin">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-warning" onclick="applyZonesFilter()">
+                    <i class="fas fa-filter me-2"></i>Appliquer les filtres
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de détail d'une zone dangereuse -->
+<div class="modal fade" id="zoneDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Détails de la zone dangereuse
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4" id="zoneDetailContent">
+                <!-- Le contenu sera injecté dynamiquement -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal des images d'une zone dangereuse -->
+<div class="modal fade" id="zoneImagesModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-images me-2"></i>Images de la zone dangereuse
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4" id="zoneImagesContent">
+                <!-- Le contenu sera injecté dynamiquement -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ categories_json|json_script:"categories-data" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    let currentBusinessId = null;
+
+    // Graphique d'activité
+    const activityCtx = document.getElementById('activityChart').getContext('2d');
+    const activityChart = new Chart(activityCtx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_data.dates | safe }},
+    datasets: [{
+        label: 'Nouveaux Business',
+        data: {{ chart_data.business_counts | safe }},
+        borderColor: '#667eea',
+        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+        tension: 0.4
+        }, {
+        label: 'Transactions (k XAF)',
+        data: {{ chart_data.transaction_amounts | safe }}.map(x => x / 1000),
+        borderColor: '#48bb78',
+        backgroundColor: 'rgba(72, 187, 120, 0.1)',
+        tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+            plugins: {
+            legend: {
+                position: 'top',
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+    // Graphique des types de business
+    const businessTypesCtx = document.getElementById('businessTypesChart').getContext('2d');
+    const businessTypesChart = new Chart(businessTypesCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [{% for stat in business_types_stats %}'{{ stat.business_location_type|default:"Autre" }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+    datasets: [{
+        data: [{% for stat in business_types_stats %}{{ stat.count }}{% if not forloop.last %}, {% endif %} {% endfor %}],
+    backgroundColor: [
+        '#667eea',
+        '#48bb78',
+        '#ed8936',
+        '#f56565',
+        '#9f7aea'
+    ]
+        }]
+    },
+    options: {
+        responsive: true,
+            plugins: {
+            legend: {
+                position: 'bottom',
+            }
+        }
+    }
+});
+
+    // Fonctions d'approbation/rejet
+    function approveBusiness(businessId) {
+        if (confirm('Êtes-vous sûr de vouloir approuver ce business location ?')) {
+            fetch(`/business/super-admin/approve/${businessId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    }
+                });
+        }
+    }
+
+    function rejectBusiness(businessId) {
+        currentBusinessId = businessId;
+        $('#rejectModal').modal('show');
+    }
+
+    function confirmReject() {
+        const reason = document.getElementById('rejectReason').value;
+        if (!reason.trim()) {
+            alert('Veuillez indiquer une raison pour le rejet.');
+            return;
+        }
+
+        fetch(`/business/super-admin/reject/${currentBusinessId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `reason=${encodeURIComponent(reason)}`
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    $('#rejectModal').modal('hide');
+                    location.reload();
+                }
+            });
+    }
+
+    // Mise à jour automatique des statistiques
+    setInterval(() => {
+        fetch('/business/super-admin/api/stats/')
+            .then(response => response.json())
+            .then(data => {
+                // Mettre à jour les statistiques en temps réel
+                document.querySelectorAll('.stats-number').forEach((el, index) => {
+                    if (index === 0) el.textContent = data.total_businesses;
+                    if (index === 1) el.textContent = data.total_users;
+                    if (index === 2) el.textContent = data.pending_approvals;
+                    if (index === 3) el.textContent = data.active_businesses;
+                });
+            });
+    }, 30000); // Mise à jour toutes les 30 secondes
+
+    // Soumission du formulaire d'ajout de site
+    $('#addSiteForm').on('submit', function (e) {
+        e.preventDefault();
+        $('#addSiteAlert').html('');
+        const btn = $('#addSiteSubmitBtn');
+        const spinner = $('#addSiteSpinner');
+        btn.prop('disabled', true);
+        spinner.removeClass('d-none');
+        const formData = new FormData(this);
+        fetch('{% url "tourist_sites:super_admin_site_create" %}', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value }
+        })
+            .then(response => response.json())
+            .then(data => {
+                btn.prop('disabled', false);
+                spinner.addClass('d-none');
+                if (data.success) {
+                    $('#addSiteModal').modal('hide');
+                    location.reload();
+                } else {
+                    $('#addSiteAlert').html(`<div class='alert alert-danger'>${data.error || "Erreur lors de l'ajout du site."}</div>`);
+                }
+            })
+            .catch(() => {
+                btn.prop('disabled', false);
+                spinner.addClass('d-none');
+                $('#addSiteAlert').html(`<div class='alert alert-danger'>Erreur réseau.</div>`);
+            });
+    });
+
+    // Fonction pour générer les options de catégories (corrigée)
+    const categories = JSON.parse(document.getElementById('categories-data').textContent);
+    function generateCategoryOptions(selectedCategoryId) {
+        return categories.map(category =>
+            `<option value="${category.id}" ${selectedCategoryId == category.id ? 'selected' : ''}>${category.name}</option>`
+        ).join('');
+    }
+
+    // Pré-remplir le modal de modification
+    $('#editSiteModal').on('show.bs.modal', function (event) {
+        const button = $(event.relatedTarget);
+        const siteId = button.data('site-id');
+        fetch(`/tourist-sites/admin/sites/${siteId}/api/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Générer le formulaire pré-rempli
+                    let html = `
+                        <input type="hidden" name="site_id" value="${data.site.id}">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nom *</label>
+                                <input type="text" class="form-control" name="name" value="${data.site.name}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Catégorie</label>
+                                <select class="form-select" name="category">
+                                    <option value="">Sélectionner une catégorie</option>
+                                    ${generateCategoryOptions(data.site.category_id)}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description *</label>
+                            <textarea class="form-control" name="description" rows="3" required>${data.site.description}</textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Latitude *</label>
+                                <input type="number" class="form-control" id="editSiteLatitude" name="latitude" step="0.000001" value="${data.site.latitude}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Longitude *</label>
+                                <input type="number" class="form-control" id="editSiteLongitude" name="longitude" step="0.000001" value="${data.site.longitude}" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Choisir sur la carte</label>
+                            <div id="editSiteMap" style="height: 250px; border-radius: 10px; overflow: hidden;"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Images</label>
+                            <input type="file" class="form-control" id="editSiteImages" name="images" accept="image/*" multiple>
+                            <div class="mt-2" id="editSiteImagesPreview" style="display: flex; gap: 10px; flex-wrap;"></div>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" name="is_active" id="editSiteIsActive" ${data.site.is_active ? 'checked' : ''}>
+                            <label class="form-check-label" for="editSiteIsActive">Site actif</label>
+                        </div>
+                    `;
+                    $('#editSiteModalBody').html(html);
+
+                    // Initialiser la carte APRÈS injection du HTML
+                    setTimeout(function () {
+                        if (window.editSiteMapInstance) {
+                            window.editSiteMapInstance.remove();
+                        }
+                        const lat = parseFloat($('#editSiteLatitude').val()) || 7.3697;
+                        const lng = parseFloat($('#editSiteLongitude').val()) || 12.3547;
+                        window.editSiteMapInstance = L.map('editSiteMap').setView([lat, lng], 10);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '&copy; OpenStreetMap contributors'
+                        }).addTo(window.editSiteMapInstance);
+                        const marker = L.marker([lat, lng], { draggable: true }).addTo(window.editSiteMapInstance);
+
+                        window.editSiteMapInstance.on('click', function (e) {
+                            marker.setLatLng(e.latlng);
+                            $('#editSiteLatitude').val(e.latlng.lat.toFixed(6));
+                            $('#editSiteLongitude').val(e.latlng.lng.toFixed(6));
+                        });
+                        marker.on('move', function (e) {
+                            $('#editSiteLatitude').val(e.latlng.lat.toFixed(6));
+                            $('#editSiteLongitude').val(e.latlng.lng.toFixed(6));
+                        });
+                        $('#editSiteLatitude, #editSiteLongitude').on('input', function () {
+                            const lat = parseFloat($('#editSiteLatitude').val());
+                            const lng = parseFloat($('#editSiteLongitude').val());
+                            if (!isNaN(lat) && !isNaN(lng)) {
+                                marker.setLatLng([lat, lng]);
+                                window.editSiteMapInstance.setView([lat, lng], window.editSiteMapInstance.getZoom());
+                            }
+                        });
+                        setTimeout(() => { window.editSiteMapInstance.invalidateSize(); }, 200);
+                    }, 100);
+
+                    // Affiche les images existantes (si présentes)
+                    if (data.site.images && data.site.images.length > 0) {
+                        data.site.images.forEach(img => {
+                            $('#editSiteImagesPreview').append(`<img src='${img.url}' style='height:60px; border-radius:8px; box-shadow:0 2px 8px #0001;'>`);
+                        });
+                    }
+
+                    // Aperçu des images sélectionnées
+                    $('#editSiteImages').on('change', function () {
+                        const preview = $('#editSiteImagesPreview');
+                        preview.html('');
+                        const files = this.files;
+                        if (files) {
+                            Array.from(files).forEach(file => {
+                                if (file.type.startsWith('image/')) {
+                                    const reader = new FileReader();
+                                    reader.onload = function (e) {
+                                        preview.append(`<img src='${e.target.result}' style='height:60px; border-radius:8px; box-shadow:0 2px 8px #0001;'>`);
+                                    };
+                                    reader.readAsDataURL(file);
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    $('#editSiteModalBody').html('<div class="alert alert-danger">Erreur lors du chargement des données.</div>');
+                }
+            });
+    });
+
+    // Supprime l'initialisation de la carte dans 'shown.bs.modal' (inutile désormais)
+    $('#editSiteModal').on('hidden.bs.modal', function () {
+        if (window.editSiteMapInstance) {
+            window.editSiteMapInstance.remove();
+            window.editSiteMapInstance = null;
+        }
+    });
+
+    // Soumission du formulaire de modification
+    $('#editSiteForm').on('submit', function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const siteId = formData.get('site_id');
+        fetch(`/tourist-sites/admin/sites/${siteId}/edit/`, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    $('#editSiteModal').modal('hide');
+                    location.reload();
+                } else {
+                    alert(data.error || 'Erreur lors de la modification.');
+                }
+            });
+    });
+
+    // Suppression d'un site
+    function deleteSite(siteId) {
+        if (confirm('Êtes-vous sûr de vouloir supprimer ce site touristique ?')) {
+            fetch(`/ tourist - sites / admin / sites / ${siteId} / delete/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.error || 'Erreur lors de la suppression.');
+                    }
+                });
+        }
+    }
+
+    // Suppression d'une catégorie
+    function deleteCategory(categoryId) {
+        if (confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) {
+            fetch(`/tourist-sites/admin/categories/${categoryId}/delete/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.error || 'Erreur lors de la suppression.');
+                    }
+                });
+        }
+    }
+
+    // Carte Leaflet dans la modal d'ajout de site
+    let addSiteMap, addSiteMarker;
+    $('#addSiteModal').on('shown.bs.modal', function () {
+        if (!addSiteMap) {
+            addSiteMap = L.map('addSiteMap').setView([7.3697, 12.3547], 6); // Cameroun par défaut
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(addSiteMap);
+            addSiteMarker = L.marker([7.3697, 12.3547], { draggable: true }).addTo(addSiteMap);
+            // Quand on clique sur la carte
+            addSiteMap.on('click', function (e) {
+                const { lat, lng } = e.latlng;
+                addSiteMarker.setLatLng([lat, lng]);
+                $('#siteLatitude').val(lat.toFixed(6));
+                $('#siteLongitude').val(lng.toFixed(6));
+            });
+            // Quand on déplace le marqueur
+            addSiteMarker.on('move', function (e) {
+                const { lat, lng } = e.latlng;
+                $('#siteLatitude').val(lat.toFixed(6));
+                $('#siteLongitude').val(lng.toFixed(6));
+            });
+            // Quand on modifie les champs à la main
+            $('#siteLatitude, #siteLongitude').on('input', function () {
+                const lat = parseFloat($('#siteLatitude').val());
+                const lng = parseFloat($('#siteLongitude').val());
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    addSiteMarker.setLatLng([lat, lng]);
+                    addSiteMap.setView([lat, lng], addSiteMap.getZoom());
+                }
+            });
+        } else {
+            setTimeout(() => { addSiteMap.invalidateSize(); }, 200);
+        }
+    });
+    $('#addSiteModal').on('hidden.bs.modal', function () {
+        // Optionnel : reset la carte ou les champs si besoin
+    });
+
+    // --- AJOUT CATÉGORIE ---
+    $('#addCategoryForm').on('submit', function (e) {
+        e.preventDefault();
+        $('#addCategoryAlert').html('');
+        const btn = $('#addCategorySubmitBtn');
+        const spinner = $('#addCategorySpinner');
+        btn.prop('disabled', true);
+        spinner.removeClass('d-none');
+        const formData = new FormData(this);
+        formData.append('add_category', 'true');
+        fetch('{% url "tourist_sites:super_admin_categories_list" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+            .then(response => {
+                btn.prop('disabled', false);
+                spinner.addClass('d-none');
+                if (response.redirected) {
+                    location.reload();
+                } else {
+                    return response.json();
+                }
+            })
+            .then(data => {
+                if (data && data.success) {
+                    $('#addCategoryModal').modal('hide');
+                    location.reload();
+                } else if (data && data.error) {
+                    $('#addCategoryAlert').html(`<div class='alert alert-danger'>${data.error}</div>`);
+                }
+            })
+            .catch(() => {
+                btn.prop('disabled', false);
+                spinner.addClass('d-none');
+                $('#addCategoryAlert').html(`<div class='alert alert-danger'>Erreur réseau.</div>`);
+            });
+    });
+
+    // Aperçu des images sélectionnées
+    $('#siteImages').on('change', function () {
+        const preview = $('#siteImagesPreview');
+        preview.html('');
+        const files = this.files;
+        if (files) {
+            Array.from(files).forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        preview.append(`<img src='${e.target.result}' style='height:60px; border-radius:8px; box-shadow:0 2px 8px #0001;'>`);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    });
+
+    // Ouvrir la modale de modification de catégorie
+    $('#editCategoryModal').on('show.bs.modal', function (event) {
+        const button = $(event.relatedTarget);
+        const categoryId = button.data('category-id');
+        fetch(`/tourist-sites/admin/categories/${categoryId}/api/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    let html = `
+                        <input type="hidden" name="category_id" value="${data.category.id}">
+                        <div class="mb-3">
+                            <label class="form-label">Nom *</label>
+                            <input type="text" class="form-control" name="name" value="${data.category.name}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="3">${data.category.description || ''}</textarea>
+                        </div>
+                    `;
+                    $('#editCategoryModalBody').html(html);
+                } else {
+                    $('#editCategoryModalBody').html('<div class="alert alert-danger">Erreur lors du chargement des données.</div>');
+                }
+            });
+    });
+
+    // Soumission du formulaire de modification de catégorie
+    $('#editCategoryForm').on('submit', function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const categoryId = formData.get('category_id');
+        fetch(`/tourist-sites/admin/categories/${categoryId}/edit/`, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    $('#editCategoryModal').modal('hide');
+                    location.reload();
+                } else {
+                    alert(data.error || 'Erreur lors de la modification.');
+                }
+            });
+    });
+
+    // --- GESTION DES ZONES DANGEREUSES ---
+
+    // Soumission du formulaire d'ajout de zone dangereuse
+    $('#addZoneForm').on('submit', function (e) {
+        e.preventDefault();
+        $('#addZoneAlert').html('');
+        const btn = $('#addZoneSubmitBtn');
+        const spinner = $('#addZoneSpinner');
+        btn.prop('disabled', true);
+        spinner.removeClass('d-none');
+        const formData = new FormData(this);
+        fetch('{% url "tourist_sites:super_admin_zones_dangereuses_create" %}', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value }
+        })
+            .then(response => response.json())
+            .then(data => {
+                btn.prop('disabled', false);
+                spinner.addClass('d-none');
+                if (data.success) {
+                    $('#addZoneModal').modal('hide');
+                    location.reload();
+                } else {
+                    let errorMsg = data.error || "Erreur lors de l'ajout de la zone dangereuse.";
+                    if (data.errors) {
+                        errorMsg += '<ul>';
+                        for (const [field, msgs] of Object.entries(JSON.parse(data.errors))) {
+                            errorMsg += `<li>${field}: ${msgs.map(m => m.message).join(', ')}</li>`;
+                        }
+                        errorMsg += '</ul>';
+                    }
+                    $('#addZoneAlert').html(`<div class='alert alert-danger'>${errorMsg}</div>`);
+                }
+            })
+            .catch(() => {
+                btn.prop('disabled', false);
+                spinner.addClass('d-none');
+                $('#addZoneAlert').html(`<div class='alert alert-danger'>Erreur réseau.</div>`);
+            });
+    });
+
+    // Aperçu des images pour les zones dangereuses
+    $('#zoneImages').on('change', function () {
+        const preview = $('#zoneImagesPreview');
+        preview.html('');
+        const files = this.files;
+        if (files) {
+            Array.from(files).forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        preview.append(`<img src='${e.target.result}' style='height:60px; border-radius:8px; box-shadow:0 2px 8px #0001;'>`);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    });
+
+    // Fonctions pour les actions sur les zones dangereuses
+    function viewZone(zoneId) {
+        // TODO: Ouvrir modal de détail de zone
+        console.log('Voir zone:', zoneId);
+        alert('Fonctionnalité à implémenter');
+    }
+
+    function editZone(zoneId) {
+        // TODO: Ouvrir modal d'édition de zone
+        console.log('Éditer zone:', zoneId);
+        alert('Fonctionnalité à implémenter');
+    }
+
+    function validateZone(zoneId) {
+        // TODO: Valider une zone (changer statut)
+        console.log('Valider zone:', zoneId);
+        alert('Fonctionnalité à implémenter');
+    }
+
+    // Nouvelles fonctions pour les zones dangereuses
+    function viewZoneImages(zoneId) {
+        fetch(`/tourist-sites/admin/zones-dangereuses/${zoneId}/images/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    let imagesHtml = '';
+                    if (data.images && data.images.length > 0) {
+                        imagesHtml = '<div class="row">';
+                        data.images.forEach(img => {
+                            imagesHtml += `
+                                <div class="col-md-4 mb-3">
+                                    <img src="${img.url}" class="img-fluid rounded" style="max-height: 200px; object-fit: cover;">
+                                </div>
+                            `;
+                        });
+                        imagesHtml += '</div>';
+                    } else {
+                        imagesHtml = '<div class="text-center text-muted"><i class="fas fa-images fa-3x mb-3"></i><p>Aucune image disponible</p></div>';
+                    }
+                    $('#zoneImagesContent').html(imagesHtml);
+                    $('#zoneImagesModal').modal('show');
+                } else {
+                    alert('Erreur lors du chargement des images');
+                }
+            })
+            .catch(() => {
+                alert('Erreur réseau');
+            });
+    }
+
+    function resolveZone(zoneId) {
+        if (confirm('Êtes-vous sûr de vouloir marquer cette zone comme résolue ?')) {
+            fetch(`/tourist-sites/admin/zones-dangereuses/${zoneId}/resolve/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.error || 'Erreur lors de la résolution');
+                    }
+                })
+                .catch(() => {
+                    alert('Erreur réseau');
+                });
+        }
+    }
+
+    function deleteZone(zoneId) {
+        if (confirm('Êtes-vous sûr de vouloir supprimer cette zone dangereuse ? Cette action est irréversible.')) {
+            fetch(`/tourist-sites/admin/zones-dangereuses/${zoneId}/delete/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.error || 'Erreur lors de la suppression');
+                    }
+                })
+                .catch(() => {
+                    alert('Erreur réseau');
+                });
+        }
+    }
+
+    function exportZonesData() {
+        const filters = new FormData(document.getElementById('zonesFilterForm'));
+        const params = new URLSearchParams(filters);
+        window.open(`/tourist-sites/admin/zones-dangereuses/export/?${params.toString()}`, '_blank');
+    }
+
+    function applyZonesFilter() {
+        const formData = new FormData(document.getElementById('zonesFilterForm'));
+        const params = new URLSearchParams(formData);
+        window.location.href = `/tourist-sites/admin/zones-dangereuses/?${params.toString()}`;
+    }
+
+    // Initialisation des graphiques pour les statistiques des zones dangereuses
+    $('#zonesStatsModal').on('shown.bs.modal', function () {
+        // Graphique par type de danger
+        const typeCtx = document.getElementById('zonesTypeChart').getContext('2d');
+        new Chart(typeCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Sanitaire', 'Naturel', 'Accident', 'Criminalité', 'Conflit', 'Autre'],
+                datasets: [{
+                    data: [12, 8, 15, 6, 3, 2],
+                    backgroundColor: ['#f56565', '#ed8936', '#ecc94b', '#48bb78', '#4299e1', '#9f7aea']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+
+        // Graphique par statut
+        const statusCtx = document.getElementById('zonesStatusChart').getContext('2d');
+        new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Signalée', 'Vérifiée', 'Résolue', 'Rejetée'],
+                datasets: [{
+                    data: [20, 15, 8, 2],
+                    backgroundColor: ['#ed8936', '#4299e1', '#48bb78', '#f56565']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+
+        // Graphique d'évolution
+        const evolutionCtx = document.getElementById('zonesEvolutionChart').getContext('2d');
+        new Chart(evolutionCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'],
+                datasets: [{
+                    label: 'Nouvelles zones signalées',
+                    data: [5, 8, 12, 15, 10, 7],
+                    borderColor: '#f56565',
+                    backgroundColor: 'rgba(245, 101, 101, 0.1)',
+                    tension: 0.4
+                }, {
+                    label: 'Zones résolues',
+                    data: [2, 4, 6, 8, 12, 9],
+                    borderColor: '#48bb78',
+                    backgroundColor: 'rgba(72, 187, 120, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    });
+
+    // --- Carte Leaflet dans la modal d'ajout de zone dangereuse ---
+    let addZoneMap, addZoneMarker;
+    $('#addZoneModal').on('shown.bs.modal', function () {
+        if (!addZoneMap) {
+            addZoneMap = L.map('addZoneMap').setView([7.3697, 12.3547], 6); // Cameroun par défaut
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(addZoneMap);
+            addZoneMarker = L.marker([7.3697, 12.3547], { draggable: true }).addTo(addZoneMap);
+            // Quand on clique sur la carte
+            addZoneMap.on('click', function (e) {
+                const { lat, lng } = e.latlng;
+                addZoneMarker.setLatLng([lat, lng]);
+                $('#zoneLatitude').val(lat.toFixed(6));
+                $('#zoneLongitude').val(lng.toFixed(6));
+            });
+            // Quand on déplace le marqueur
+            addZoneMarker.on('move', function (e) {
+                const { lat, lng } = e.latlng;
+                $('#zoneLatitude').val(lat.toFixed(6));
+                $('#zoneLongitude').val(lng.toFixed(6));
+            });
+            // Quand on modifie les champs à la main
+            $('#zoneLatitude, #zoneLongitude').on('input', function () {
+                const lat = parseFloat($('#zoneLatitude').val());
+                const lng = parseFloat($('#zoneLongitude').val());
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    addZoneMarker.setLatLng([lat, lng]);
+                    addZoneMap.setView([lat, lng], addZoneMap.getZoom());
+                }
+            });
+        } else {
+            setTimeout(() => { addZoneMap.invalidateSize(); }, 200);
+        }
+    });
+    $('#addZoneModal').on('hidden.bs.modal', function () {
+        // Optionnel : reset la carte ou les champs si besoin
+    });
+
+    // --- Gestion des images multiples pour le formset ---
+    $('#zoneImages').on('change', function () {
+        const files = this.files;
+        const preview = $('#zoneImagesPreview');
+        preview.html('');
+
+        if (files && files.length > 0) {
+            // Mettre à jour le nombre total de formulaires dans le formset
+            $('#id_images-TOTAL_FORMS').val(files.length);
+
+            // Créer les champs pour chaque image
+            Array.from(files).forEach((file, index) => {
+                if (file.type.startsWith('image/')) {
+                    // Créer un champ caché pour cette image
+                    const inputName = `images-${index}-image`;
+                    const inputId = `id_images-${index}-image`;
+
+                    // Supprimer l'ancien champ s'il existe
+                    $(`#${inputId}`).remove();
+
+                    // Créer le nouveau champ (simplifié)
+                    const newInput = $(`<input type="file" name="${inputName}" id="${inputId}" style="display: none;">`);
+                    $('#addZoneForm').append(newInput);
+
+                    // Aperçu de l'image
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        preview.append(`
+                            <div class="position-relative">
+                                <img src="${e.target.result}" style="height:60px; border-radius:8px; box-shadow:0 2px 8px #0001;">
+                                <small class="d-block text-muted">${file.name}</small>
+                            </div>
+                        `);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        } else {
+            // Reset le formset si aucune image
+            $('#id_images-TOTAL_FORMS').val(1);
+        }
+    });
+
+    // --- Soumission du formulaire d'ajout de zone dangereuse ---
+    $('#addZoneForm').on('submit', function (e) {
+        e.preventDefault();
+        $('#addZoneAlert').html('');
+        const btn = $('#addZoneSubmitBtn');
+        const spinner = $('#addZoneSpinner');
+        btn.prop('disabled', true);
+        spinner.removeClass('d-none');
+
+        const formData = new FormData(this);
+
+        fetch('{% url "tourist_sites:super_admin_zones_dangereuses_create" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                btn.prop('disabled', false);
+                spinner.addClass('d-none');
+
+                if (data.success) {
+                    $('#addZoneModal').modal('hide');
+                    location.reload();
+                } else {
+                    let errorMsg = '';
+                    if (data.error) {
+                        errorMsg += `<div><strong>${data.error}</strong></div>`;
+                    }
+                    if (data.errors) {
+                        errorMsg += '<ul>';
+                        Object.keys(data.errors).forEach(field => {
+                            const errors = JSON.parse(data.errors)[field];
+                            if (errors) {
+                                errors.forEach(error => {
+                                    errorMsg += `<li>${field}: ${error}</li>`;
+                                });
+                            }
+                        });
+                        errorMsg += '</ul>';
+                    }
+                    if (data.formset_errors && data.formset_errors.length > 0) {
+                        errorMsg += '<div><strong>Erreurs dans les images:</strong></div><ul>';
+                        data.formset_errors.forEach(error => {
+                            errorMsg += `<li>${error}</li>`;
+                        });
+                        errorMsg += '</ul>';
+                    }
+
+                    $('#addZoneAlert').html(`
+                    <div class="alert alert-danger">
+                        ${errorMsg || 'Erreur lors de l\'ajout de la zone dangereuse.'}
+                    </div>
+                `);
+                }
+            })
+            .catch(error => {
+                btn.prop('disabled', false);
+                spinner.addClass('d-none');
+                $('#addZoneAlert').html(`
+                <div class="alert alert-danger">
+                    Erreur de connexion: ${error.message}
+                </div>
+            `);
+            });
+    });
+
+    // --- ÉDITION ZONE DANGEREUSE ---
+    $('#editZoneModal').on('show.bs.modal', function (event) {
+        const button = $(event.relatedTarget);
+        const zoneId = button.data('zone-id');
+        fetch(`/tourist-sites/admin/zones-dangereuses/${zoneId}/api/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    let html = `
+                        <input type="hidden" name="zone_id" value="${data.zone.id}">
+                        <div class="mb-3">
+                            <label class="form-label">Nom *</label>
+                            <input type="text" class="form-control" name="nom_zone" value="${data.zone.nom_zone}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Type de danger *</label>
+                            <select class="form-select" name="type_danger">
+                                <option value="">Sélectionner un type</option>
+                                <option value="sanitaire" ${data.zone.type_danger == 'sanitaire' ? 'selected' : ''}>Risque sanitaire</option>
+                                <option value="naturel" ${data.zone.type_danger == 'naturel' ? 'selected' : ''}>Naturel</option>
+                                <option value="accident" ${data.zone.type_danger == 'accident' ? 'selected' : ''}>Accident fréquent</option>
+                                <option value="criminalite" ${data.zone.type_danger == 'criminalite' ? 'selected' : ''}>Criminalité</option>
+                                <option value="conflit" ${data.zone.type_danger == 'conflit' ? 'selected' : ''}>Conflit</option>
+                                <option value="autre" ${data.zone.type_danger == 'autre' ? 'selected' : ''}>Autre</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description du danger *</label>
+                            <textarea class="form-control" name="description_danger" rows="3" required>${data.zone.description_danger}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Latitude</label>
+                            <input type="number" class="form-control" name="latitude" value="${data.zone.latitude}" step="0.000001">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Longitude</label>
+                            <input type="number" class="form-control" name="longitude" value="${data.zone.longitude}" step="0.000001">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Site touristique concerné</label>
+                            <select class="form-select" name="site">
+                                <option value="">Aucun site spécifique</option>
+                                {% for site in tourist_sites %}
+                                <option value="{{ site.id }}" ${site.id == data.zone.site_id ? 'selected' : ''}>{{ site.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Images (optionnel)</label>
+                            <input type="file" class="form-control" name="images" accept="image/*" multiple>
+                            <div class="mt-2" id="editZoneImagesPreview" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Choisir sur la carte</label>
+                            <div id="editZoneMap" style="height: 250px; border-radius: 10px; overflow: hidden;"></div>
+                        </div>
+                    `;
+                    $('#editZoneModalBody').html(html);
+
+                    // Initialiser la carte APRÈS injection du HTML
+                    setTimeout(function () {
+                        if (window.editZoneMapInstance) {
+                            window.editZoneMapInstance.remove();
+                        }
+                        const lat = parseFloat($('#editZoneLatitude').val()) || 7.3697;
+                        const lng = parseFloat($('#editZoneLongitude').val()) || 12.3547;
+                        window.editZoneMapInstance = L.map('editZoneMap').setView([lat, lng], 10);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '&copy; OpenStreetMap contributors'
+                        }).addTo(window.editZoneMapInstance);
+                        const marker = L.marker([lat, lng], { draggable: true }).addTo(window.editZoneMapInstance);
+
+                        window.editZoneMapInstance.on('click', function (e) {
+                            marker.setLatLng(e.latlng);
+                            $('#editZoneLatitude').val(e.latlng.lat.toFixed(6));
+                            $('#editZoneLongitude').val(e.latlng.lng.toFixed(6));
+                        });
+                        marker.on('move', function (e) {
+                            $('#editZoneLatitude').val(e.latlng.lat.toFixed(6));
+                            $('#editZoneLongitude').val(e.latlng.lng.toFixed(6));
+                        });
+                        $('#editZoneLatitude, #editZoneLongitude').on('input', function () {
+                            const lat = parseFloat($('#editZoneLatitude').val());
+                            const lng = parseFloat($('#editZoneLongitude').val());
+                            if (!isNaN(lat) && !isNaN(lng)) {
+                                marker.setLatLng([lat, lng]);
+                                window.editZoneMapInstance.setView([lat, lng], window.editZoneMapInstance.getZoom());
+                            }
+                        });
+                        setTimeout(() => { window.editZoneMapInstance.invalidateSize(); }, 200);
+                    }, 100);
+
+                    // Affiche les images existantes (si présentes)
+                    if (data.zone.images && data.zone.images.length > 0) {
+                        data.zone.images.forEach(img => {
+                            $('#editZoneImagesPreview').append(`<img src='${img.url}' style='height:60px; border-radius:8px; box-shadow:0 2px 8px #0001;'>`);
+                        });
+                    }
+
+                    // Aperçu des images sélectionnées
+                    $('#editZoneImages').on('change', function () {
+                        const preview = $('#editZoneImagesPreview');
+                        preview.html('');
+                        const files = this.files;
+                        if (files) {
+                            Array.from(files).forEach(file => {
+                                if (file.type.startsWith('image/')) {
+                                    const reader = new FileReader();
+                                    reader.onload = function (e) {
+                                        preview.append(`<img src='${e.target.result}' style='height:60px; border-radius:8px; box-shadow:0 2px 8px #0001;'>`);
+                                    };
+                                    reader.readAsDataURL(file);
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    $('#editZoneModalBody').html('<div class="alert alert-danger">Erreur lors du chargement des données.</div>');
+                }
+            });
+    });
+
+    // Supprime l'initialisation de la carte dans 'shown.bs.modal' (inutile désormais)
+    $('#editZoneModal').on('hidden.bs.modal', function () {
+        if (window.editZoneMapInstance) {
+            window.editZoneMapInstance.remove();
+            window.editZoneMapInstance = null;
+        }
+    });
+
+    // Soumission du formulaire de modification
+    $('#editZoneForm').on('submit', function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const zoneId = formData.get('zone_id');
+        fetch(`/tourist-sites/admin/zones-dangereuses/${zoneId}/edit/`, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    $('#editZoneModal').modal('hide');
+                    location.reload();
+                } else {
+                    alert(data.error || 'Erreur lors de la modification.');
+                }
+            });
+    });
+</script>
+{% endblock %}

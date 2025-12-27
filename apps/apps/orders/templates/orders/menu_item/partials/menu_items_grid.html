@@ -1,0 +1,90 @@
+{% load i18n %}
+
+{% if menu_items %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for item in menu_items %}
+            <div class="col">
+                <div class="card h-100 shadow-lg border-0">
+                    {% if item.main_image %}
+                        <img src="{{ item.main_image.url }}" class="card-img-top" alt="{{ item.name }}"
+                             style="height: 220px; object-fit: cover;">
+                    {% else %}
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center"
+                             style="height: 220px;">
+                            <i class="fas fa-hamburger fa-3x text-muted"></i>
+                        </div>
+                    {% endif %}
+
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0">{{ item.name }}</h5>
+                            <span class="badge bg-primary">{{ item.price|floatformat:2 }} XAF</span>
+                        </div>
+
+                        {% if item.description %}
+                            <p class="card-text">{{ item.description|truncatewords:20 }}</p>
+                        {% endif %}
+
+                        {% if item.preparation_time_minutes %}
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    <i class="fas fa-clock"></i>
+                                    {% blocktranslate with time=item.preparation_time_minutes %}
+                                        {{ time }} min preparation
+                                    {% endblocktranslate %}
+                                </small>
+                            </p>
+                        {% endif %}
+
+                        <div class="mb-2">
+                            {% if item.dietary_info %}
+                                {% for info in item.dietary_info %}
+                                    <span class="badge bg-info me-1">{{ info }}</span>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-2">
+                            <span class="badge {% if item.is_available %}bg-success{% else %}bg-danger{% endif %}">
+                                {% if item.is_available %}{% translate "Disponible" %}{% else %}{% translate "Indisponible" %}{% endif %}
+                            </span>
+                            {% if item.is_featured %}
+                                <span class="badge bg-warning text-dark ms-1">
+                                    {% translate "Vedette" %}
+                                </span>
+                            {% endif %}
+                            <span class="badge bg-secondary ms-1">
+                                <i class="fas fa-boxes me-1"></i> {{ item.stock_quantity }} {% translate "en stock" %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="card-footer bg-transparent border-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'orders:menu_item_detail' item.pk %}"
+                               class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-eye"></i> {% translate "Détails" %}
+                            </a>
+                            {% if item.is_available and item.stock_quantity > 0 %}
+                                <form method="post" action="{% url 'orders:add_to_cart' item.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-shopping-cart"></i> {% translate "Commander" %}
+                                    </button>
+                                </form>
+                            {% else %}
+                                <button class="btn btn-secondary btn-sm" disabled>
+                                    <i class="fas fa-shopping-cart"></i> {% translate "Indisponible" %}
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> {% translate "Aucun plat trouvé dans cette catégorie." %}
+    </div>
+{% endif %} 

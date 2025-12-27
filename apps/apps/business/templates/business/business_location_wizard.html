@@ -1,0 +1,137 @@
+{% extends "business/base.html" %}
+{% load i18n %}
+{% load static %}
+{% load business_tags %}
+
+{% block title %}{% if is_edit %}{% translate "Modifier l'établissement" %}{% else %}{% translate "Nouvel établissement" %}{% endif %} | {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+{% if step == 1 %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+{% endif %}
+<link href="{% static 'business/css/business_location_wizard.css' %}" rel="stylesheet">
+<style>
+    .wizard-progress {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        gap: 1rem;
+    }
+    .wizard-step {
+        flex: 1;
+        text-align: center;
+        position: relative;
+    }
+    .wizard-step .step-icon {
+        font-size: 2rem;
+        color: var(--primary-color);
+        background: #fff;
+        border: 2px solid var(--primary-color);
+        border-radius: 50%;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.5rem auto;
+        transition: background 0.2s, color 0.2s;
+    }
+    .wizard-step.active .step-icon, .wizard-step.completed .step-icon {
+        background: var(--primary-color);
+        color: #fff;
+    }
+    .wizard-step .step-label {
+        font-weight: 500;
+        color: var(--primary-color);
+    }
+    .wizard-step.completed .step-label {
+        color: #28a745;
+    }
+    .wizard-step:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        top: 24px;
+        right: -50%;
+        width: 100%;
+        height: 4px;
+        background: #e0e0e0;
+        z-index: 0;
+    }
+    .wizard-step.completed:not(:last-child)::after {
+        background: var(--primary-color);
+    }
+</style>
+{% endblock %}
+
+{% block business_content %}
+<div class="container py-4" 
+     data-is-edit="{{ is_edit|yesno:'True,False' }}" 
+     data-business-id="{{ business.id|default:'' }}"
+     data-current-step="{{ step }}">
+    
+    <!-- Header avec bouton de réinitialisation -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            {% if is_edit %}
+                {% translate "Modifier l'établissement" %}
+            {% else %}
+                {% translate "Nouvel établissement" %}
+            {% endif %}
+        </h2>
+        {% if not is_edit and step > 1 %}
+        <button type="button" class="btn btn-outline-warning btn-sm" id="resetWizardBtn" title="{% translate 'Réinitialiser le wizard' %}">
+            <i class="fas fa-redo me-1"></i>{% translate "Recommencer" %}
+        </button>
+        {% endif %}
+    </div>
+    
+    <div class="wizard-progress mb-5">
+        <div class="wizard-step {% if step == 1 %}active{% elif step > 1 %}completed{% endif %}">
+            <div class="step-icon"><i class="fas fa-info-circle"></i></div>
+            <div class="step-label">{% translate "Informations" %}</div>
+        </div>
+        <div class="wizard-step {% if step == 2 %}active{% elif step > 2 %}completed{% endif %}">
+            <div class="step-icon"><i class="fas fa-clock"></i></div>
+            <div class="step-label">{% translate "Horaires" %}</div>
+        </div>
+        <div class="wizard-step {% if step == 3 %}active{% elif step > 3 %}completed{% endif %}">
+            <div class="step-icon"><i class="fas fa-list"></i></div>
+            <div class="step-label">{% translate "Commodités" %}</div>
+        </div>
+        <div class="wizard-step {% if step == 4 %}active{% elif step > 4 %}completed{% endif %}">
+            <div class="step-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="step-label">{% translate "Résumé" %}</div>
+        </div>
+        <div class="wizard-step {% if step == 5 %}active{% elif step > 5 %}completed{% endif %}">
+            <div class="step-icon"><i class="fas fa-images"></i></div>
+            <div class="step-label">{% translate "Images" %}</div>
+        </div>
+    </div>
+
+    <div id="wizard-step-content">
+        {# Inclusion dynamique de l'étape courante #}
+        {% if step == 1 %}
+            {% include "business/wizard_steps/step1_location.html" %}
+        {% elif step == 2 %}
+            {% include "business/wizard_steps/step2_hours.html" %}
+        {% elif step == 3 %}
+            {% include "business/wizard_steps/step3_amenities.html" %}
+        {% elif step == 4 %}
+            {% include "business/wizard_steps/step4_summary.html" %}
+        {% elif step == 5 %}
+            {% include "business/wizard_steps/step5_images.html" %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
+{% if step == 1 %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% endif %}
+<script src="{% static 'business/js/business_location_wizard.js' %}"></script>
+{% endblock %} 

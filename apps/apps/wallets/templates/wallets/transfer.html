@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Transfer Funds" %}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{% trans "Transfer Funds" %}</h5>
+                    <div class="alert alert-info">
+                        {% trans "Available Balance" %}: {{ form.sender_wallet.balance }} {{ form.sender_wallet.currency }}
+                    </div>
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-info">
+                                <i class="fas fa-exchange-alt"></i> {% trans "Transfer" %}
+                            </button>
+                            <a href="{% url 'wallets:wallet_detail' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> {% trans "Back to Wallet" %}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

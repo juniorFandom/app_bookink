@@ -1,0 +1,117 @@
+{% extends "tours/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block tour_content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-4">{% trans "Destinations" %}</h1>
+        <p class="lead">{% trans "Discover amazing places in Cameroon" %}</p>
+    </div>
+</div>
+
+<!-- Map View -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div id="destinationsMap" class="map-container"></div>
+    </div>
+</div>
+
+<!-- Destinations Grid -->
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for destination in destinations %}
+        <div class="col">
+            <div class="card h-100 tour-card">
+                {% if destination.image %}
+                    <img src="{{ destination.image.url }}" class="card-img-top gallery-image" alt="{{ destination.name }}">
+                {% else %}
+                    <img src="{% static 'tours/images/default-destination.jpg' %}" class="card-img-top gallery-image" alt="{{ destination.name }}">
+                {% endif %}
+
+                <div class="card-body">
+                    <h5 class="card-title">{{ destination.name }}</h5>
+                    <p class="card-text text-muted">
+                        <i class="fas fa-map-marker-alt"></i> {{ destination.region }}<br>
+                        <i class="fas fa-route"></i> {{ destination.tours.count }} {% trans "tours available" %}
+                    </p>
+                    <p class="card-text">{{ destination.description|truncatewords:30 }}</p>
+                </div>
+
+                <div class="card-footer bg-transparent">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'tours:destination_detail' destination.slug %}" class="btn btn-outline-primary">
+                            {% trans "Explore Tours" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> {% trans "No destinations available at the moment." %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="{% trans 'Destination navigation' %}" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                    <i class="fas fa-angle-left"></i>
+                </a>
+            </li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize map
+        var map = initMap('destinationsMap', 7.369722, 12.354722, 6);  // Centered on Cameroon
+        
+        // Add markers for all destinations
+        {% for destination in destinations %}
+            L.marker([{{ destination.latitude }}, {{ destination.longitude }}])
+                .addTo(map)
+                .bindPopup(
+                    '<div class="text-center">' +
+                    '<h6>{{ destination.name }}</h6>' +
+                    '<p class="mb-2">{{ destination.region }}</p>' +
+                    '<a href="{% url "tours:destination_detail" destination.slug %}" class="btn btn-sm btn-primary">' +
+                    '{% trans "View Tours" %}' +
+                    '</a>' +
+                    '</div>'
+                );
+        {% endfor %}
+    });
+</script>
+{% endblock %}
+{% endblock %} 

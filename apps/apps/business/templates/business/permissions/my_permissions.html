@@ -1,0 +1,379 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Mes permissions" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-users-cog me-2"></i>{% translate "Mes permissions" %}
+                    </h1>
+                    <p class="text-muted mb-0">{% translate "Gérez vos accès et droits sur les établissements." %}</p>
+                </div>
+                <div class="mt-2 mt-md-0">
+                    <a href="{% url 'business:request_permission' %}" class="btn btn-primary me-2 mb-1">
+                        <i class="fas fa-plus"></i> {% translate "Demander une permission" %}
+                    </a>
+                    {% if user.owned_businesses.exists %}
+                    <a href="{% url 'business:permission_request_list' %}" class="btn btn-outline-primary mb-1">
+                        <i class="fas fa-inbox"></i> {% translate "Demandes reçues" %}
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Résumé Statistiques -->
+            <div class="row mb-4 g-3">
+                <div class="col-md-4">
+                    <div class="card border-primary shadow-sm">
+                        <div class="card-body text-center">
+                            <h5 class="card-title mb-1"><i class="fas fa-key text-primary"></i> {% translate "Total permissions" %}</h5>
+                            <span class="display-6 fw-bold">{{ permissions.paginator.count }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-success shadow-sm">
+                        <div class="card-body text-center">
+                            <h5 class="card-title mb-1"><i class="fas fa-check-circle text-success"></i> {% translate "Actives" %}</h5>
+                            <span class="display-6 fw-bold text-success">{{ permissions|length }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-danger shadow-sm">
+                        <div class="card-body text-center">
+                            <h5 class="card-title mb-1"><i class="fas fa-times-circle text-danger"></i> {% translate "Expirées" %}</h5>
+                            <span class="display-6 fw-bold text-danger">{{ permissions.paginator.count|add:"-"|add:permissions|length }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtres avancés -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label for="location" class="form-label">{% translate "Établissement" %}</label>
+                            <select name="location" id="location" class="form-select">
+                                <option value="">{% translate "Tous" %}</option>
+                                {% for location in user_locations %}
+                                <option value="{{ location.pk }}" {% if location_filter == location.pk|stringformat:"s" %}selected{% endif %}>
+                                    {{ location.name }} - {{ location.business.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="permission_type" class="form-label">{% translate "Type de permission" %}</label>
+                            <select name="permission_type" id="permission_type" class="form-select">
+                                <option value="">{% translate "Tous" %}</option>
+                                {% for permission_type in permission_types %}
+                                <option value="{{ permission_type.0 }}" {% if permission_type_filter == permission_type.0 %}selected{% endif %}>
+                                    {{ permission_type.1 }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-filter"></i> {% translate "Filtrer" %}
+                            </button>
+                            <a href="{% url 'business:my_permissions' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> {% translate "Effacer" %}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Permissions List (responsive cards on mobile, table on desktop) -->
+            <div class="d-none d-md-block">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>{% translate "Mes permissions actives" %}
+                            <span class="badge bg-primary ms-2">{{ permissions.paginator.count }}</span>
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if permissions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0 align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>{% translate "Établissement" %}</th>
+                                        <th>{% translate "Permission" %}</th>
+                                        <th>{% translate "Accordée par" %}</th>
+                                        <th>{% translate "Expiration" %}</th>
+                                        <th>{% translate "Statut" %}</th>
+                                        <th>{% translate "Actions" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for permission in permissions %}
+                                    <tr {% if permission.get_remaining_days and permission.get_remaining_days <= 7 and not permission.is_expired %}class="table-warning"{% endif %}>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-shrink-0">
+                                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                        <i class="fas fa-building"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <h6 class="mb-0">{{ permission.business_location.name }}</h6>
+                                                    <small class="text-muted">{{ permission.business_location.business.name }}</small>
+                                                    <br>
+                                                    <small class="text-muted">{{ permission.business_location.get_business_location_type_display }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">{{ permission.get_permission_type_display }}</span>
+                                            {% if permission.notes %}
+                                            <br><small class="text-muted">{{ permission.notes|truncatechars:50 }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {{ permission.granted_by.get_full_name|default:permission.granted_by.username }}
+                                                <br>{{ permission.created_at|date:"d/m/Y H:i" }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            {% if permission.expires_at %}
+                                                <small class="{% if permission.is_expired %}text-danger{% elif permission.get_remaining_days <= 7 %}text-warning fw-bold{% else %}text-muted{% endif %}">
+                                                    {{ permission.expires_at|date:"d/m/Y H:i" }}
+                                                    {% if not permission.is_expired and permission.get_remaining_days %}
+                                                        <br><span class="badge bg-{% if permission.get_remaining_days <= 7 %}warning text-dark{% else %}success{% endif %}">
+                                                            <i class="fas fa-hourglass-half"></i> {{ permission.get_remaining_days }} {% translate "jours restants" %}
+                                                        </span>
+                                                    {% endif %}
+                                                </small>
+                                            {% else %}
+                                                <span class="badge bg-success">{% translate "Permanente" %}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if permission.is_valid %}
+                                                <span class="badge bg-success">{% translate "Active" %}</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">{% translate "Expirée" %}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{% url 'business:business_location_dashboard' permission.business_location.pk %}" class="btn btn-sm btn-outline-primary" title="{% translate 'Accéder au dashboard' %}">
+                                                    <i class="fas fa-tachometer-alt"></i>
+                                                </a>
+                                                <a href="{% url 'business:location_detail' permission.business_location.pk %}" class="btn btn-sm btn-outline-info" title="{% translate 'Voir l\'établissement' %}">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-users-cog fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">{% translate "Aucune permission accordée" %}</h5>
+                            <p class="text-muted">{% translate "Vous n'avez pas encore de permissions sur des établissements." %}</p>
+                            <div class="mt-3">
+                                <a href="{% url 'business:request_permission' %}" class="btn btn-primary me-2">
+                                    <i class="fas fa-plus"></i> {% translate "Demander une permission" %}
+                                </a>
+                                <a href="{% url 'business:business_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-search"></i> {% translate "Découvrir des établissements" %}
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <!-- Version cartes pour mobile -->
+            <div class="d-md-none">
+                <div class="row g-3">
+                    {% for permission in permissions %}
+                    <div class="col-12">
+                        <div class="card shadow-sm {% if permission.get_remaining_days and permission.get_remaining_days <= 7 and not permission.is_expired %}border-warning{% elif permission.is_expired %}border-danger{% else %}border-success{% endif %}">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-building"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">{{ permission.business_location.name }}</h6>
+                                        <small class="text-muted">{{ permission.business_location.business.name }}</small>
+                                        <br>
+                                        <small class="text-muted">{{ permission.business_location.get_business_location_type_display }}</small>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <span class="badge bg-info">{{ permission.get_permission_type_display }}</span>
+                                    {% if permission.notes %}
+                                    <br><small class="text-muted">{{ permission.notes|truncatechars:50 }}</small>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-2">
+                                    {% if permission.expires_at %}
+                                        <small class="{% if permission.is_expired %}text-danger{% elif permission.get_remaining_days <= 7 %}text-warning fw-bold{% else %}text-muted{% endif %}">
+                                            <i class="fas fa-calendar-alt"></i> {{ permission.expires_at|date:"d/m/Y H:i" }}
+                                            {% if not permission.is_expired and permission.get_remaining_days %}
+                                                <br><span class="badge bg-{% if permission.get_remaining_days <= 7 %}warning text-dark{% else %}success{% endif %}">
+                                                    <i class="fas fa-hourglass-half"></i> {{ permission.get_remaining_days }} {% translate "jours restants" %}
+                                                </span>
+                                            {% endif %}
+                                        </small>
+                                    {% else %}
+                                        <span class="badge bg-success">{% translate "Permanente" %}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="mb-2">
+                                    {% if permission.is_valid %}
+                                        <span class="badge bg-success">{% translate "Active" %}</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">{% translate "Expirée" %}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'business:business_location_dashboard' permission.business_location.pk %}" class="btn btn-outline-primary btn-sm flex-fill">
+                                        <i class="fas fa-tachometer-alt"></i> {% translate "Dashboard" %}
+                                    </a>
+                                    <a href="{% url 'business:location_detail' permission.business_location.pk %}" class="btn btn-outline-info btn-sm flex-fill">
+                                        <i class="fas fa-eye"></i> {% translate "Voir" %}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 text-center py-5">
+                        <i class="fas fa-users-cog fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">{% translate "Aucune permission accordée" %}</h5>
+                        <p class="text-muted">{% translate "Vous n'avez pas encore de permissions sur des établissements." %}</p>
+                        <div class="mt-3">
+                            <a href="{% url 'business:request_permission' %}" class="btn btn-primary me-2">
+                                <i class="fas fa-plus"></i> {% translate "Demander une permission" %}
+                            </a>
+                            <a href="{% url 'business:business_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-search"></i> {% translate "Découvrir des établissements" %}
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            {% if permissions.has_other_pages %}
+            <nav aria-label="{% translate 'Pagination des permissions' %}" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if permissions.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ permissions.previous_page_number }}{% if location_filter %}&location={{ location_filter }}{% endif %}{% if permission_type_filter %}&permission_type={{ permission_type_filter }}{% endif %}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in permissions.paginator.page_range %}
+                    {% if permissions.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > permissions.number|add:'-3' and num < permissions.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if location_filter %}&location={{ location_filter }}{% endif %}{% if permission_type_filter %}&permission_type={{ permission_type_filter }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if permissions.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ permissions.next_page_number }}{% if location_filter %}&location={{ location_filter }}{% endif %}{% if permission_type_filter %}&permission_type={{ permission_type_filter }}{% endif %}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            <!-- Quick Actions for Business Owners -->
+            {% if user.owned_businesses.exists %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-crown me-2"></i>{% translate "Actions pour propriétaires" %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-grid">
+                                <a href="{% url 'business:permission_request_list' %}" class="btn btn-outline-primary">
+                                    <i class="fas fa-inbox"></i> {% translate "Gérer les demandes de permissions" %}
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-grid">
+                                <a href="{% url 'business:my_businesses' %}" class="btn btn-outline-success">
+                                    <i class="fas fa-building"></i> {% translate "Mes établissements" %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-control, .form-select {
+    border-radius: 0.375rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.table-warning {
+    background-color: #fff3cd !important;
+}
+
+@media (max-width: 767.98px) {
+    .d-md-block { display: none !important; }
+    .d-md-none { display: block !important; }
+}
+@media (min-width: 768px) {
+    .d-md-block { display: block !important; }
+    .d-md-none { display: none !important; }
+}
+</style>
+{% endblock %} 

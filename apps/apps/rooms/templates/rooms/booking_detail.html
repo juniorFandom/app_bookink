@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Booking Details" %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: #fff;
+        min-height: 100vh;
+    }
+
+    .booking-card {
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(44, 62, 80, 0.12);
+        overflow: hidden;
+        background: #fff;
+        margin-top: 2rem;
+    }
+
+    .booking-card .card-header {
+        background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+        color: #2c3e50;
+        border-bottom: none;
+        padding: 2rem 2rem 1rem 2rem;
+        text-align: center;
+    }
+
+    .booking-card .card-title {
+        font-weight: 800;
+        font-size: 2rem;
+        letter-spacing: 1px;
+        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+    }
+
+    .booking-card .card-body {
+        padding: 2rem;
+    }
+
+    .alert-success,
+    .alert-warning {
+        border-radius: 12px;
+        font-size: 1.1rem;
+        box-shadow: 0 2px 10px rgba(16, 185, 129, 0.08);
+        border: none;
+    }
+
+    .alert-success {
+        background: linear-gradient(90deg, #d1fae5 0%, #f0fff4 100%);
+        color: #065f46;
+    }
+
+    .alert-warning {
+        background: linear-gradient(90deg, #fff7e6 0%, #fffbe6 100%);
+        color: #b45309;
+    }
+
+    .badge {
+        font-size: 1rem;
+        border-radius: 8px;
+        padding: 0.4em 0.9em;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    .badge.bg-warning {
+        background: #f59e0b;
+        color: #fff;
+    }
+
+    .badge.bg-success {
+        background: #10b981;
+        color: #fff;
+    }
+
+    .badge.bg-info {
+        background: #3b82f6;
+        color: #fff;
+    }
+
+    .btn {
+        border-radius: 10px;
+        font-weight: 600;
+        padding: 0.7rem 1.5rem;
+        transition: all 0.2s;
+        box-shadow: 0 2px 8px rgba(44, 62, 80, 0.07);
+    }
+
+    .btn-secondary {
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        border: none;
+    }
+
+    .btn-secondary:hover {
+        background: linear-gradient(90deg, #764ba2 0%, #667eea 100%);
+        color: #fff;
+    }
+
+    .btn-success {
+        background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+        color: #fff;
+        border: none;
+    }
+
+    .btn-success:hover {
+        background: linear-gradient(90deg, #34d399 0%, #10b981 100%);
+        color: #fff;
+    }
+
+    .btn-warning {
+        background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+        color: #fff;
+        border: none;
+    }
+
+    .btn-warning:hover {
+        background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
+        color: #fff;
+    }
+
+    .section-title {
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        margin-top: 2rem;
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .section-title i {
+        color: #f59e0b;
+    }
+
+    .booking-detail-label {
+        color: #667eea;
+        font-weight: 600;
+    }
+
+    .booking-detail-value {
+        color: #2c3e50;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="card booking-card">
+                <div class="card-header">
+                    <h1 class="card-title mb-0">
+                        <i class="fas fa-bed"></i>
+                        {% trans "Booking Details" %}
+                    </h1>
+                </div>
+                <div class="card-body">
+                    <!-- Booking Reference -->
+                    <div class="alert alert-success d-flex align-items-center gap-2">
+                        <i class="fas fa-hashtag fa-lg"></i>
+                        <h5 class="mb-0">{% trans "Booking Reference" %}: <span class="booking-detail-value">{{
+                                booking.booking_reference }}</span></h5>
+                    </div>
+
+                    <!-- Room Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h4 class="section-title"><i class="fas fa-info-circle"></i> {% trans "Room Information" %}
+                            </h4>
+                            <p>
+                                <span class="booking-detail-label">{% trans "Room Type" %}:</span> <span
+                                    class="booking-detail-value">{{ booking.room.room_type.name }}</span><br>
+                                <span class="booking-detail-label">{% trans "Room Number" %}:</span> <span
+                                    class="booking-detail-value">{{ booking.room.room_number }}</span><br>
+                                <span class="booking-detail-label">{% trans "Location" %}:</span> <span
+                                    class="booking-detail-value">{{ booking.business_location.name }}</span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h4 class="section-title"><i class="fas fa-calendar-alt"></i> {% trans "Stay Details" %}
+                            </h4>
+                            <p>
+                                <span class="booking-detail-label">{% trans "Check-in" %}:</span> <span
+                                    class="booking-detail-value">{{ booking.check_in_date }}</span><br>
+                                <span class="booking-detail-label">{% trans "Check-out" %}:</span> <span
+                                    class="booking-detail-value">{{ booking.check_out_date }}</span><br>
+                                <span class="booking-detail-label">{% trans "Duration" %}:</span> <span
+                                    class="booking-detail-value">{{ booking.duration_nights }} {% trans "nights"
+                                    %}</span><br>
+                                <span class="booking-detail-label">{% trans "Adults" %}:</span> <span
+                                    class="booking-detail-value">{{ booking.adults_count }}</span><br>
+                                <span class="booking-detail-label">{% trans "Children" %}:</span> <span
+                                    class="booking-detail-value">{{ booking.children_count }}</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Financial Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h4 class="section-title"><i class="fas fa-money-bill-wave"></i> {% trans "Financial
+                                Details" %}</h4>
+                            <p>
+                                <span class="booking-detail-label">{% trans "Total Amount" %}:</span> <span
+                                    class="booking-detail-value">{{ booking.total_amount }} XAF</span><br>
+                                <span class="booking-detail-label">{% trans "Payment Status" %}:</span>
+                                {% if remaining_amount > 0 %}
+                                <span class="badge bg-warning">Non payé</span>
+                                {% else %}
+                                <span class="badge bg-success">Payé</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h4 class="section-title"><i class="fas fa-clipboard-check"></i> {% trans "Booking Status"
+                                %}</h4>
+                            <p>
+                                <span class="booking-detail-label">{% trans "Status" %}:</span>
+                                <span class="badge bg-info">{{ booking.get_status_display }}</span><br>
+                                <span class="booking-detail-label">{% trans "Created" %}:</span> <span
+                                    class="booking-detail-value">{{ booking.created_at|date:"d/m/Y H:i" }}</span><br>
+                                {% if booking.cancelled_at %}
+                                <span class="booking-detail-label">{% trans "Cancelled" %}:</span> <span
+                                    class="booking-detail-value">{{ booking.cancelled_at|date:"d/m/Y H:i" }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Hotel Notes -->
+                    {% if booking.hotel_notes %}
+                    <div class="mb-4">
+                        <h4 class="section-title"><i class="fas fa-sticky-note"></i> {% trans "Hotel Notes" %}</h4>
+                        <p>{{ booking.hotel_notes }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Actions -->
+                    <div class="d-flex gap-2 mb-3">
+                        <a href="{% url 'rooms:room_detail' booking.room.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-eye"></i> {% trans "View Room" %}
+                        </a>
+                        {% if booking.status == 'CONFIRMED' and booking.payment_status == 'PAID' %}
+                        <button class="btn btn-warning" disabled>
+                            <i class="fas fa-ban"></i> {% trans "Cancel Booking" %}
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    {# Affichage du montant restant et bouton de paiement #}
+                    {% if remaining_amount > 0 %}
+                    <div class="alert alert-warning mt-3 d-flex align-items-center gap-2">
+                        <i class="fas fa-exclamation-triangle fa-lg"></i>
+                        <div>
+                            <p class="mb-1">Montant restant à payer : <strong>{{ remaining_amount|floatformat:0 }}
+                                    XAF</strong></p>
+                            <form method="post" action="{% url 'rooms:finalize_payment' booking.booking_reference %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success mt-2"><i class="fas fa-credit-card"></i>
+                                    Finaliser le paiement</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-success mt-3 d-flex align-items-center gap-2">
+                        <i class="fas fa-check-circle fa-lg"></i>
+                        <div>
+                            <p class="mb-0">Paiement complet. Merci !</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

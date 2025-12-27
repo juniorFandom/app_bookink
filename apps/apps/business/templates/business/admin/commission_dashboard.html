@@ -1,0 +1,341 @@
+{% extends "business/admin/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "Commission Dashboard" %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .commission-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .commission-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .commission-header i {
+        font-size: 2rem;
+        margin-right: 1rem;
+    }
+
+    .commission-header h4 {
+        margin: 0;
+        font-weight: 700;
+    }
+
+    .commission-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-item {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1.5rem;
+        border-radius: 10px;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+
+    .commission-table {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+
+    .commission-table th {
+        background: #2c5aa0;
+        color: white;
+        padding: 1rem;
+        font-weight: 600;
+    }
+
+    .commission-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .commission-table tr:hover {
+        background: #f8f9fa;
+    }
+
+    .commission-amount {
+        font-weight: 700;
+        color: #2c5aa0;
+    }
+
+    .commission-type {
+        background: #e8f4fd;
+        color: #2c5aa0;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .business-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .business-avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #2c5aa0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 0.8rem;
+    }
+
+    .date-filter {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+
+    .filter-form {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .filter-form .form-group {
+        margin: 0;
+    }
+
+    .btn-filter {
+        background: #2c5aa0;
+        color: white;
+        border: none;
+        padding: 0.5rem 1.5rem;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-filter:hover {
+        background: #1e4a8a;
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="commission-card">
+                <div class="commission-header">
+                    <i class="fas fa-chart-line"></i>
+                    <h4>{% trans "Dashboard des Commissions" %}</h4>
+                </div>
+                
+                <div class="commission-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">{{ total_commission|floatformat:0 }}</div>
+                        <div class="stat-label">{% trans "Total des Commissions" %}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{{ monthly_commission|floatformat:0 }}</div>
+                        <div class="stat-label">{% trans "Commissions du Mois" %}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{{ transaction_count }}</div>
+                        <div class="stat-label">{% trans "Transactions" %}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{{ commission_rate|floatformat:1 }}%</div>
+                        <div class="stat-label">{% trans "Taux Moyen" %}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres de date -->
+    <div class="row">
+        <div class="col-12">
+            <div class="date-filter">
+                <h5 class="mb-3">{% trans "Filtres" %}</h5>
+                <form method="get" class="filter-form">
+                    <div class="form-group">
+                        <label for="start_date">{% trans "Date de début" %}</label>
+                        <input type="date" name="start_date" id="start_date" class="form-control" value="{{ start_date|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="end_date">{% trans "Date de fin" %}</label>
+                        <input type="date" name="end_date" id="end_date" class="form-control" value="{{ end_date|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="business_type">{% trans "Type de business" %}</label>
+                        <select name="business_type" id="business_type" class="form-control">
+                            <option value="">{% trans "Tous" %}</option>
+                            <option value="hotel" {% if business_type == 'hotel' %}selected{% endif %}>{% trans "Hôtel" %}</option>
+                            <option value="restaurant" {% if business_type == 'restaurant' %}selected{% endif %}>{% trans "Restaurant" %}</option>
+                            <option value="tour_operator" {% if business_type == 'tour_operator' %}selected{% endif %}>{% trans "Tour Operator" %}</option>
+                            <option value="transport" {% if business_type == 'transport' %}selected{% endif %}>{% trans "Transport" %}</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-filter">
+                            <i class="fas fa-filter me-2"></i>{% trans "Filtrer" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableau des commissions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="commission-table">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Date" %}</th>
+                            <th>{% trans "Business" %}</th>
+                            <th>{% trans "Type" %}</th>
+                            <th>{% trans "Référence" %}</th>
+                            <th>{% trans "Montant" %}</th>
+                            <th>{% trans "Commission" %}</th>
+                            <th>{% trans "Actions" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transaction in commission_transactions %}
+                        <tr>
+                            <td>{{ transaction.created_at|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                <div class="business-info">
+                                    <div class="business-avatar">
+                                        {{ transaction.wallet.business_location.name|first|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">{{ transaction.wallet.business_location.name }}</div>
+                                        <small class="text-muted">{{ transaction.wallet.business_location.business_location_type|title }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="commission-type">
+                                    {% if transaction.content_type.model == 'roombooking' %}
+                                        {% trans "Chambre" %}
+                                    {% elif transaction.content_type.model == 'vehiclebooking' %}
+                                        {% trans "Véhicule" %}
+                                    {% elif transaction.content_type.model == 'tourbooking' %}
+                                        {% trans "Tour" %}
+                                    {% elif transaction.content_type.model == 'restaurantorder' %}
+                                        {% trans "Commande" %}
+                                    {% else %}
+                                        {% trans "Autre" %}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <code>{{ transaction.reference|truncatechars:12 }}</code>
+                            </td>
+                            <td class="commission-amount">{{ transaction.amount|floatformat:0 }} XAF</td>
+                            <td class="commission-amount">{{ transaction.amount|floatformat:0 }} XAF</td>
+                            <td>
+                                <a href="#" class="btn btn-sm btn-outline-primary" title="{% trans 'Voir détails' %}">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                                <p class="text-muted">{% trans "Aucune commission trouvée pour cette période." %}</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if commission_transactions.has_other_pages %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <nav aria-label="{% trans 'Pagination des commissions' %}">
+                <ul class="pagination justify-content-center">
+                    {% if commission_transactions.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ commission_transactions.previous_page_number }}&start_date={{ start_date|default:'' }}&end_date={{ end_date|default:'' }}&business_type={{ business_type|default:'' }}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {% for num in commission_transactions.paginator.page_range %}
+                        {% if commission_transactions.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > commission_transactions.number|add:'-3' and num < commission_transactions.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}&start_date={{ start_date|default:'' }}&end_date={{ end_date|default:'' }}&business_type={{ business_type|default:'' }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if commission_transactions.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ commission_transactions.next_page_number }}&start_date={{ start_date|default:'' }}&end_date={{ end_date|default:'' }}&business_type={{ business_type|default:'' }}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit form when date changes
+    const dateInputs = document.querySelectorAll('input[type="date"], select[name="business_type"]');
+    dateInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            this.closest('form').submit();
+        });
+    });
+});
+</script>
+{% endblock %} 

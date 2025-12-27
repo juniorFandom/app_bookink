@@ -1,0 +1,407 @@
+{% extends "business/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .business-form-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .form-section {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e0e0e0;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--primary-color);
+    }
+
+    .section-header i {
+        font-size: 1.5rem;
+        color: var(--primary-color);
+        margin-right: 1rem;
+    }
+
+    .section-header h3 {
+        margin: 0;
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+
+    .form-floating {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-floating>.form-control,
+    .form-floating>.form-select {
+        height: calc(3.5rem + 2px);
+        padding: 1rem 0.75rem;
+    }
+
+    .form-floating>label {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        padding: 1rem 0.75rem;
+        pointer-events: none;
+        border: 1px solid transparent;
+        transform-origin: 0 0;
+        transition: opacity .1s ease-in-out, transform .1s ease-in-out;
+    }
+
+    .form-floating>.form-control:focus~label,
+    .form-floating>.form-control:not(:placeholder-shown)~label,
+    .form-floating>.form-select~label {
+        opacity: .65;
+        transform: scale(.85) translateY(-0.5rem) translateX(0.15rem);
+    }
+
+    .form-control.is-invalid,
+    .was-validated .form-control:invalid {
+        border-color: #dc3545;
+        padding-right: calc(1.5em + 0.75rem);
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+
+    .invalid-feedback {
+        display: none;
+        width: 100%;
+        margin-top: 0.25rem;
+        font-size: 0.875em;
+        color: #dc3545;
+    }
+
+    .form-control.is-invalid~.invalid-feedback {
+        display: block;
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, var(--primary-color), #1e4a8a);
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        border: none;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(30, 74, 138, 0.4);
+    }
+
+    /* Loading Animation */
+    .loading-spinner {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.8);
+        z-index: 9999;
+    }
+
+    .loading-spinner::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 50px;
+        height: 50px;
+        margin: -25px 0 0 -25px;
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid var(--primary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block business_content %}
+<div class="business-form-container">
+    <!-- Header Section -->
+    <div class="section-header mb-4">
+        <i class="fas fa-building"></i>
+        <h2 class="mb-0">{% if business %}{% translate "Modifier l'Entreprise" %}{% else %}{% translate "Nouvelle
+            Entreprise" %}{% endif %}</h2>
+    </div>
+
+    <form id="businessForm" method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <!-- Messages -->
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4">
+            <i
+                class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-triangle{% endif %} me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <!-- Basic Information Section -->
+        <div class="form-section">
+            <div class="section-header">
+                <i class="fas fa-info-circle"></i>
+                <h3>{% translate "Informations de Base" %}</h3>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="name" name="name" placeholder=" " required
+                    value="{% if form_data.name %}{{ form_data.name }}{% elif business %}{{ business.name }}{% else %}{% endif %}">
+                <label for="name">{% translate "Nom de l'entreprise" %} *</label>
+                <div class="invalid-feedback">
+                    {% translate "Le nom de l'entreprise est requis" %}
+                </div>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input type="email" class="form-control" id="email" name="email" placeholder=" " required
+                    value="{% if form_data.email %}{{ form_data.email }}{% elif business %}{{ business.email }}{% else %}{% endif %}">
+                <label for="email">{% translate "Email professionnel" %} *</label>
+                <div class="invalid-feedback">
+                    {% translate "Veuillez entrer une adresse email valide" %}
+                </div>
+            </div>
+
+            <div class="form-floating phone-input-group mb-3">
+                <input type="tel" class="form-control phone-input" id="phone" name="phone" placeholder=" " required
+                    value="{% if form_data.phone %}{{ form_data.phone }}{% elif business %}{{ business.phone|slice:'4:' }}{% else %}{% endif %}">
+                <label for="phone">{% translate "Numéro de téléphone" %} *</label>
+                <div class="invalid-feedback">
+                    {% translate "Veuillez entrer un numéro de téléphone valide" %}
+                </div>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input type="url" class="form-control" id="website" name="website" placeholder=" "
+                    value="{% if form_data.website %}{{ form_data.website }}{% elif business %}{{ business.website }}{% else %}{% endif %}">
+                <label for="website">{% translate "Site Web" %}</label>
+                <div class="invalid-feedback">
+                    {% translate "Veuillez entrer une URL valide" %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Description Section -->
+        <div class="form-section">
+            <div class="section-header">
+                <i class="fas fa-align-left"></i>
+                <h3>{% translate "Description" %}</h3>
+            </div>
+
+            <div class="form-floating mb-3">
+                <textarea class="form-control" id="description" name="description" style="height: 150px" required
+                    placeholder="Décrivez votre entreprise en quelques mots">{% if form_data.description %}{{ form_data.description }}{% elif business %}{{ business.description }}{% else %}{% endif %}</textarea>
+                <label for="description">{% translate "Description de l'entreprise" %} *</label>
+                <div class="invalid-feedback">
+                    {% translate "La description est requise" %}
+                </div>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="founded_date" name="founded_date" placeholder=" "
+                    value="{% if form_data.founded_date %}{{ form_data.founded_date|date:'Y-m-d' }}{% elif business %}{{ business.founded_date|date:'Y-m-d' }}{% else %}{% endif %}">
+                <label for="founded_date">{% translate "Date de création" %}</label>
+                <div class="invalid-feedback">
+                    {% translate "Veuillez entrer une date valide" %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Documents de l'entreprise -->
+        <div class="form-section">
+            <div class="section-header">
+                <i class="fas fa-file-alt"></i>
+                <h3>{% translate "Documents de l'entreprise" %}</h3>
+            </div>
+
+            <div class="mb-3">
+                <label for="document_title" class="form-label">{% translate "Titre du document" %}</label>
+                <input type="text" class="form-control" id="document_title" name="document_title"
+                    placeholder="{% translate 'Ex: Licence d\'exploitation' %}">
+            </div>
+
+            <div class="mb-3">
+                <label for="document_type" class="form-label">{% translate "Type de document" %}</label>
+                <select class="form-select" id="document_type" name="document_type">
+                    <option value="other">{% translate "Autre" %}</option>
+                    <option value="license">{% translate "Licence" %}</option>
+                    <option value="permit">{% translate "Permis" %}</option>
+                    <option value="contract">{% translate "Contrat" %}</option>
+                    <option value="certificate">{% translate "Certificat" %}</option>
+                    <option value="insurance">{% translate "Assurance" %}</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="document_description" class="form-label">{% translate "Description du document" %}</label>
+                <textarea class="form-control" id="document_description" name="document_description" rows="3"
+                    placeholder="{% translate 'Description optionnelle du document' %}"></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="document_file" class="form-label">{% translate "Fichier" %}</label>
+                <input type="file" class="form-control" id="document_file" name="document_file"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif">
+                <div class="form-text">{% translate "Formats acceptés: PDF, DOC, DOCX, JPG, PNG, GIF (max 10MB)" %}
+                </div>
+            </div>
+
+            <!-- Liste des documents existants -->
+            {% if main_location and main_location.documents.all %}
+            <div class="mt-4">
+                <h5>{% translate "Documents existants" %}</h5>
+                <div class="list-group">
+                    {% for document in main_location.documents.all %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">{{ document.title }}</h6>
+                            <small class="text-muted">{{ document.get_document_type_display }} - {{
+                                document.get_file_size_display }}</small>
+                        </div>
+                        <a href="{{ document.file.url }}" class="btn btn-sm btn-outline-primary" target="_blank">{%
+                            translate "Voir" %}</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Submit Section -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <a href="{% url 'business:my_businesses' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>{% translate "Retour" %}
+            </a>
+            <button type="button" class="btn btn-submit">
+                <i class="fas fa-save me-2"></i>
+                {% if business %}
+                {% translate "Mettre à jour" %}
+                {% else %}
+                {% translate "Créer l'entreprise" %}
+                {% endif %}
+            </button>
+        </div>
+    </form>
+
+    <!-- Loading Spinner -->
+    <div class="loading-spinner"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize date picker
+        flatpickr("#founded_date", {
+            locale: "fr",
+            dateFormat: "Y-m-d",
+            maxDate: "today",
+            allowInput: true
+        });
+
+        // Form validation
+        const form = document.getElementById('businessForm');
+        const loadingSpinner = document.querySelector('.loading-spinner');
+        const submitButton = document.querySelector('.btn-submit');
+
+        submitButton.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            // Reset validation
+            form.querySelectorAll('.is-invalid').forEach(input => {
+                input.classList.remove('is-invalid');
+            });
+
+            let isValid = true;
+
+            // Validate required fields
+            const requiredFields = ['name', 'email', 'phone', 'description'];
+            requiredFields.forEach(field => {
+                const input = form.querySelector(`#${field}`);
+                if (!input.value.trim()) {
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                }
+            });
+
+            // Email validation
+            const email = form.querySelector('#email');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email.value.trim())) {
+                email.classList.add('is-invalid');
+                isValid = false;
+            }
+
+            // Phone validation (Cameroon format)
+            const phone = form.querySelector('#phone');
+            const phoneRegex = /^6\d{8}$/;  // 9 chiffres, commençant par 6
+            if (!phoneRegex.test(phone.value.trim())) {
+                phone.classList.add('is-invalid');
+                isValid = false;
+            }
+
+            // Website validation (if provided)
+            const website = form.querySelector('#website');
+            if (website.value.trim()) {
+                try {
+                    new URL(website.value);
+                } catch {
+                    website.classList.add('is-invalid');
+                    isValid = false;
+                }
+            }
+
+            if (isValid) {
+                loadingSpinner.style.display = 'block';
+                form.submit();
+            }
+        });
+
+        // Real-time validation removal
+        form.querySelectorAll('input, textarea').forEach(input => {
+            input.addEventListener('input', function () {
+                this.classList.remove('is-invalid');
+            });
+        });
+    });
+</script>
+{% endblock %}

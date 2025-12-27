@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Gestion des permissions" %} - {{ location.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-users-cog me-2"></i>{% translate "Gestion des permissions" %}
+                    </h1>
+                    <p class="text-muted mb-0">{{ location.name }} - {{ location.business.name }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'business:permission_create' location.pk %}" class="btn btn-primary me-2">
+                        <i class="fas fa-plus"></i> {% translate "Accorder une permission" %}
+                    </a>
+                    <a href="{% url 'business:user_search' location.pk %}" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-search"></i> {% translate "Rechercher un utilisateur" %}
+                    </a>
+                    <a href="{% url 'business:business_location_dashboard' location.pk %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> {% translate "Retour au dashboard" %}
+                    </a>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="status" class="form-label">{% translate "Statut" %}</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="">{% translate "Tous" %}</option>
+                                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>{% translate "Actives" %}</option>
+                                <option value="expired" {% if status_filter == 'expired' %}selected{% endif %}>{% translate "Expirées" %}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="permission_type" class="form-label">{% translate "Type de permission" %}</label>
+                            <select name="permission_type" id="permission_type" class="form-select">
+                                <option value="">{% translate "Tous" %}</option>
+                                {% for permission_type in permission_types %}
+                                <option value="{{ permission_type.0 }}" {% if permission_type_filter == permission_type.0 %}selected{% endif %}>
+                                    {{ permission_type.1 }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-filter"></i> {% translate "Filtrer" %}
+                            </button>
+                            <a href="{% url 'business:permission_list' location.pk %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> {% translate "Effacer" %}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Permissions List -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>{% translate "Permissions accordées" %}
+                        <span class="badge bg-primary ms-2">{{ permissions.paginator.count }}</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if permissions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% translate "Utilisateur" %}</th>
+                                    <th>{% translate "Permission" %}</th>
+                                    <th>{% translate "Accordée par" %}</th>
+                                    <th>{% translate "Date d'expiration" %}</th>
+                                    <th>{% translate "Statut" %}</th>
+                                    <th>{% translate "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for permission in permissions %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                                     style="width: 40px; height: 40px;">
+                                                    <i class="fas fa-user"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <h6 class="mb-0">{{ permission.user.get_full_name|default:permission.user.username }}</h6>
+                                                <small class="text-muted">{{ permission.user.email }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ permission.get_permission_type_display }}</span>
+                                        {% if permission.notes %}
+                                        <br><small class="text-muted">{{ permission.notes|truncatechars:50 }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ permission.granted_by.get_full_name|default:permission.granted_by.username }}
+                                            <br>{{ permission.created_at|date:"d/m/Y H:i" }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {% if permission.expires_at %}
+                                            <small class="{% if permission.is_expired %}text-danger{% elif permission.get_remaining_days <= 7 %}text-warning{% else %}text-muted{% endif %}">
+                                                {{ permission.expires_at|date:"d/m/Y H:i" }}
+                                                {% if not permission.is_expired and permission.get_remaining_days %}
+                                                    <br><span class="badge bg-{% if permission.get_remaining_days <= 7 %}warning{% else %}success{% endif %}">
+                                                        {{ permission.get_remaining_days }} {% translate "jours restants" %}
+                                                    </span>
+                                                {% endif %}
+                                            </small>
+                                        {% else %}
+                                            <span class="badge bg-success">{% translate "Permanente" %}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if permission.is_valid %}
+                                            <span class="badge bg-success">{% translate "Active" %}</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">{% translate "Expirée" %}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'business:permission_edit' permission.pk %}" 
+                                               class="btn btn-sm btn-outline-primary" 
+                                               title="{% translate 'Modifier' %}">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-outline-danger" 
+                                                    onclick="confirmDelete('{{ permission.pk }}', '{{ permission.user.get_full_name|default:permission.user.username }}')"
+                                                    title="{% translate 'Révoquer' %}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-users-cog fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">{% translate "Aucune permission accordée" %}</h5>
+                        <p class="text-muted">{% translate "Commencez par accorder des permissions aux utilisateurs." %}</p>
+                        <a href="{% url 'business:permission_create' location.pk %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> {% translate "Accorder une permission" %}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            {% if permissions.has_other_pages %}
+            <nav aria-label="{% translate 'Pagination des permissions' %}" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if permissions.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ permissions.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if permission_type_filter %}&permission_type={{ permission_type_filter }}{% endif %}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in permissions.paginator.page_range %}
+                    {% if permissions.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > permissions.number|add:'-3' and num < permissions.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if permission_type_filter %}&permission_type={{ permission_type_filter }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if permissions.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ permissions.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if permission_type_filter %}&permission_type={{ permission_type_filter }}{% endif %}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">{% translate "Confirmer la révocation" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>{% translate "Êtes-vous sûr de vouloir révoquer la permission de" %} <strong id="userName"></strong> ?</p>
+                <p class="text-muted">{% translate "Cette action ne peut pas être annulée." %}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Annuler" %}</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">{% translate "Révoquer" %}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(permissionId, userName) {
+    document.getElementById('userName').textContent = userName;
+    document.getElementById('deleteForm').action = `/business/permission/${permissionId}/delete/`;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+{% endblock %} 

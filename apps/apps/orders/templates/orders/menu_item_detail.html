@@ -1,0 +1,622 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ menu_item.name }} - {% translate "Détail du plat" %}{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section mb-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="hero-content">
+                    <nav aria-label="breadcrumb" class="mb-3">
+                        <ol class="breadcrumb breadcrumb-modern">
+                            <li class="breadcrumb-item">
+                                <a href="{% url 'orders:menu_item_list' %}">
+                                    <i class="fas fa-utensils me-2"></i>{% translate "Menu" %}
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item active" aria-current="page">{{ menu_item.name }}</li>
+                        </ol>
+                    </nav>
+                    <h1 class="display-4 fw-bold text-white mb-3 animate-fade-in">
+                        {{ menu_item.name }}
+                    </h1>
+                    <p class="lead text-white-50 mb-4 animate-fade-in-delay">
+                        {{ menu_item.description|truncatewords:20|default:_("Découvrez ce délicieux plat de notre carte") }}
+                    </p>
+                    <div class="hero-stats animate-fade-in-delay-2">
+                        <div class="stat-item">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span class="stat-number">{{ menu_item.price|floatformat:0 }}</span>
+                            <span class="stat-label">{% translate "XAF" %}</span>
+                        </div>
+                        {% if menu_item.preparation_time_minutes %}
+                        <div class="stat-item">
+                            <i class="fas fa-clock"></i>
+                            <span class="stat-number">{{ menu_item.preparation_time_minutes }}</span>
+                            <span class="stat-label">{% translate "min" %}</span>
+                        </div>
+                        {% endif %}
+                        {% if menu_item.calories %}
+                        <div class="stat-item">
+                            <i class="fas fa-fire"></i>
+                            <span class="stat-number">{{ menu_item.calories }}</span>
+                            <span class="stat-label">{% translate "cal" %}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 text-end">
+                <div class="hero-actions animate-fade-in-delay-3">
+                    {% if menu_item.is_available %}
+                        <a href="#" class="btn btn-gradient-primary btn-lg">
+                            <i class="fas fa-shopping-cart me-2"></i>{% translate "Ajouter au panier" %}
+                        </a>
+                    {% else %}
+                        <button class="btn btn-secondary btn-lg" disabled>
+                            <i class="fas fa-times me-2"></i>{% translate "Indisponible" %}
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="hero-overlay"></div>
+</div>
+
+<!-- Main Content -->
+<div class="container">
+    <div class="row justify-content-center g-5">
+        <div class="col-md-8 col-lg-7">
+            <div class="details-card">
+                <div class="card-header-modern">
+                    <h2 class="item-title">{{ menu_item.name }}</h2>
+                    <div class="item-category">
+                        <i class="fas fa-layer-group text-primary me-2"></i>
+                        <span>{{ menu_item.food_category.name }}</span>
+                    </div>
+                </div>
+                
+                <!-- Menu Item Images -->
+                {% if menu_item.main_image or menu_item.images.all %}
+                <div class="section-modern">
+                    <h5 class="section-title">
+                        <i class="fas fa-images text-primary me-2"></i>{% translate "Photos du plat" %}
+                    </h5>
+                    <div class="image-gallery">
+                        {% if menu_item.main_image %}
+                        <div class="main-image-container">
+                            <img src="{{ menu_item.main_image.url }}" alt="{{ menu_item.name }}" class="main-image">
+                        </div>
+                        {% endif %}
+                        {% if menu_item.images.all %}
+                        <div class="additional-images">
+                            {% for image in menu_item.images.all %}
+                            <div class="image-item">
+                                <img src="{{ image.image.url }}" alt="{{ image.caption|default:menu_item.name }}" class="gallery-image">
+                                {% if image.caption %}
+                                <div class="image-caption">{{ image.caption }}</div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="quick-info-section">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <i class="fas fa-money-bill-wave text-success"></i>
+                            <div>
+                                <span class="info-label">{% translate "Prix" %}</span>
+                                <span class="info-value">{{ menu_item.price|floatformat:0 }} XAF</span>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-circle text-{% if menu_item.is_available %}success{% else %}danger{% endif %}"></i>
+                            <div>
+                                <span class="info-label">{% translate "Statut" %}</span>
+                                <span class="info-value">
+                                    {% if menu_item.is_available %}
+                                        {% translate "Disponible" %}
+                                    {% else %}
+                                        {% translate "Indisponible" %}
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        {% if menu_item.preparation_time_minutes %}
+                        <div class="info-item">
+                            <i class="fas fa-clock text-info"></i>
+                            <div>
+                                <span class="info-label">{% translate "Préparation" %}</span>
+                                <span class="info-value">{{ menu_item.preparation_time_minutes }} {% translate "min" %}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if menu_item.calories %}
+                        <div class="info-item">
+                            <i class="fas fa-fire text-warning"></i>
+                            <div>
+                                <span class="info-label">{% translate "Calories" %}</span>
+                                <span class="info-value">{{ menu_item.calories }} {% translate "cal" %}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="section-modern">
+                    <h5 class="section-title">
+                        <i class="fas fa-align-left text-primary me-2"></i>{% translate "Description" %}
+                    </h5>
+                    <p class="section-content">{{ menu_item.description }}</p>
+                </div>
+                
+                <!-- Restaurant Description -->
+                {% if menu_item.business_location.description %}
+                <div class="section-modern">
+                    <h5 class="section-title">
+                        <i class="fas fa-store text-primary me-2"></i>{% translate "À propos du restaurant" %}
+                    </h5>
+                    <div class="restaurant-info">
+                        <div class="restaurant-header">
+                            <h6 class="restaurant-name">{{ menu_item.business_location.name }}</h6>
+                            {% if menu_item.business_location.phone %}
+                            <div class="restaurant-contact">
+                                <i class="fas fa-phone text-muted me-2"></i>
+                                <span>{{ menu_item.business_location.phone }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <p class="section-content">{{ menu_item.business_location.description }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="d-flex gap-2 mt-4">
+                    <a href="{% url 'orders:menu_item_list' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left"></i> {% translate "Retour à la liste" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --border-radius: 1rem;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.15);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .hero-section {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%), url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80') center/cover no-repeat;
+        color: white;
+        padding: 4rem 0;
+        border-radius: 0 0 3rem 3rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.1);
+        z-index: 1;
+    }
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+    .hero-stats {
+        display: flex;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+    .stat-item {
+        text-align: center;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        border-radius: var(--border-radius);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .stat-number {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+    }
+    .stat-label {
+        font-size: 0.875rem;
+        opacity: 0.8;
+    }
+    .breadcrumb-modern {
+        background: transparent;
+        padding: 0;
+        margin: 0;
+    }
+    .breadcrumb-modern .breadcrumb-item a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: var(--transition);
+    }
+    .breadcrumb-modern .breadcrumb-item a:hover {
+        color: white;
+    }
+    .breadcrumb-modern .breadcrumb-item.active {
+        color: rgba(255, 255, 255, 0.6);
+    }
+    .details-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    .card-header-modern {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 2px solid #f8f9fa;
+    }
+    .item-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    .item-category {
+        color: #6c757d;
+        font-size: 1.1rem;
+    }
+    
+    /* Image Gallery Styles */
+    .image-gallery {
+        margin-bottom: 1rem;
+    }
+    .main-image-container {
+        margin-bottom: 1.5rem;
+    }
+    .main-image {
+        width: 100%;
+        height: 300px;
+        object-fit: cover;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        transition: var(--transition);
+    }
+    .main-image:hover {
+        transform: scale(1.02);
+    }
+    .additional-images {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+    .image-item {
+        position: relative;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        transition: var(--transition);
+    }
+    .image-item:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+    .gallery-image {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        transition: var(--transition);
+    }
+    .image-item:hover .gallery-image {
+        transform: scale(1.1);
+    }
+    .image-caption {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+        color: white;
+        padding: 0.5rem;
+        font-size: 0.875rem;
+        text-align: center;
+    }
+    
+    /* Restaurant Info Styles */
+    .restaurant-info {
+        background: #f8f9fa;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+    .restaurant-header {
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .restaurant-name {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    .restaurant-contact {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .quick-info-section {
+        margin-bottom: 2rem;
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    .info-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 0.75rem;
+        transition: var(--transition);
+    }
+    .info-item:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+    }
+    .info-item i {
+        font-size: 1.5rem;
+        margin-right: 1rem;
+        width: 30px;
+        text-align: center;
+    }
+    .info-label {
+        display: block;
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+    .info-value {
+        display: block;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    .section-modern {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #f8f9fa;
+    }
+    .section-modern:last-child {
+        border-bottom: none;
+    }
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+    }
+    .section-content {
+        color: #6c757d;
+        line-height: 1.6;
+        margin: 0;
+    }
+    .btn-gradient-primary {
+        background: var(--primary-gradient);
+        border: none;
+        color: white;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+    .btn-gradient-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+    .btn-outline-primary {
+        border: 2px solid #667eea;
+        color: #667eea;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+    .btn-outline-primary:hover {
+        background: #667eea;
+        border-color: #667eea;
+        transform: translateY(-2px);
+    }
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    .animate-fade-in {
+        animation: fadeInUp 0.8s ease forwards;
+    }
+    .animate-fade-in-delay {
+        animation: fadeInUp 0.8s ease 0.2s forwards;
+        opacity: 0;
+    }
+    .animate-fade-in-delay-2 {
+        animation: fadeInUp 0.8s ease 0.4s forwards;
+        opacity: 0;
+    }
+    .animate-fade-in-delay-3 {
+        animation: fadeInUp 0.8s ease 0.6s forwards;
+        opacity: 0;
+    }
+    @media (max-width: 768px) {
+        .hero-section {
+            padding: 2rem 0;
+            border-radius: 0 0 2rem 2rem;
+        }
+        .hero-stats {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .item-title {
+            font-size: 1.5rem;
+        }
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        .main-image {
+            height: 200px;
+        }
+        .additional-images {
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        }
+        .gallery-image {
+            height: 100px;
+        }
+    }
+    @media (max-width: 576px) {
+        .hero-section h1 {
+            font-size: 2rem;
+        }
+        .details-card {
+            padding: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effects for info items
+    document.querySelectorAll('.info-item').forEach(item => {
+        item.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px) scale(1.02)';
+        });
+        item.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+    
+    // Add click effects for buttons
+    document.querySelectorAll('.btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            // Create ripple effect
+            const ripple = document.createElement('span');
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            ripple.classList.add('ripple');
+            this.appendChild(ripple);
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    });
+    
+    // Add image gallery interactions
+    document.querySelectorAll('.image-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const img = this.querySelector('.gallery-image');
+            if (img) {
+                // Create a modal or lightbox effect
+                const modal = document.createElement('div');
+                modal.className = 'image-modal';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <img src="${img.src}" alt="${img.alt}">
+                        <span class="close-modal">&times;</span>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal || e.target.className === 'close-modal') {
+                        modal.remove();
+                    }
+                });
+            }
+        });
+    });
+});
+
+// Add ripple effect CSS
+const style = document.createElement('style');
+style.textContent = `
+    .btn {
+        position: relative;
+        overflow: hidden;
+    }
+    .ripple {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.6);
+        transform: scale(0);
+        animation: ripple-animation 0.6s linear;
+        pointer-events: none;
+    }
+    @keyframes ripple-animation {
+        to {
+            transform: scale(4);
+            opacity: 0;
+        }
+    }
+    
+    .image-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+    .modal-content {
+        position: relative;
+        max-width: 90%;
+        max-height: 90%;
+    }
+    .modal-content img {
+        width: 100%;
+        height: auto;
+        border-radius: 0.5rem;
+    }
+    .close-modal {
+        position: absolute;
+        top: -40px;
+        right: 0;
+        color: white;
+        font-size: 2rem;
+        cursor: pointer;
+        background: none;
+        border: none;
+    }
+    .close-modal:hover {
+        color: #ddd;
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %} 

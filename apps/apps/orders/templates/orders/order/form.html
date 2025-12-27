@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Create Order" %}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white text-center">
+                    <h2 class="mb-0"><i class="fas fa-plus-circle me-2"></i>{% translate "Create Order" %}</h2>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" autocomplete="off" novalidate>
+                        {% csrf_token %}
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+                        {% for field in form %}
+                            <div class="mb-3">
+                                <label for="id_{{ field.name }}" class="form-label fw-semibold">
+                                    {{ field.label }}
+                                    {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                                </label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <div class="form-text">{{ field.help_text }}</div>
+                                {% endif %}
+                                {% for error in field.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                        <button type="submit" class="btn btn-success w-100 py-2 fs-5">
+                            <i class="fas fa-check-circle me-2"></i>{% translate "Create" %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Ajoute la classe is-invalid sur les champs avec erreur pour Bootstrap
+(function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.invalid-feedback').forEach(function(el) {
+            var input = el.closest('.mb-3').querySelector('input, select, textarea');
+            if(input) input.classList.add('is-invalid');
+        });
+    });
+})();
+</script>
+{% endblock %} 

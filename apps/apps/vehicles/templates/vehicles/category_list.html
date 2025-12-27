@@ -1,0 +1,514 @@
+{% extends "vehicles/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block vehicle_content %}
+<div class="category-dashboard-bg py-4">
+    <div class="container-xxl">
+        <!-- HERO SECTION -->
+        <div class="category-hero mb-4 p-4 rounded-4 shadow-sm d-flex flex-wrap align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <div class="category-hero-icon bg-gradient-primary text-white rounded-3 d-flex align-items-center justify-content-center">
+                    <i class="fas fa-tags fa-2x"></i>
+                </div>
+                <div>
+                    <h1 class="category-title mb-1">{% trans "Vehicle Categories" %}</h1>
+                    {% if location %}
+                        <div class="text-white-50 small">{{ location.name }} &mdash; {{ location.business.name }}</div>
+                    {% else %}
+                        <div class="text-white-50 small">{% trans "Manage vehicle categories" %}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-3 mt-md-0">
+                {% if location %}
+                    <a href="{% url 'business:business_location_dashboard' location.pk %}" class="btn btn-outline-light category-btn-action">
+                        <i class="fas fa-arrow-left"></i> {% trans "Back to dashboard" %}
+                    </a>
+                {% endif %}
+                <a href="{% url 'vehicles:category_create' %}" class="btn btn-gradient-primary category-btn-action">
+                    <i class="fas fa-plus"></i> {% trans "Add Category" %}
+                </a>
+            </div>
+        </div>
+
+        <!-- STATS CARDS -->
+        <div class="row g-3 mb-4 category-stats-row">
+            <div class="col-6 col-md-3">
+                <div class="category-stat-card bg-gradient-primary text-white animate-fade-in">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="stat-value">{{ categories.count }}</div>
+                            <div class="stat-label">{% trans "Total Categories" %}</div>
+                        </div>
+                        <i class="fas fa-tags fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="category-stat-card bg-gradient-success text-white animate-fade-in">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="stat-value">{{ categories|dictsort:"is_active"|length }}</div>
+                            <div class="stat-label">{% trans "Active" %}</div>
+                        </div>
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="category-stat-card bg-gradient-warning text-dark animate-fade-in">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="stat-value">{{ total_vehicles|default:0 }}</div>
+                            <div class="stat-label">{% trans "Total Vehicles" %}</div>
+                        </div>
+                        <i class="fas fa-car fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="category-stat-card bg-gradient-info text-white animate-fade-in">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="stat-value">{{ page_obj.paginator.num_pages|default:1 }}</div>
+                            <div class="stat-label">{% trans "Pages" %}</div>
+                        </div>
+                        <i class="fas fa-file-alt fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="row g-3">
+            <div class="col-12">
+                <div class="category-section-card p-4">
+                    <div class="d-flex align-items-center mb-3 gap-2">
+                        <i class="fas fa-layer-group text-primary"></i>
+                        <h2 class="h5 mb-0">{% trans "Category Management" %}</h2>
+                    </div>
+                    
+                    {% if categories %}
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                        {% for category in categories %}
+                        <div class="col">
+                            <div class="category-card h-100">
+                                <div class="category-card-image">
+                                    {% if category.icon %}
+                                        <img src="{{ category.icon.url }}" class="category-img" alt="{{ category.name }}">
+                                    {% else %}
+                                        <div class="category-img-placeholder">
+                                            <i class="fas fa-car fa-3x text-muted"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div class="category-status-badge">
+                                        <span class="badge {% if category.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                            {% if category.is_active %}
+                                                {% trans "Active" %}
+                                            {% else %}
+                                                {% trans "Inactive" %}
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="category-card-body">
+                                    <div class="category-header mb-3">
+                                        <h5 class="category-title mb-2">{{ category.name }}</h5>
+                                        <div class="category-code">
+                                            <span class="badge bg-light text-dark">
+                                                <i class="fas fa-hashtag me-1"></i>{{ category.code }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="category-description mb-3">
+                                        <p class="text-muted small mb-0">
+                                            {{ category.description|truncatewords:20|default:"No description available" }}
+                                        </p>
+                                    </div>
+
+                                    <div class="category-stats mb-3">
+                                        <div class="category-stat-item">
+                                            <i class="fas fa-car text-primary me-2"></i>
+                                            <span class="fw-bold">{{ category.vehicles.count }}</span>
+                                            <span class="text-muted">{% trans "vehicles" %}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="category-card-footer">
+                                    <div class="category-actions">
+                                        <a href="{% url 'vehicles:vehicle_list' %}?category={{ category.pk }}" 
+                                           class="btn btn-outline-primary category-action-btn">
+                                            <i class="fas fa-car me-1"></i> {% trans "View Vehicles" %}
+                                        </a>
+                                        <a href="{% url 'vehicles:category_update' category.pk %}"
+                                           class="btn btn-outline-secondary category-action-btn">
+                                            <i class="fas fa-edit me-1"></i> {% trans "Edit" %}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if is_paginated %}
+                    <nav aria-label="{% trans 'Page navigation' %}" class="mt-4">
+                        <ul class="pagination justify-content-center category-pagination">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                        <i class="fas fa-chevron-left"></i> {% trans "Previous" %}
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                        {% trans "Next" %} <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    {% else %}
+                    <div class="empty-state text-center py-5">
+                        <div class="empty-state-icon mb-3">
+                            <i class="fas fa-tags fa-4x text-muted"></i>
+                        </div>
+                        <h5 class="text-muted mb-2">{% trans "No categories available" %}</h5>
+                        <p class="text-muted mb-4">{% trans "Start by creating your first vehicle category." %}</p>
+                        <a href="{% url 'vehicles:category_create' %}" class="btn btn-gradient-primary">
+                            <i class="fas fa-plus me-2"></i>{% trans "Create First Category" %}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- STYLE CATEGORY DASHBOARD -->
+<style>
+.category-dashboard-bg { 
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
+    min-height: 100vh; 
+}
+
+.category-hero { 
+    background: linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%); 
+    color: #fff; 
+    box-shadow: 0 4px 24px rgba(139, 92, 246, 0.15); 
+}
+
+.category-hero-icon { 
+    width: 56px; 
+    height: 56px; 
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); 
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.2); 
+}
+
+.category-title { 
+    font-size: 2.1rem; 
+    font-weight: 700; 
+    letter-spacing: 0.5px; 
+}
+
+.category-btn-action { 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+    border-radius: 0.7rem; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07); 
+    font-weight: 600;
+}
+
+.category-btn-action:hover { 
+    transform: translateY(-2px) scale(1.02); 
+    box-shadow: 0 6px 24px rgba(139, 92, 246, 0.2); 
+}
+
+.btn-gradient-primary {
+    background: linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-gradient-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(139, 92, 246, 0.4);
+    color: white;
+}
+
+.category-stats-row .category-stat-card { 
+    border-radius: 1.1rem; 
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07); 
+    padding: 1.2rem 1.3rem; 
+    min-height: 110px; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    animation: fadeInUp 0.7s; 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.category-stats-row .category-stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.bg-gradient-primary { background: linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%) !important; }
+.bg-gradient-success { background: linear-gradient(90deg, #10b981 0%, #059669 100%) !important; }
+.bg-gradient-warning { background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%) !important; }
+.bg-gradient-info { background: linear-gradient(90deg, #06b6d4 0%, #0891b2 100%) !important; }
+
+.category-stat-card .stat-value { 
+    font-size: 2.1rem; 
+    font-weight: 700; 
+}
+
+.category-stat-card .stat-label { 
+    font-size: 1.1rem; 
+    font-weight: 500; 
+    opacity: 0.85; 
+}
+
+.category-section-card { 
+    background: #fff; 
+    border-radius: 1.1rem; 
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07); 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.category-section-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.category-card {
+    background: #fff;
+    border-radius: 1.1rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    position: relative;
+}
+
+.category-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(139, 92, 246, 0.15);
+}
+
+.category-card-image {
+    position: relative;
+    height: 180px;
+    overflow: hidden;
+}
+
+.category-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.category-card:hover .category-img {
+    transform: scale(1.1);
+}
+
+.category-img-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.category-card:hover .category-img-placeholder {
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+}
+
+.category-status-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 2;
+}
+
+.category-status-badge .badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.category-card-body {
+    padding: 1.5rem;
+}
+
+.category-header {
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 1rem;
+}
+
+.category-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.category-code {
+    margin-top: 0.5rem;
+}
+
+.category-code .badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    background: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid #e2e8f0;
+}
+
+.category-description {
+    min-height: 3rem;
+}
+
+.category-stats {
+    background: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 0.7rem;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+}
+
+.category-stat-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.category-card-footer {
+    padding: 1.5rem;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+}
+
+.category-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.category-action-btn {
+    flex: 1;
+    min-width: 120px;
+    border-radius: 0.7rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    border: 1px solid #e2e8f0;
+    padding: 0.75rem 1rem;
+}
+
+.category-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.category-pagination .page-link {
+    border-radius: 0.5rem;
+    margin: 0 0.25rem;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    transition: all 0.2s ease;
+}
+
+.category-pagination .page-link:hover {
+    background: linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.category-pagination .page-item.active .page-link {
+    background: linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%);
+    border-color: #8b5cf6;
+}
+
+.empty-state {
+    background: white;
+    border-radius: 1.1rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    padding: 3rem 2rem;
+}
+
+.empty-state-icon {
+    opacity: 0.6;
+}
+
+@keyframes fadeInUp { 
+    from { 
+        opacity: 0; 
+        transform: translateY(30px); 
+    } 
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    } 
+}
+
+.animate-fade-in { 
+    animation: fadeInUp 0.7s; 
+}
+
+@media (max-width: 991px) { 
+    .category-hero { 
+        flex-direction: column; 
+        gap: 1.5rem; 
+    } 
+    .category-title { 
+        font-size: 1.5rem; 
+    } 
+}
+
+@media (max-width: 767px) { 
+    .category-stats-row .category-stat-card { 
+        min-height: 90px; 
+        padding: 0.8rem 0.7rem; 
+    } 
+    .category-title { 
+        font-size: 1.2rem; 
+    }
+    .category-actions {
+        flex-direction: column;
+    }
+    .category-action-btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %} 

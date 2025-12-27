@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sites Touristiques{% endblock %}
+
+{% block extra_css %}
+<style>
+    .site-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    .site-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .site-image {
+        height: 200px;
+        object-fit: cover;
+        width: 100%;
+    }
+
+    .category-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+    }
+
+    .filter-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+
+    .btn-map {
+        background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-map:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Section de filtres -->
+    <div class="filter-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-3">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        Sites Touristiques
+                    </h1>
+                    <p class="mb-0">Découvrez les merveilles touristiques de notre région</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="{% url 'tourist_sites:sites_map' %}" class="btn btn-map">
+                        <i class="fas fa-map me-2"></i>
+                        Voir sur la carte
+                    </a>
+                </div>
+            </div>
+
+            <!-- Filtres -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <form method="get" class="d-flex">
+                        <select name="category" class="form-select me-2" onchange="this.form.submit()">
+                            <option value="">Toutes les catégories</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}
+                                selected {% endif %}>
+                                {{ category.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+                <div class="col-md-6 text-end">
+                    <span class="text-white">
+                        <i class="fas fa-filter me-1"></i>
+                        {{ sites.count }} site{{ sites.count|pluralize }} trouvé{{ sites.count|pluralize }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des sites -->
+    <div class="container">
+        {% if sites %}
+        <div class="row">
+            {% for site in sites %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card site-card h-100">
+                    {% if site.images.exists %}
+                    <img src="{{ site.images.first.image.url }}" class="card-img-top site-image" alt="{{ site.name }}">
+                    {% else %}
+                    <div class="card-img-top site-image bg-light d-flex align-items-center justify-content-center">
+                        <i class="fas fa-image fa-3x text-muted"></i>
+                    </div>
+                    {% endif %}
+
+                    {% if site.category %}
+                    <div class="category-badge">{{ site.category.name }}</div>
+                    {% endif %}
+
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ site.name }}</h5>
+                        <p class="card-text text-muted">
+                            {{ site.description|truncatewords:20 }}
+                        </p>
+
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-map-marker-alt me-1"></i>
+                                    {{ site.latitude|floatformat:4 }}, {{ site.longitude|floatformat:4 }}
+                                </small>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    {{ site.created_at|date:"d/m/Y" }}
+                                </small>
+                            </div>
+
+                            <a href="{% url 'tourist_sites:site_detail' site.id %}" class="btn btn-primary w-100">
+                                <i class="fas fa-eye me-2"></i>
+                                Voir les détails
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <h3 class="text-muted">Aucun site trouvé</h3>
+            <p class="text-muted">Aucun site touristique ne correspond à vos critères de recherche.</p>
+            <a href="{% url 'tourist_sites:sites_list' %}" class="btn btn-primary">
+                <i class="fas fa-refresh me-2"></i>
+                Voir tous les sites
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,246 @@
+{% extends "tours/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block tour_content %}
+<!-- Hero Section -->
+<div class="position-relative mb-4">
+    {% if destination.image %}
+        <img src="{{ destination.image.url }}" class="w-100 rounded" alt="{{ destination.name }}"
+             style="height: 400px; object-fit: cover;">
+    {% else %}
+        <img src="{% static 'tours/images/default-destination.jpg' %}" class="w-100 rounded" alt="{{ destination.name }}"
+             style="height: 400px; object-fit: cover;">
+    {% endif %}
+    <div class="position-absolute bottom-0 start-0 w-100 p-4" 
+         style="background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);">
+        <div class="container">
+            <h1 class="display-4 text-white mb-2">{{ destination.name }}</h1>
+            <p class="lead text-white mb-0">
+                <i class="fas fa-map-marker-alt"></i> {{ destination.region }}
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Description -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title">{% trans "About" %} {{ destination.name }}</h4>
+                <p class="card-text">{{ destination.description|linebreaks }}</p>
+                
+                <!-- Key Information -->
+                <div class="row row-cols-2 row-cols-md-4 g-3 mt-3">
+                    <div class="col">
+                        <div class="card h-100 text-center">
+                            <div class="card-body">
+                                <i class="fas fa-route fa-2x text-primary mb-2"></i>
+                                <h6 class="card-title">{% trans "Tours" %}</h6>
+                                <p class="card-text">{{ destination.tours.count }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card h-100 text-center">
+                            <div class="card-body">
+                                <i class="fas fa-hiking fa-2x text-primary mb-2"></i>
+                                <h6 class="card-title">{% trans "Activities" %}</h6>
+                                <p class="card-text">{{ destination.get_activity_count }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card h-100 text-center">
+                            <div class="card-body">
+                                <i class="fas fa-calendar-alt fa-2x text-primary mb-2"></i>
+                                <h6 class="card-title">{% trans "Best Time" %}</h6>
+                                <p class="card-text">{{ destination.best_time }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card h-100 text-center">
+                            <div class="card-body">
+                                <i class="fas fa-temperature-high fa-2x text-primary mb-2"></i>
+                                <h6 class="card-title">{% trans "Climate" %}</h6>
+                                <p class="card-text">{{ destination.climate }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Tours -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title mb-4">{% trans "Available Tours" %}</h4>
+                
+                {% for tour in destination.tours.all %}
+                    <div class="card mb-3">
+                        <div class="row g-0">
+                            <div class="col-md-4">
+                                {% if tour.images.first %}
+                                    <img src="{{ tour.images.first.image.url }}" class="img-fluid rounded-start" 
+                                         alt="{{ tour.name }}" style="height: 100%; object-fit: cover;">
+                                {% else %}
+                                    <img src="{% static 'tours/images/default-tour.jpg' %}" class="img-fluid rounded-start" 
+                                         alt="{{ tour.name }}" style="height: 100%; object-fit: cover;">
+                                {% endif %}
+                            </div>
+                            <div class="col-md-8">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <h5 class="card-title">{{ tour.name }}</h5>
+                                        <span class="badge bg-primary">{{ tour.get_difficulty_display }}</span>
+                                    </div>
+                                    <p class="card-text text-muted">
+                                        <i class="fas fa-clock"></i> {{ tour.duration }} {% trans "days" %} |
+                                        <i class="fas fa-users"></i> {% trans "Max" %} {{ tour.max_participants }} {% trans "participants" %}
+                                    </p>
+                                    <p class="card-text">{{ tour.description|truncatewords:30 }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h4 class="text-primary mb-0">{{ tour.price|floatformat:2 }} {% trans "XAF" %}</h4>
+                                        <a href="{% url 'tours:tour_detail' tour.slug %}" class="btn btn-outline-primary">
+                                            {% trans "View Details" %}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> {% trans "No tours available for this destination at the moment." %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Activities -->
+        {% if destination.get_activities %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">{% trans "Available Activities" %}</h4>
+                    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
+                        {% for activity in destination.get_activities %}
+                            <div class="col">
+                                <div class="card h-100 text-center">
+                                    {% if activity.icon %}
+                                        <img src="{{ activity.icon.url }}" class="card-img-top p-3" alt="{{ activity.name }}"
+                                             style="height: 100px; object-fit: contain;">
+                                    {% else %}
+                                        <i class="fas fa-hiking card-img-top p-3" style="font-size: 3rem;"></i>
+                                    {% endif %}
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ activity.name }}</h6>
+                                        <p class="card-text small">{{ activity.description|truncatewords:10 }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <!-- Map -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">{% trans "Location" %}</h5>
+                <div id="destinationMap" class="map-container"></div>
+            </div>
+        </div>
+
+        <!-- Weather -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">{% trans "Weather Information" %}</h5>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Season" %}</th>
+                                <th>{% trans "Temperature" %}</th>
+                                <th>{% trans "Rainfall" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for weather in destination.get_weather_info %}
+                                <tr>
+                                    <td>{{ weather.season }}</td>
+                                    <td>{{ weather.temperature }}°C</td>
+                                    <td>{{ weather.rainfall }}mm</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Getting There -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">{% trans "Getting There" %}</h5>
+                <ul class="list-unstyled">
+                    {% for transport in destination.get_transport_options %}
+                        <li class="mb-3">
+                            <i class="fas fa-{{ transport.icon }} text-primary"></i>
+                            <strong>{{ transport.mode }}:</strong>
+                            <p class="mb-0 ms-4">{{ transport.description }}</p>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{% trans "Need Help?" %}</h5>
+                <p class="card-text">{% trans "Contact our local expert for more information about this destination." %}</p>
+                <form method="post" action="{% url 'tours:destination_inquiry' destination.slug %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="name" class="form-label">{% trans "Your Name" %}</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">{% trans "Your Email" %}</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="message" class="form-label">{% trans "Your Message" %}</label>
+                        <textarea class="form-control" id="message" name="message" rows="4" required></textarea>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> {% trans "Send Inquiry" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize map
+        var map = initMap('destinationMap', {{ destination.latitude }}, {{ destination.longitude }}, 12);
+        
+        // Add marker for destination
+        L.marker([{{ destination.latitude }}, {{ destination.longitude }}])
+            .addTo(map)
+            .bindPopup("{{ destination.name }}");
+    });
+</script>
+{% endblock %}
+{% endblock %} 

@@ -1,0 +1,212 @@
+{% extends "vehicles/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Booking Details" %}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="h4 mb-0">{% trans "Booking Details" %}</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h5 class="text-muted">{% trans "Reference" %}</h5>
+                            <p>{{ booking.booking_reference }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="text-muted">{% trans "Status" %}</h5>
+                            <p>
+                                <span class="badge bg-{{ booking.status|lower }}">
+                                    {{ booking.get_status_display }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h5 class="text-muted">{% trans "Vehicle" %}</h5>
+                            <p>{{ booking.vehicle }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="text-muted">{% trans "Driver" %}</h5>
+                            <p>{{ booking.driver|default:"-" }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h5 class="text-muted">{% trans "Pickup" %}</h5>
+                            <p>
+                                {{ booking.pickup_datetime|date:"d/m/Y H:i" }}<br>
+                                <small class="text-muted">{{ booking.pickup_location }}</small>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="text-muted">{% trans "Return" %}</h5>
+                            <p>
+                                {{ booking.return_datetime|date:"d/m/Y H:i" }}<br>
+                                <small class="text-muted">{{ booking.return_location }}</small>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h5 class="text-muted">{% trans "Customer" %}</h5>
+                            <p>
+                                {{ booking.customer.get_full_name }}<br>
+                                <small class="text-muted">{{ booking.customer.email }}</small>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="text-muted">{% trans "Payment Status" %}</h5>
+                            <p>
+                                <span class="badge bg-{{ booking.payment_status|lower }}">
+                                    {{ booking.get_payment_status_display }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    {% if booking.notes %}
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h5 class="text-muted">{% trans "Notes" %}</h5>
+                            <p>{{ booking.notes }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="h5 mb-0">{% trans "Financial Summary" %}</h3>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <td>{% trans "Daily Rate" %}</td>
+                            <td class="text-end">{{ booking.daily_rate }} XAF</td>
+                        </tr>
+                        <tr>
+                            <td>{% trans "Total Days" %}</td>
+                            <td class="text-end">{{ booking.total_days }}</td>
+                        </tr>
+                        <tr>
+                            <td>{% trans "Subtotal" %}</td>
+                            <td class="text-end">{{ booking.subtotal }} XAF</td>
+                        </tr>
+                        {% if booking.driver_fee %}
+                        <tr>
+                            <td>{% trans "Driver Fee" %}</td>
+                            <td class="text-end">{{ booking.driver_fee }} XAF</td>
+                        </tr>
+                        {% endif %}
+                        {% if booking.additional_charges %}
+                        <tr>
+                            <td>{% trans "Additional Charges" %}</td>
+                            <td class="text-end">{{ booking.additional_charges }} XAF</td>
+                        </tr>
+                        {% endif %}
+                        <tr class="table-primary">
+                            <th>{% trans "Total Amount" %}</th>
+                            <th class="text-end">{{ booking.total_amount }} XAF</th>
+                        </tr>
+                        <tr>
+                            <td>{% trans "Amount Paid" %}</td>
+                            <td class="text-end">{{ booking.amount_paid }} XAF</td>
+                        </tr>
+                        <tr class="table-info">
+                            <th>{% trans "Balance Due" %}</th>
+                            <th class="text-end">{{ booking.balance_due }} XAF</th>
+                        </tr>
+                    </table>
+
+                    {% if booking.payment_status != 'PAID' %}
+                    <a href="{% url 'vehicles:booking_payment' booking.pk %}" 
+                       class="btn btn-success w-100">
+                        <i class="fas fa-money-bill"></i> {% trans "Make Payment" %}
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if user.is_staff %}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h3 class="h5 mb-0">{% trans "Actions" %}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if booking.status == 'PENDING' %}
+                        <a href="{% url 'vehicles:booking_update' booking.pk %}" 
+                           class="btn btn-warning">
+                            <i class="fas fa-edit"></i> {% trans "Edit Booking" %}
+                        </a>
+                        {% endif %}
+                        
+                        {% if booking.status == 'CONFIRMED' %}
+                        <form method="post" action="{% url 'vehicles:booking_start' booking.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-play"></i> {% trans "Start Booking" %}
+                            </button>
+                        </form>
+                        {% endif %}
+                        
+                        {% if booking.status == 'PICKED_UP' %}
+                        <button type="button" class="btn btn-success w-100" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#completeBookingModal">
+                            <i class="fas fa-check"></i> {% trans "Complete Booking" %}
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if booking.status == 'PICKED_UP' %}
+<!-- Complete Booking Modal -->
+<div class="modal fade" id="completeBookingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'vehicles:booking_complete' booking.pk %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">{% trans "Complete Booking" %}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="end_mileage" class="form-label">
+                            {% trans "End Mileage" %}
+                        </label>
+                        <input type="number" class="form-control" id="end_mileage" 
+                               name="end_mileage" required min="{{ booking.start_mileage }}">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" 
+                            data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                    <button type="submit" class="btn btn-success">
+                        {% trans "Complete Booking" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %} 

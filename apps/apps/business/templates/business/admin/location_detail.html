@@ -1,0 +1,421 @@
+{% extends 'business/admin/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ location.name }}{% endblock %}
+
+{% block admin_content %}
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">{{ location.name }}</h2>
+        <p class="text-muted mb-0">{{ location.business.name }} - {{ location.get_business_location_type_display }}</p>
+    </div>
+    <div class="btn-group" role="group">
+        <a href="{% url 'business:admin:location_edit' location.pk %}" class="btn btn-primary btn-admin">
+            <i class="fas fa-edit"></i>
+            Edit
+        </a>
+        <button type="button" class="btn btn-danger btn-admin" 
+                onclick="confirmDelete('{% url 'business:admin:location_delete' location.pk %}', 'Are you sure you want to delete this location?')">
+            <i class="fas fa-trash"></i>
+            Delete
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Location Information -->
+    <div class="col-lg-8">
+        <!-- Basic Information -->
+        <div class="card admin-card mb-4">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle text-primary"></i>
+                    Location Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Basic Information</h6>
+                        <dl class="row">
+                            <dt class="col-sm-4">Name:</dt>
+                            <dd class="col-sm-8">{{ location.name }}</dd>
+                            
+                            <dt class="col-sm-4">Business:</dt>
+                            <dd class="col-sm-8">
+                                <a href="{% url 'business:admin:business_detail' location.business.pk %}">
+                                    {{ location.business.name }}
+                                </a>
+                            </dd>
+                            
+                            <dt class="col-sm-4">Type:</dt>
+                            <dd class="col-sm-8">{{ location.get_business_location_type_display }}</dd>
+                            
+                            <dt class="col-sm-4">Registration:</dt>
+                            <dd class="col-sm-8">{{ location.registration_number }}</dd>
+                            
+                            {% if location.founded_date %}
+                            <dt class="col-sm-4">Founded:</dt>
+                            <dd class="col-sm-8">{{ location.founded_date|date:"F d, Y" }}</dd>
+                            {% endif %}
+                        </dl>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6>Status & Flags</h6>
+                        <dl class="row">
+                            <dt class="col-sm-4">Status:</dt>
+                            <dd class="col-sm-8">
+                                <span class="status-badge {% if location.is_active %}status-active{% else %}status-inactive{% endif %}">
+                                    {% if location.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </dd>
+                            
+                            <dt class="col-sm-4">Verification:</dt>
+                            <dd class="col-sm-8">
+                                <span class="status-badge {% if location.is_verified %}status-verified{% else %}status-inactive{% endif %}">
+                                    {% if location.is_verified %}Verified{% else %}Unverified{% endif %}
+                                </span>
+                            </dd>
+                            
+                            <dt class="col-sm-4">Featured:</dt>
+                            <dd class="col-sm-8">
+                                <span class="status-badge {% if location.featured %}status-featured{% else %}status-inactive{% endif %}">
+                                    {% if location.featured %}Featured{% else %}Not Featured{% endif %}
+                                </span>
+                            </dd>
+                            
+                            <dt class="col-sm-4">Main Location:</dt>
+                            <dd class="col-sm-8">
+                                {% if location.is_main_location %}
+                                    <span class="badge bg-warning">Yes</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">No</span>
+                                {% endif %}
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                
+                {% if location.description %}
+                <div class="mt-3">
+                    <h6>Description</h6>
+                    <p class="text-muted">{{ location.description }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Contact Information -->
+        <div class="card admin-card mb-4">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-address-book text-info"></i>
+                    Contact Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Contact Details</h6>
+                        <dl class="row">
+                            {% if location.phone %}
+                            <dt class="col-sm-4">Phone:</dt>
+                            <dd class="col-sm-8">
+                                <a href="tel:{{ location.phone }}">{{ location.phone }}</a>
+                            </dd>
+                            {% endif %}
+                            
+                            {% if location.email %}
+                            <dt class="col-sm-4">Email:</dt>
+                            <dd class="col-sm-8">
+                                <a href="mailto:{{ location.email }}">{{ location.email }}</a>
+                            </dd>
+                            {% endif %}
+                        </dl>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6>Address</h6>
+                        <dl class="row">
+                            {% if location.street_address %}
+                            <dt class="col-sm-4">Address:</dt>
+                            <dd class="col-sm-8">{{ location.street_address }}</dd>
+                            {% endif %}
+                            
+                            {% if location.city %}
+                            <dt class="col-sm-4">City:</dt>
+                            <dd class="col-sm-8">{{ location.city }}</dd>
+                            {% endif %}
+                            
+                            {% if location.state %}
+                            <dt class="col-sm-4">State:</dt>
+                            <dd class="col-sm-8">{{ location.state }}</dd>
+                            {% endif %}
+                            
+                            {% if location.postal_code %}
+                            <dt class="col-sm-4">Postal Code:</dt>
+                            <dd class="col-sm-8">{{ location.postal_code }}</dd>
+                            {% endif %}
+                            
+                            {% if location.country %}
+                            <dt class="col-sm-4">Country:</dt>
+                            <dd class="col-sm-8">{{ location.country }}</dd>
+                            {% endif %}
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Images -->
+        {% if images %}
+        <div class="card admin-card mb-4">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-images text-success"></i>
+                    Location Images ({{ images.count }})
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for image in images %}
+                    <div class="col-md-4 mb-3">
+                        <div class="position-relative">
+                            <img src="{{ image.image.url }}" class="img-fluid rounded" alt="{{ image.caption }}">
+                            {% if image.is_primary %}
+                                <span class="position-absolute top-0 start-0 badge bg-primary m-2">Primary</span>
+                            {% endif %}
+                            <div class="mt-2">
+                                <small class="text-muted">{{ image.caption|default:"No caption" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Reviews -->
+        {% if reviews %}
+        <div class="card admin-card">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-star text-warning"></i>
+                    Recent Reviews ({{ total_reviews }})
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Reviewer</th>
+                                <th>Rating</th>
+                                <th>Visit Type</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for review in reviews %}
+                            <tr>
+                                <td>{{ review.reviewer.get_full_name|default:review.reviewer.username }}</td>
+                                <td>
+                                    <div class="text-warning">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= review.rating %}
+                                                <i class="fas fa-star"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                                <td>{{ review.get_visit_type_display }}</td>
+                                <td>{{ review.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <a href="{% url 'business:admin_review_detail' review.pk %}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Quick Actions -->
+        <div class="card admin-card mb-4">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt text-warning"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-success btn-admin" 
+                            onclick="toggleLocationStatus('{% url 'business:admin:location_toggle_status' location.pk %}', 'status-{{ location.id }}')">
+                        <i class="fas fa-toggle-on"></i>
+                        Toggle Status
+                    </button>
+                    <button type="button" class="btn btn-outline-info btn-admin" 
+                            onclick="toggleLocationVerification('{% url 'business:admin:location_toggle_verification' location.pk %}')">
+                        <i class="fas fa-shield-alt"></i>
+                        Toggle Verification
+                    </button>
+                    <button type="button" class="btn btn-outline-warning btn-admin" 
+                            onclick="toggleLocationFeatured('{% url 'business:admin:location_toggle_featured' location.pk %}')">
+                        <i class="fas fa-star"></i>
+                        Toggle Featured
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Statistics -->
+        <div class="card admin-card mb-4">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar text-success"></i>
+                    Statistics
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-primary">{{ total_reviews }}</h4>
+                        <small class="text-muted">Total Reviews</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-warning">{{ avg_rating }}</h4>
+                        <small class="text-muted">Avg Rating</small>
+                    </div>
+                </div>
+                
+                {% if rating_distribution %}
+                <hr>
+                <h6>Rating Distribution</h6>
+                {% for rating in rating_distribution %}
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="text-muted">{{ rating.rating }} stars</span>
+                    <span class="badge bg-secondary">{{ rating.count }}</span>
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Timestamps -->
+        <div class="card admin-card">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-clock text-secondary"></i>
+                    Timestamps
+                </h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-6">Created:</dt>
+                    <dd class="col-sm-6">{{ location.created_at|date:"M d, Y" }}</dd>
+                    
+                    <dt class="col-sm-6">Updated:</dt>
+                    <dd class="col-sm-6">{{ location.updated_at|date:"M d, Y" }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleLocationStatus(url, elementId) {
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = data.is_active ? 'Active' : 'Inactive';
+                element.className = data.is_active ? 'status-badge status-active' : 'status-badge status-inactive';
+            }
+            showAlert('success', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'An error occurred while updating the status.');
+    });
+}
+
+function toggleLocationVerification(url) {
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('success', data.message);
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'An error occurred while updating the verification status.');
+    });
+}
+
+function toggleLocationFeatured(url) {
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('success', data.message);
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'An error occurred while updating the featured status.');
+    });
+}
+
+function showAlert(type, message) {
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.admin-content .mt-4').insertBefore(alert, document.querySelector('.admin-content .mt-4').firstChild);
+}
+</script>
+{% endblock %} 

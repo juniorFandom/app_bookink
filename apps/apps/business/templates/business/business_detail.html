@@ -1,0 +1,365 @@
+{% extends "business/base.html" %}
+{% load i18n %}
+{% load static %}
+{% load business_tags %}
+
+{% block title %}{{ business.name }} | {{ block.super }}{% endblock %}
+
+{% block business_content %}
+<div class="business-detail-bg py-4">
+    <div class="container-xxl">
+        <!-- HERO SECTION -->
+        <div class="business-hero mb-4 p-4 rounded-4 shadow-sm d-flex flex-wrap align-items-center justify-content-between animate-fade-in">
+            <div class="d-flex align-items-center gap-3">
+                <div class="business-hero-icon bg-gradient-green text-white rounded-3 d-flex align-items-center justify-content-center">
+                    <i class="fas fa-building fa-2x"></i>
+                </div>
+                <div>
+                    <h1 class="business-title mb-1">{{ business.name }}</h1>
+                    <div class="d-flex gap-2 flex-wrap align-items-center mt-2">
+                        {% if business.is_verified %}
+                            <span class="badge bg-success"><i class="fas fa-check-circle"></i> {% translate 'Vérifié' %}</span>
+                        {% endif %}
+                        {% if business.is_active %}
+                            <span class="badge bg-gradient-green text-white">{% translate 'Actif' %}</span>
+                        {% else %}
+                            <span class="badge bg-danger">{% translate 'Inactif' %}</span>
+                        {% endif %}
+                        <span class="badge bg-light text-dark"><i class="fas fa-briefcase me-1"></i> {{ business.get_business_type_display|default:_('Type inconnu') }}</span>
+                        {% if business.founded_date %}<span class="badge bg-light text-dark"><i class="fas fa-calendar-alt me-1"></i> {{ business.founded_date }}</span>{% endif %}
+                        {% if business.owner %}<span class="badge bg-light text-dark"><i class="fas fa-user-tie me-1"></i> {{ business.owner.get_full_name|default:business.owner.username }}</span>{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PHOTO PRINCIPALE DE L'ENTREPRISE -->
+        <div class="business-main-photo-card mb-4 animate-fade-in">
+            <div class="business-main-photo-wrapper">
+                {% if images and images.0.image %}
+                    <img src="{{ images.0.image.url }}" alt="Photo principale de {{ business.name }}" class="business-main-photo-img">
+                {% else %}
+                    <div class="business-main-photo-placeholder d-flex flex-column align-items-center justify-content-center text-center">
+                        <i class="fas fa-building fa-4x text-muted mb-3"></i>
+                        <div class="text-muted mb-2">{% translate "Aucune photo d'entreprise n'est disponible." %}</div>
+                        {% if is_owner %}
+                            {% if main_location and main_location.pk %}
+                        <a href="{% url 'business:location_edit' main_location.pk %}" class="btn btn-gradient-green btn-sm mt-2">
+                            <i class="fas fa-plus me-1"></i>{% translate "Ajouter une photo" %}
+                        </a>
+                            {% else %}
+                                <a href="{% url 'business:location_create' business.pk %}" class="btn btn-gradient-green btn-sm mt-2">
+                                    <i class="fas fa-map-marker-alt me-1"></i>{% translate "Ajouter une localisation" %}
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Galerie d'images -->
+        <div class="business-card mb-4 p-0 overflow-hidden animate-fade-in">
+            <div id="businessImages" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    {% for image in images %}
+                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                        <img src="{{ image.image.url }}" class="d-block w-100" alt="{{ image.caption|default:business.name }}" style="height: 350px; object-fit: cover;">
+                        {% if image.caption %}
+                        <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-2">
+                            <p class="mb-0">{{ image.caption }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <div class="carousel-item active">
+                        <div class="bg-light d-flex align-items-center justify-content-center" style="height: 350px;">
+                            <i class="fas fa-building fa-5x text-muted"></i>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if images|length > 1 %}
+                <button class="carousel-control-prev" type="button" data-bs-target="#businessImages" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">{% translate "Précédent" %}</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#businessImages" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">{% translate "Suivant" %}</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Résumé des notes -->
+        {% if rating_stats.total_reviews %}
+        <div class="business-card mb-4 animate-fade-in">
+            <div class="card-body">
+                <h3 class="h5 mb-3"><i class="fas fa-star text-warning me-2"></i>{% translate "Résumé des notes" %}</h3>
+                <div class="row align-items-center">
+                    <div class="col-md-4 text-center">
+                        <div class="display-4 fw-bold text-success">{{ rating_stats.avg_overall|floatformat:1 }}</div>
+                        <div class="rating-stars mb-2">
+                            {% for i in stars_range %}
+                            <i class="fas fa-star"></i>
+                            {% endfor %}
+                        </div>
+                        <p class="text-muted">{{ rating_stats.total_reviews }} {% translate "avis" %}</p>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <small class="text-muted">{% translate "Service" %}</small>
+                                <div class="progress">
+                                    {% if rating_stats.avg_service is not None %}
+                                    <div class="progress-bar bg-success" style="width: {{ rating_stats.avg_service|multiply:20|floatformat:0|default_if_none:'0' }}%">{{ rating_stats.avg_service|floatformat:1 }}</div>
+                                    {% else %}
+                                    <div class="progress-bar bg-success" style="width:0%">0.0</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">{% translate "Valeur" %}</small>
+                                <div class="progress">
+                                    {% if rating_stats.avg_value is not None %}
+                                    <div class="progress-bar bg-success" style="width: {{ rating_stats.avg_value|multiply:20|floatformat:0|default_if_none:'0' }}%">{{ rating_stats.avg_value|floatformat:1 }}</div>
+                                    {% else %}
+                                    <div class="progress-bar bg-success" style="width:0%">0.0</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if rating_stats.avg_cleanliness is not None %}
+                            <div class="col-6">
+                                <small class="text-muted">{% translate "Propreté" %}</small>
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" style="width: {{ rating_stats.avg_cleanliness|multiply:20|floatformat:0|default_if_none:'0' }}%">{{ rating_stats.avg_cleanliness|floatformat:1 }}</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% if rating_stats.avg_location is not None %}
+                            <div class="col-6">
+                                <small class="text-muted">{% translate "Emplacement" %}</small>
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" style="width: {{ rating_stats.avg_location|multiply:20|floatformat:0|default_if_none:'0' }}%">{{ rating_stats.avg_location|floatformat:1 }}</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Description -->
+        <div class="business-card mb-4 animate-fade-in">
+            <div class="card-body">
+                <h3 class="h5 mb-3"><i class="fas fa-info-circle me-2"></i>{% translate "À propos" %}</h3>
+                <p class="mb-0">{{ business.description|linebreaks }}</p>
+            </div>
+        </div>
+
+        <!-- Contact -->
+        <div class="business-card mb-4 animate-fade-in">
+            <div class="card-body">
+                <h3 class="h5 mb-3"><i class="fas fa-address-book me-2"></i>{% translate "Contact" %}</h3>
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2"><i class="fas fa-map-marker-alt text-success"></i> {{ business.address }}, {{ business.city }}, {{ business.state }}, {{ business.country }}</li>
+                    <li class="mb-2"><i class="fas fa-phone text-success"></i> <a href="tel:{{ business.phone }}" class="text-decoration-none">{{ business.phone }}</a></li>
+                    <li class="mb-2"><i class="fas fa-envelope text-success"></i> <a href="mailto:{{ business.email }}" class="text-decoration-none">{{ business.email }}</a></li>
+                    {% if business.website %}
+                    <li class="mb-2"><i class="fas fa-globe text-success"></i> <a href="{{ business.website }}" target="_blank" class="text-decoration-none">{{ business.website }}</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Horaires -->
+        <div class="business-card mb-4 animate-fade-in">
+            <div class="card-body">
+                <h3 class="h5 mb-3"><i class="fas fa-clock me-2"></i>{% translate "Horaires d'ouverture" %}
+                    {% if is_owner and main_location %}
+                    <a href="{% url 'business:location_hours' main_location.pk %}" class="btn btn-sm btn-outline-success float-end"><i class="fas fa-edit"></i> {% translate "Modifier" %}</a>
+                    {% endif %}
+                </h3>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <tbody>
+                            {% for day, schedule in hours.items %}
+                            <tr {% if forloop.counter0 == current_day %}class="table-active"{% endif %}>
+                                <td class="fw-bold">{{ day }}</td>
+                                <td>
+                                    {% if schedule and schedule.is_closed %}
+                                    <span class="text-danger">{% translate "Fermé" %}</span>
+                                    {% elif schedule %}
+                                    {{ schedule.opening_time|time:"H:i" }} - {{ schedule.closing_time|time:"H:i" }}
+                                    {% if schedule.break_start and schedule.break_end %}<br><small class="text-muted">{% translate "Pause:" %} {{ schedule.break_start|time:"H:i" }} - {{ schedule.break_end|time:"H:i" }}</small>{% endif %}
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Amenities -->
+        {% if amenities %}
+        <div class="business-card mb-4 animate-fade-in">
+            <div class="card-body">
+                <h3 class="h5 mb-3"><i class="fas fa-concierge-bell me-2"></i>{% translate "Équipements" %}</h3>
+                {% for category, items in amenities.items %}
+                <div class="mb-3">
+                    <h4 class="h6 mb-2"><i class="{{ category.icon }} me-1"></i> {{ category.name }}</h4>
+                    <div class="row g-2">
+                        {% for assign in items %}
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                {% if assign.amenity.icon %}<i class="{{ assign.amenity.icon }} me-2"></i>{% endif %}
+                                <span>{{ assign.amenity.name }}</span>
+                                {% if assign.details %}<small class="text-muted ms-2">({{ assign.details }})</small>{% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- STYLE BUSINESS DETAIL GREEN THEME -->
+<style>
+.business-detail-bg {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    min-height: 100vh;
+}
+.business-hero {
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+    color: #fff;
+    box-shadow: 0 4px 24px rgba(16,185,129,0.10);
+}
+.business-hero-icon {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 2px 8px rgba(16,185,129,0.13);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.business-title {
+    font-size: 2.1rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+.bg-gradient-green {
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%) !important;
+}
+.business-card {
+    background: #fff;
+    border-radius: 1.1rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-bottom: 2rem;
+}
+.business-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(16,185,129,0.13);
+}
+.badge.bg-gradient-green {
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%) !important;
+    color: #fff !important;
+}
+.animate-fade-in {
+    animation: fadeInUp 0.7s;
+}
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.rating-stars i {
+    color: #fbbf24;
+    font-size: 1.2rem;
+}
+.table-active {
+    background: linear-gradient(90deg, #bbf7d0 0%, #6ee7b7 100%) !important;
+}
+.btn-outline-success {
+    border-color: #10b981;
+    color: #10b981;
+}
+.btn-outline-success:hover {
+    background: #10b981;
+    color: #fff;
+}
+.business-main-photo-card {
+    background: #fff;
+    border-radius: 1.1rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+}
+.business-main-photo-wrapper {
+    width: 220px;
+    height: 220px;
+    border-radius: 1.1rem;
+    overflow: hidden;
+    background: linear-gradient(135deg, #bbf7d0 0%, #6ee7b7 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 12px rgba(16,185,129,0.10);
+}
+.business-main-photo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 1.1rem;
+    box-shadow: 0 2px 8px rgba(16,185,129,0.13);
+}
+.business-main-photo-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f0fdf4;
+    border-radius: 1.1rem;
+}
+@media (max-width: 991px) {
+    .business-hero { flex-direction: column; gap: 1.5rem; }
+    .business-title { font-size: 1.5rem; }
+}
+@media (max-width: 767px) {
+    .business-title { font-size: 1.2rem; }
+    .business-card { padding: 0.5rem; }
+    .business-main-photo-wrapper {
+        width: 120px;
+        height: 120px;
+    }
+}
+.btn-gradient-green {
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+    border: none;
+    color: #fff;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-gradient-green:hover {
+    background: linear-gradient(90deg, #059669 0%, #10b981 100%);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16,185,129,0.15);
+}
+</style>
+{% endblock %} 

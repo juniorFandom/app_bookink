@@ -1,0 +1,526 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Catégories de plats" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <!-- Header Section -->
+    <div class="text-center mb-5">
+        <div class="display-6 fw-bold text-gradient mb-3">
+            <i class="fas fa-layer-group text-primary me-3"></i>{% translate "Catégories de plats" %}
+        </div>
+        <p class="lead text-muted">
+            {% translate "Gérez vos catégories pour organiser efficacement votre menu" %}
+        </p>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-10">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="stats-badge me-3">
+                                <i class="fas fa-list-ul"></i>
+                                <span class="ms-2 fw-bold">{{ categories|length }}</span>
+                            </div>
+                            <span class="text-muted">{% translate "catégories au total" %}</span>
+                        </div>
+                        <a href="{% url 'orders:food_category_create' %}" class="btn btn-gradient-primary btn-lg px-4 rounded-pill shadow-lg">
+                            <i class="fas fa-plus-circle me-2"></i>{% translate "Nouvelle catégorie" %}
+        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Grid -->
+    {% if categories %}
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="row g-4">
+            {% for category in categories %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="category-card" data-category-id="{{ category.pk }}">
+                                <div class="card shadow-lg border-0 rounded-4 h-100 overflow-hidden">
+                                    <!-- Category Image -->
+                                    <div class="category-image-container">
+                        {% if category.image %}
+                                            <img src="{{ category.image.url }}" class="category-image" alt="{{ category.name }}">
+                        {% else %}
+                                            <div class="category-placeholder">
+                                                <i class="fas fa-utensils fa-3x"></i>
+                            </div>
+                        {% endif %}
+                                        <div class="category-overlay">
+                                            <div class="overlay-content">
+                                                <a href="{% url 'orders:food_category_edit' category.pk %}" class="btn btn-light btn-sm rounded-pill me-2">
+                                                    <i class="fas fa-edit"></i> {% translate "Modifier" %}
+                                                </a>
+                                                <button class="btn btn-outline-light btn-sm rounded-pill" onclick="viewCategory({{ category.pk }})">
+                                                    <i class="fas fa-eye"></i> {% translate "Voir" %}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Category Content -->
+                                    <div class="card-body p-4">
+                                        <div class="d-flex align-items-start justify-content-between mb-3">
+                                            <div class="category-header">
+                                                <h5 class="card-title fw-bold mb-1">{{ category.name }}</h5>
+                                                {% if category.icon %}
+                                                    <i class="{{ category.icon }} text-primary me-2"></i>
+                            {% endif %}
+                        </div>
+                                            <div class="status-badge">
+                                                <span class="badge {% if category.is_active %}bg-success{% else %}bg-danger{% endif %} rounded-pill">
+                                    {% if category.is_active %}
+                                                        <i class="fas fa-check-circle me-1"></i>{% translate "Active" %}
+                                    {% else %}
+                                                        <i class="fas fa-times-circle me-1"></i>{% translate "Inactive" %}
+                                    {% endif %}
+                                </span>
+                                            </div>
+                                        </div>
+
+                                        {% if category.description %}
+                                            <p class="card-text text-muted mb-3">{{ category.description|truncatewords:20 }}</p>
+                                        {% endif %}
+
+                                        <!-- Category Stats -->
+                                        <div class="category-stats">
+                                            <div class="row g-2">
+                                                <div class="col-6">
+                                                    <div class="stat-item">
+                                                        <i class="fas fa-sort-numeric-up text-primary"></i>
+                                                        <span class="ms-1 fw-semibold">{{ category.order }}</span>
+                                                        <small class="text-muted d-block">{% translate "Ordre" %}</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="stat-item">
+                                                        <i class="fas fa-utensils text-success"></i>
+                                                        <span class="ms-1 fw-semibold">{{ category.menu_items.count|default:"0" }}</span>
+                                                        <small class="text-muted d-block">{% translate "Plats" %}</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Card Footer -->
+                                    <div class="card-footer bg-transparent border-0 p-4 pt-0">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div class="category-meta">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-calendar-alt me-1"></i>
+                                                    {% translate "Créée le" %} {{ category.created_at|date:"d/m/Y" }}
+                                                </small>
+                                            </div>
+                                            <div class="category-actions">
+                                                <a href="{% url 'orders:food_category_edit' category.pk %}" class="btn btn-outline-primary btn-sm rounded-pill">
+                                                    <i class="fas fa-edit me-1"></i>{% translate "Modifier" %}
+                                </a>
+                                            </div>
+                                        </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- Empty State -->
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="empty-state text-center">
+                    <div class="empty-state-icon mb-4">
+                        <i class="fas fa-layer-group fa-4x text-muted"></i>
+                    </div>
+                    <h4 class="mb-3">{% translate "Aucune catégorie trouvée" %}</h4>
+                    <p class="text-muted mb-4">
+                        {% translate "Commencez par créer votre première catégorie pour organiser vos plats" %}
+                    </p>
+                    <a href="{% url 'orders:food_category_create' %}" class="btn btn-gradient-primary btn-lg px-5 rounded-pill">
+                        <i class="fas fa-plus-circle me-2"></i>{% translate "Créer ma première catégorie" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Category Detail Modal -->
+<div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="categoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 rounded-4">
+            <div class="modal-header bg-gradient-primary text-white border-0 rounded-top-4">
+                <h5 class="modal-title" id="categoryModalLabel">
+                    <i class="fas fa-layer-group me-2"></i>{% translate "Détails de la catégorie" %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4" id="categoryModalBody">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Modern Design Variables */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --border-radius: 1rem;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Text Gradient */
+    .text-gradient {
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* Stats Badge */
+    .stats-badge {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        font-size: 1.1rem;
+    }
+
+    /* Category Cards */
+    .category-card {
+        transition: all 0.3s ease;
+    }
+
+    .category-card:hover {
+        transform: translateY(-10px);
+    }
+
+    .category-card .card {
+        transition: all 0.3s ease;
+        border: none;
+        overflow: hidden;
+    }
+
+    .category-card:hover .card {
+        box-shadow: var(--shadow-lg);
+    }
+
+    /* Category Image */
+    .category-image-container {
+        position: relative;
+        height: 200px;
+        overflow: hidden;
+    }
+
+    .category-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: all 0.3s ease;
+    }
+
+    .category-placeholder {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6c757d;
+    }
+
+    .category-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    .category-card:hover .category-overlay {
+        opacity: 1;
+    }
+
+    .overlay-content {
+        text-align: center;
+    }
+
+    /* Category Header */
+    .category-header {
+        flex: 1;
+    }
+
+    .category-header h5 {
+        color: #2c3e50;
+        margin-bottom: 0.25rem;
+    }
+
+    /* Status Badge */
+    .status-badge .badge {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    /* Category Stats */
+    .category-stats {
+        margin-top: 1rem;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 0.75rem;
+        background: #f8f9fa;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .stat-item:hover {
+        background: #e9ecef;
+        transform: translateY(-2px);
+    }
+
+    .stat-item i {
+        font-size: 1.2rem;
+    }
+
+    /* Category Meta */
+    .category-meta small {
+        font-size: 0.8rem;
+    }
+
+    /* Buttons */
+    .btn-gradient-primary {
+        background: var(--primary-gradient);
+        border: none;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-gradient-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .btn-outline-primary {
+        border: 2px solid #667eea;
+        color: #667eea;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-primary:hover {
+        background: #667eea;
+        border-color: #667eea;
+        transform: translateY(-2px);
+    }
+
+    /* Empty State */
+    .empty-state {
+        padding: 4rem 2rem;
+        background: #f8f9fa;
+        border-radius: var(--border-radius);
+        border: 2px dashed #dee2e6;
+    }
+
+    .empty-state-icon {
+        color: #6c757d;
+    }
+
+    /* Modal Styling */
+    .modal-content {
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .modal-header {
+        background: var(--primary-gradient);
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .category-card {
+        animation: fadeInUp 0.6s ease forwards;
+    }
+
+    .category-card:nth-child(1) { animation-delay: 0.1s; }
+    .category-card:nth-child(2) { animation-delay: 0.2s; }
+    .category-card:nth-child(3) { animation-delay: 0.3s; }
+    .category-card:nth-child(4) { animation-delay: 0.4s; }
+    .category-card:nth-child(5) { animation-delay: 0.5s; }
+    .category-card:nth-child(6) { animation-delay: 0.6s; }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .container-fluid {
+            padding: 1rem;
+        }
+        
+        .category-image-container {
+            height: 150px;
+        }
+        
+        .stats-badge {
+            font-size: 1rem;
+            padding: 0.4rem 0.8rem;
+        }
+    }
+
+    /* Loading Animation */
+    .loading {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Add hover effects for category cards
+    document.querySelectorAll('.category-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-10px) scale(1.02)';
+        });
+
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+
+    // Add click effects for buttons
+    document.querySelectorAll('.btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            // Create ripple effect
+            const ripple = document.createElement('span');
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+            
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            ripple.classList.add('ripple');
+            
+            this.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    });
+
+    // Search functionality (if needed)
+    const searchInput = document.getElementById('searchCategories');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            document.querySelectorAll('.category-card').forEach(card => {
+                const title = card.querySelector('.card-title').textContent.toLowerCase();
+                const description = card.querySelector('.card-text')?.textContent.toLowerCase() || '';
+                
+                if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    }
+});
+
+// Function to view category details
+function viewCategory(categoryId) {
+    var modal = new bootstrap.Modal(document.getElementById('categoryModal'));
+    var modalBody = document.getElementById('categoryModalBody');
+    
+    // Show loading state
+    modalBody.innerHTML = '<div class="text-center py-4"><div class="loading"></div><p class="mt-3">{% translate "Chargement..." %}</p></div>';
+    
+    modal.show();
+    
+    // Fetch category details (you can implement this with AJAX)
+    // For now, we'll just show a placeholder
+    setTimeout(function() {
+        modalBody.innerHTML = '<div class="text-center py-4"><i class="fas fa-info-circle fa-3x text-primary mb-3"></i><h5>{% translate "Détails de la catégorie" %}</h5><p class="text-muted">{% translate "Fonctionnalité en cours de développement" %}</p></div>';
+    }, 1000);
+}
+
+// Add ripple effect CSS
+const style = document.createElement('style');
+style.textContent = `
+    .btn {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .ripple {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.6);
+        transform: scale(0);
+        animation: ripple-animation 0.6s linear;
+        pointer-events: none;
+    }
+    
+    @keyframes ripple-animation {
+        to {
+            transform: scale(4);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %} 

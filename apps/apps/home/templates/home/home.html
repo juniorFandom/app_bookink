@@ -1,0 +1,565 @@
+{% extends "base.html" %}
+{% load navigation_tags %}
+
+{% block title %}explorMboa — Découvrez le Cameroun{% endblock %}
+
+{% block extra_css %}
+<style>
+  .hero {
+    position: relative;
+    background: linear-gradient(135deg, rgba(44, 90, 160, 0.8) 0%, rgba(255, 107, 53, 0.8) 100%), 
+                url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80') center/cover no-repeat;
+    color: #fff;
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+  }
+  
+  .hero h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  }
+  
+  .hero .lead {
+    font-size: 1.25rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+  }
+  
+  .section-title {
+    position: relative;
+    margin-bottom: 3rem;
+  }
+  
+  .section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    border-radius: 2px;
+  }
+  
+  .card {
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  }
+  
+  .card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+  }
+  
+  .card-img-top {
+    height: 200px;
+    object-fit: cover;
+  }
+  
+  .feature-card {
+    text-align: center;
+    padding: 2rem 1rem;
+    border-radius: 15px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    transition: all 0.3s ease;
+  }
+  
+  .feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  }
+  
+  .feature-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .stats-section {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #1e4a8a 100%);
+    color: white;
+  }
+  
+  .stat-item {
+    text-align: center;
+    padding: 2rem 1rem;
+  }
+  
+  .stat-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    display: block;
+  }
+  
+  .cta-section {
+    background: linear-gradient(135deg, var(--accent-color) 0%, #e55a2b 100%);
+    color: white;
+  }
+  
+  .btn-hero {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 50px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-hero:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+  }
+  
+  .destination-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 15px;
+  }
+  
+  .destination-card img {
+    transition: transform 0.3s ease;
+  }
+  
+  .destination-card:hover img {
+    transform: scale(1.1);
+  }
+  
+  .destination-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    color: white;
+    padding: 2rem 1.5rem 1.5rem;
+  }
+  
+  .badge-custom {
+    background: linear-gradient(135deg, var(--accent-color), #e55a2b);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container text-center">
+      <h1 class="display-3 fw-bold mb-4">Explorez le Cameroun</h1>
+      <p class="lead mb-5">Des montagnes majestueuses du Nord aux plages paradisiaques du Sud,<br>découvrez l'authenticité africaine avec explorMboa</p>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="#destinations" class="btn btn-light btn-hero">
+          <i class="fas fa-map-marked-alt me-2"></i>Découvrir les destinations
+        </a>
+        <a href="{% url 'tours:tour_list' %}" class="btn btn-outline-light btn-hero">
+          <i class="fas fa-route me-2"></i>Voir tous les tours
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="py-5 bg-light">
+    <div class="container">
+      <h2 class="text-center section-title">Pourquoi choisir explorMboa ?</h2>
+      <div class="row g-4">
+        <div class="col-lg-3 col-md-6">
+          <div class="feature-card h-100">
+            <i class="fas fa-shield-alt feature-icon"></i>
+            <h5>Réservations sécurisées</h5>
+            <p class="text-muted">Paiements sécurisés et réservations garanties pour votre tranquillité d'esprit.</p>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="feature-card h-100">
+            <i class="fas fa-users feature-icon"></i>
+            <h5>Guides experts</h5>
+            <p class="text-muted">Des guides locaux expérimentés pour des expériences authentiques et enrichissantes.</p>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="feature-card h-100">
+            <i class="fas fa-clock feature-icon"></i>
+            <h5>Support 24/7</h5>
+            <p class="text-muted">Une équipe disponible à tout moment pour vous accompagner dans votre voyage.</p>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="feature-card h-100">
+            <i class="fas fa-star feature-icon"></i>
+            <h5>Expériences uniques</h5>
+            <p class="text-muted">Des itinéraires personnalisés pour découvrir le vrai Cameroun.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Destinations Populaires -->
+  <section id="destinations" class="py-5">
+    <div class="container">
+      <h2 class="text-center section-title">
+        <i class="fas fa-map-marked-alt text-primary me-2"></i>Destinations Populaires
+      </h2>
+      <div class="row g-4">
+        <div class="col-lg-4 col-md-6">
+          <div class="card destination-card h-100">
+            <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" class="card-img-top" alt="Mont Cameroun">
+            <div class="destination-overlay">
+              <span class="badge-custom mb-2">Montagne</span>
+              <h5 class="mb-2">Mont Cameroun</h5>
+              <p class="mb-3">Le plus haut sommet d'Afrique de l'Ouest avec ses 4095m d'altitude.</p>
+              <a href="{% url 'tours:tour_list' %}" class="btn btn-sm btn-light">Explorer</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+          <div class="card destination-card h-100">
+            <img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" class="card-img-top" alt="Kribi">
+            <div class="destination-overlay">
+              <span class="badge-custom mb-2">Plage</span>
+              <h5 class="mb-2">Kribi</h5>
+              <p class="mb-3">Plages de sable blanc et cascades spectaculaires au bord de l'océan.</p>
+              <a href="{% url 'tours:tour_list' %}" class="btn btn-sm btn-light">Explorer</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+          <div class="card destination-card h-100">
+            <img src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" class="card-img-top" alt="Parc de Waza">
+            <div class="destination-overlay">
+              <span class="badge-custom mb-2">Safari</span>
+              <h5 class="mb-2">Parc de Waza</h5>
+              <p class="mb-3">Découvrez la faune sauvage africaine dans ce parc national exceptionnel.</p>
+              <a href="{% url 'tours:tour_list' %}" class="btn btn-sm btn-light">Explorer</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="text-center mt-4">
+        <a href="{% url 'tours:tour_list' %}" class="btn btn-primary btn-lg">
+          <i class="fas fa-route me-2"></i>Voir toutes les destinations
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hébergements Populaires -->
+  <section class="py-5 bg-light">
+    <div class="container">
+      <h2 class="text-center section-title">
+        <i class="fas fa-bed text-primary me-2"></i>Hébergements Populaires
+      </h2>
+      <div class="row g-4">
+        <div class="col-lg-3 col-md-6">
+          <div class="card h-100">
+            <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" class="card-img-top" alt="Hôtel de luxe">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h6 class="card-title mb-0">Hôtel Hilton Yaoundé</h6>
+                <span class="badge bg-warning text-dark">4.8★</span>
+              </div>
+              <p class="card-text text-muted small">Yaoundé, Centre</p>
+              <p class="card-text">À partir de <strong>85,000 FCFA</strong>/nuit</p>
+              <a href="#rooms:book" class="btn btn-outline-primary btn-sm">Réserver</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="card h-100">
+            <img src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" class="card-img-top" alt="Resort">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h6 class="card-title mb-0">Kribi Beach Resort</h6>
+                <span class="badge bg-warning text-dark">4.6★</span>
+              </div>
+              <p class="card-text text-muted small">Kribi, Littoral</p>
+              <p class="card-text">À partir de <strong>65,000 FCFA</strong>/nuit</p>
+              <a href="#rooms:book" class="btn btn-outline-primary btn-sm">Réserver</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="card h-100">
+            <img src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" class="card-img-top" alt="Auberge">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h6 class="card-title mb-0">Auberge du Mont</h6>
+                <span class="badge bg-warning text-dark">4.4★</span>
+              </div>
+              <p class="card-text text-muted small">Buea, Sud-Ouest</p>
+              <p class="card-text">À partir de <strong>45,000 FCFA</strong>/nuit</p>
+              <a href="#rooms:book" class="btn btn-outline-primary btn-sm">Réserver</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="card h-100">
+            <img src="https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" class="card-img-top" alt="Lodge">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h6 class="card-title mb-0">Safari Lodge Waza</h6>
+                <span class="badge bg-warning text-dark">4.7★</span>
+              </div>
+              <p class="card-text text-muted small">Waza, Extrême-Nord</p>
+              <p class="card-text">À partir de <strong>55,000 FCFA</strong>/nuit</p>
+              <a href="#rooms:book" class="btn btn-outline-primary btn-sm">Réserver</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="text-center mt-4">
+        <a href="#rooms:book" class="btn btn-primary btn-lg">
+          <i class="fas fa-bed me-2"></i>Voir tous les hébergements
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Véhicules -->
+  <section class="py-5">
+    <div class="container">
+      <h2 class="text-center section-title">
+        <i class="fas fa-car text-primary me-2"></i>Véhicules de Location
+      </h2>
+      <div class="row g-4">
+        <div class="col-lg-3 col-md-6">
+          <div class="card h-100">
+            <img src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" class="card-img-top" alt="SUV">
+            <div class="card-body">
+              <h6 class="card-title">Toyota Land Cruiser</h6>
+              <p class="card-text text-muted small">SUV 4x4 - 7 places</p>
+              <p class="card-text">À partir de <strong>25,000 FCFA</strong>/jour</p>
+              <a href="{% url 'vehicles:vehicle_list' %}" class="btn btn-outline-primary btn-sm">Louer</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="card h-100">
+            <img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" class="card-img-top" alt="Berline">
+            <div class="card-body">
+              <h6 class="card-title">Toyota Camry</h6>
+              <p class="card-text text-muted small">Berline - 5 places</p>
+              <p class="card-text">À partir de <strong>15,000 FCFA</strong>/jour</p>
+              <a href="{% url 'vehicles:vehicle_list' %}" class="btn btn-outline-primary btn-sm">Louer</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="card h-100">
+            <img src="https://images.unsplash.com/photo-1549924231-f129b911e442?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" class="card-img-top" alt="Minibus">
+            <div class="card-body">
+              <h6 class="card-title">Mercedes Sprinter</h6>
+              <p class="card-text text-muted small">Minibus - 12 places</p>
+              <p class="card-text">À partir de <strong>35,000 FCFA</strong>/jour</p>
+              <a href="{% url 'vehicles:vehicle_list' %}" class="btn btn-outline-primary btn-sm">Louer</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="card h-100">
+            <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" class="card-img-top" alt="Moto">
+            <div class="card-body">
+              <h6 class="card-title">Yamaha XT250</h6>
+              <p class="card-text text-muted small">Moto tout-terrain</p>
+              <p class="card-text">À partir de <strong>8,000 FCFA</strong>/jour</p>
+              <a href="{% url 'vehicles:vehicle_list' %}" class="btn btn-outline-primary btn-sm">Louer</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="text-center mt-4">
+        <a href="{% url 'vehicles:vehicle_list' %}" class="btn btn-primary btn-lg">
+          <i class="fas fa-car me-2"></i>Voir tous les véhicules
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section class="stats-section py-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-3 col-md-6">
+          <div class="stat-item">
+            <span class="stat-number">500+</span>
+            <p class="mb-0">Destinations</p>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="stat-item">
+            <span class="stat-number">10K+</span>
+            <p class="mb-0">Voyageurs satisfaits</p>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="stat-item">
+            <span class="stat-number">50+</span>
+            <p class="mb-0">Guides experts</p>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="stat-item">
+            <span class="stat-number">24/7</span>
+            <p class="mb-0">Support client</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tours phares -->
+  <section class="py-5 bg-light">
+    <div class="container">
+      <h2 class="text-center section-title">
+        <i class="fas fa-star text-primary me-2"></i>Nos Tours Phares
+      </h2>
+      <div class="row g-4">
+        {% for tour in tours|default:list %}
+        <div class="col-lg-4 col-md-6">
+          <div class="card h-100">
+            <img src="{{ tour.image_url|default:'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80' }}" class="card-img-top" alt="{{ tour.title }}">
+            <div class="card-body d-flex flex-column">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h5 class="card-title">{{ tour.title|default:"Ascension du Mont Cameroun" }}</h5>
+                <span class="badge bg-success">Populaire</span>
+              </div>
+              <p class="card-text flex-grow-1">{{ tour.description|default:"Découvrez le plus haut sommet d'Afrique de l'Ouest avec nos guides expérimentés." }}</p>
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="text-primary fw-bold">À partir de 75,000 FCFA</span>
+                <a href="{% url 'tours:tour_detail' tour.slug %}" class="btn btn-primary">Réserver</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="text-center mt-4">
+        <a href="{% url 'tours:tour_list' %}" class="btn btn-primary btn-lg">
+          <i class="fas fa-route me-2"></i>Voir tous les tours
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Guides section -->
+  <section class="py-5">
+    <div class="container">
+      <h2 class="text-center section-title">
+        <i class="fas fa-users text-primary me-2"></i>Nos Guides Experts
+      </h2>
+      <div class="row g-4">
+        {% for guide in guides|default:list %}
+        <div class="col-lg-3 col-md-6 text-center">
+          <div class="card border-0 bg-transparent">
+            <div class="position-relative mb-3">
+              <img src="{{ guide.photo_url|default:'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80' }}" 
+                   class="rounded-circle" width="150" height="150" alt="{{ guide.name }}"
+                   style="object-fit: cover;">
+              <div class="position-absolute bottom-0 end-0 bg-success text-white rounded-circle p-2">
+                <i class="fas fa-check"></i>
+              </div>
+            </div>
+            <h5>{{ guide.name|default:"Jean-Pierre Mbarga" }}</h5>
+            <p class="text-muted">{{ guide.specialty|default:"Guide Montagne" }}</p>
+            <div class="d-flex justify-content-center">
+              <i class="fas fa-star text-warning"></i>
+              <i class="fas fa-star text-warning"></i>
+              <i class="fas fa-star text-warning"></i>
+              <i class="fas fa-star text-warning"></i>
+              <i class="fas fa-star text-warning"></i>
+              <span class="ms-2 text-muted">(4.9)</span>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta-section py-5">
+    <div class="container text-center">
+      <h2 class="mb-4">Prêt à vivre l'aventure ?</h2>
+      <p class="lead mb-4">Rejoignez des milliers de voyageurs qui ont déjà découvert le Cameroun avec explorMboa</p>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="{% url 'users:register' %}" class="btn btn-light btn-lg">
+          <i class="fas fa-user-plus me-2"></i>S'inscrire maintenant
+        </a>
+        <a href="{% url 'tours:tour_list' %}" class="btn btn-outline-light btn-lg">
+          <i class="fas fa-search me-2"></i>Explorer les tours
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Navigation Menu Section -->
+  <section class="py-5 bg-light">
+    <div class="container">
+      <div class="row mb-4">
+        <div class="col-12 text-center">
+          <h2 class="section-title">
+            <i class="fas fa-sitemap text-primary me-2"></i>Navigation de l'Application
+          </h2>
+          <p class="lead text-muted">
+            Découvrez toutes les fonctionnalités disponibles dans explorMboa
+          </p>
+        </div>
+      </div>
+      {% navigation_menu %}
+    </div>
+  </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Smooth scrolling for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        target.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    });
+  });
+
+  // Add animation on scroll
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, observerOptions);
+
+  // Observe all cards
+  document.querySelectorAll('.card').forEach(card => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(20px)';
+    card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    observer.observe(card);
+  });
+</script>
+{% endblock %}

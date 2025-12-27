@@ -1,0 +1,1006 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Menu Restauration" %}{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section mb-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="hero-content">
+                    <h1 class="display-4 fw-bold text-white mb-3 animate-fade-in">
+                        <i class="fas fa-utensils me-3 text-gradient"></i>
+                        {% trans "Découvrez notre carte" %}
+                    </h1>
+                    <p class="lead text-white-50 mb-4 animate-fade-in-delay">
+                        {% trans "Commandez vos plats préférés, filtrés selon vos envies et besoins alimentaires." %}
+                    </p>
+                    <div class="hero-stats animate-fade-in-delay-2">
+                        <div class="stat-item">
+                            <i class="fas fa-utensils"></i>
+                            <span class="stat-number">{{ menu_items|length }}</span>
+                            <span class="stat-label">{% trans "Plats" %}</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-star"></i>
+                            <span class="stat-number">4.7</span>
+                            <span class="stat-label">{% trans "Note" %}</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-layer-group"></i>
+                            <span class="stat-number">{{ categories|length }}</span>
+                            <span class="stat-label">{% trans "Catégories" %}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 text-end">
+                <div class="hero-actions animate-fade-in-delay-3">
+                    <a href="{% url 'orders:cart_detail' %}" class="btn btn-gradient-primary btn-lg">
+                        <i class="fas fa-shopping-cart me-2"></i>{% trans "Voir le panier" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="hero-overlay"></div>
+</div>
+
+<!-- Quick Search Bar -->
+<div class="container mb-5">
+    <div class="quick-search-card">
+        <div class="search-form">
+            <form method="get" class="row g-3 align-items-end">
+                <!-- Category -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="form-floating">
+                        <select name="category" id="category" class="form-select">
+                            <option value="">{% trans "Toutes" %}</option>
+                            {% for cat in categories %}
+                                <option value="{{ cat.id }}" {% if request.GET.category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <label for="category">
+                            <i class="fas fa-layer-group me-2"></i>{% trans "Catégorie" %}
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Price Range -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="form-floating">
+                        <select name="price_range" id="price_range" class="form-select">
+                            <option value="">{% trans "Tous les prix" %}</option>
+                            <option value="0-2000" {% if request.GET.price_range == "0-2000" %}selected{% endif %}>0 - 2,000 XAF</option>
+                            <option value="2000-5000" {% if request.GET.price_range == "2000-5000" %}selected{% endif %}>2,000 - 5,000 XAF</option>
+                            <option value="5000-10000" {% if request.GET.price_range == "5000-10000" %}selected{% endif %}>5,000 - 10,000 XAF</option>
+                            <option value="10000+" {% if request.GET.price_range == "10000+" %}selected{% endif %}>10,000+ XAF</option>
+                        </select>
+                        <label for="price_range">
+                            <i class="fas fa-money-bill-wave me-2"></i>{% trans "Prix" %}
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Availability -->
+                <div class="col-lg-2 col-md-6">
+                    <div class="form-floating">
+                        <select name="is_available" id="is_available" class="form-select">
+                            <option value="">{% trans "Tous" %}</option>
+                            <option value="1" {% if request.GET.is_available == "1" %}selected{% endif %}>{% trans "Disponible" %}</option>
+                            <option value="0" {% if request.GET.is_available == "0" %}selected{% endif %}>{% trans "Indisponible" %}</option>
+                        </select>
+                        <label for="is_available">
+                            <i class="fas fa-check-circle me-2"></i>{% trans "Disponibilité" %}
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Search Button -->
+                <div class="col-lg-2">
+                    <button type="submit" class="btn btn-gradient-primary w-100 h-100">
+                        <i class="fas fa-search me-2"></i>{% trans "Rechercher" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Filters Toggle -->
+<div class="container mb-5">
+    <div class="text-center">
+        <button class="btn btn-outline-primary btn-lg rounded-pill" type="button" data-bs-toggle="collapse" data-bs-target="#advancedFilters" aria-expanded="false">
+            <i class="fas fa-sliders-h me-2"></i>{% trans "Filtres Avancés" %}
+            <i class="fas fa-chevron-down ms-2 filter-toggle-icon"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Advanced Filters Section -->
+<div class="container mb-5">
+    <div class="collapse" id="advancedFilters">
+        <div class="advanced-filters-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-filter me-2"></i>{% trans "Filtres Avancés" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-4">
+                    <!-- Price Range Slider -->
+                    <div class="col-lg-6">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-money-bill-wave me-2 text-success"></i>{% trans "Prix" %}
+                        </label>
+                        <div class="price-slider-container">
+                            <div class="price-range">
+                                <span class="price-min">0 XAF</span>
+                                <span class="price-max">50,000+ XAF</span>
+                            </div>
+                            <input type="range" class="form-range" id="price_min" name="price_min" min="0" max="50000" step="1000" value="{{ request.GET.price_min|default:'0' }}">
+                            <input type="range" class="form-range" id="price_max" name="price_max" min="0" max="50000" step="1000" value="{{ request.GET.price_max|default:'50000' }}">
+                        </div>
+                    </div>
+
+                    <!-- Dietary Filter -->
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-leaf me-2 text-info"></i>{% trans "Diététique" %}
+                        </label>
+                        <input type="text" name="dietary" id="dietary" class="form-control" placeholder="Vegan, Sans gluten..." value="{{ request.GET.dietary|default:'' }}">
+                    </div>
+
+                    <!-- Sort Filter -->
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-sort me-2 text-warning"></i>{% trans "Trier par" %}
+                        </label>
+                        <select name="sort" id="sort" class="form-select">
+                            <option value="name" {% if request.GET.sort == "name" %}selected{% endif %}>{% trans "Nom" %}</option>
+                            <option value="price" {% if request.GET.sort == "price" %}selected{% endif %}>{% trans "Prix" %}</option>
+                            <option value="category" {% if request.GET.sort == "category" %}selected{% endif %}>{% trans "Catégorie" %}</option>
+                            <option value="popularity" {% if request.GET.sort == "popularity" %}selected{% endif %}>{% trans "Popularité" %}</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter Buttons -->
+                    <div class="col-12">
+                        <div class="d-flex gap-3 flex-wrap">
+                            <button type="submit" class="btn btn-gradient-primary btn-lg">
+                                <i class="fas fa-search me-2"></i>{% trans "Appliquer les filtres" %}
+                            </button>
+                            <a href="{% url 'orders:menu_item_list' %}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-times me-2"></i>{% trans "Effacer" %}
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Header -->
+<div class="container mb-4">
+    <div class="results-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="results-info">
+                <h4 class="mb-0">
+                    <i class="fas fa-list me-2"></i>{% trans "Résultats" %}
+                </h4>
+                <p class="text-muted mb-0">{{ menu_items|length }} {% trans "plat(s) trouvé(s)" %}</p>
+            </div>
+            <div class="view-options">
+                <div class="btn-group" role="group">
+                    <input type="radio" class="btn-check" name="viewMode" id="gridView" checked>
+                    <label class="btn btn-outline-primary" for="gridView">
+                        <i class="fas fa-th"></i>
+                    </label>
+                    <input type="radio" class="btn-check" name="viewMode" id="listView">
+                    <label class="btn btn-outline-primary" for="listView">
+                        <i class="fas fa-list"></i>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Menu Items Grid -->
+<div class="container">
+    <div class="row g-4" id="menuItemsGrid">
+        {% for item in menu_items %}
+            <div class="col-lg-4 col-md-6 menu-item" data-item-id="{{ item.id }}">
+                <div class="menu-card">
+                    <!-- Menu Item Image -->
+                    <div class="menu-image-container">
+                        {% if item.main_image %}
+                            <img src="{{ item.main_image.url }}" class="menu-image" alt="{{ item.name }}" loading="lazy">
+                        {% else %}
+                            <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" class="menu-image" alt="{{ item.name }}" loading="lazy">
+                        {% endif %}
+                        
+                        <!-- Image Overlay -->
+                        <div class="image-overlay">
+                            <div class="overlay-content">
+                                <a href="{% url 'orders:menu_item_detail' item.pk %}" class="btn btn-light btn-sm">
+                                    <i class="fas fa-eye me-1"></i>{% trans "Voir" %}
+                                </a>
+                                {% if item.is_available and item.stock_quantity > 0 %}
+                                    <form method="post" action="{% url 'orders:add_to_cart' item.pk %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{% url 'orders:cart_detail' %}">
+                                        <button type="submit" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-shopping-cart me-1"></i>{% trans "Ajouter" %}
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Status Badge -->
+                        <div class="status-badge">
+                            {% if item.is_available and item.stock_quantity > 0 %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i>{% trans "Disponible" %}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times-circle me-1"></i>{% trans "Indisponible" %}
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Price Badge -->
+                        <div class="price-badge">
+                            <span class="price-amount">{{ item.price|floatformat:0 }}</span>
+                            <span class="price-currency">{% trans "XAF" %}</span>
+                        </div>
+
+                        <!-- Category Badge -->
+                        <div class="category-badge">
+                            <span class="badge bg-primary">
+                                <i class="fas fa-layer-group me-1"></i>{{ item.food_category.name }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Card Content -->
+                    <div class="card-content">
+                        <div class="menu-header">
+                            <h5 class="menu-title">{{ item.name }}</h5>
+                            <span class="menu-stock">{{ item.stock_quantity }} {% trans "en stock" %}</span>
+                        </div>
+
+                        <div class="menu-category">
+                            <i class="fas fa-layer-group text-primary me-2"></i>
+                            <span>{{ item.food_category.name }}</span>
+                        </div>
+
+                        <!-- Dietary Info -->
+                        {% if item.dietary_info %}
+                        <div class="dietary-info">
+                            {% for info in item.dietary_info %}
+                                <span class="dietary-tag">{{ info }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <p class="menu-description">{{ item.description|truncatewords:15|default:_("Aucune description disponible") }}</p>
+
+                        <!-- Card Actions -->
+                        <div class="card-actions">
+                            <a href="{% url 'orders:menu_item_detail' item.pk %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye me-1"></i>{% trans "Détails" %}
+                            </a>
+                            {% if item.is_available and item.stock_quantity > 0 %}
+                                <form method="post" action="{% url 'orders:add_to_cart' item.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{% url 'orders:cart_detail' %}">
+                                    <button type="submit" class="btn btn-gradient-primary btn-sm">
+                                        <i class="fas fa-shopping-cart me-1"></i>{% trans "Ajouter" %}
+                                    </button>
+                                </form>
+                            {% else %}
+                                <button class="btn btn-secondary btn-sm" disabled>
+                                    <i class="fas fa-times me-1"></i>{% trans "Indisponible" %}
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                    <h4>{% trans "Aucun plat trouvé" %}</h4>
+                    <p>{% trans "Aucun plat ne correspond à vos critères de recherche." %}</p>
+                    <a href="{% url 'orders:menu_item_list' %}" class="btn btn-gradient-primary">
+                        <i class="fas fa-refresh me-2"></i>{% trans "Effacer les filtres" %}
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<div class="container mt-5">
+    <nav aria-label="{% trans 'Navigation du menu' %}" class="pagination-container">
+        <ul class="pagination pagination-lg">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            {{ num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Modern Design Variables */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        --danger-gradient: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        --border-radius: 1rem;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.15);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Hero Section */
+    .hero-section {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%), 
+                url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80') center/cover no-repeat;
+        color: white;
+        padding: 6rem 0;
+        border-radius: 0 0 3rem 3rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.1);
+        z-index: 1;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .text-gradient {
+        background: linear-gradient(45deg, #fff, #f0f0f0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .hero-stats {
+        display: flex;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .stat-item {
+        text-align: center;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        border-radius: var(--border-radius);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .stat-number {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        opacity: 0.8;
+    }
+
+    /* Quick Search Card */
+    .quick-search-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        padding: 2rem;
+        margin-top: -3rem;
+        position: relative;
+        z-index: 10;
+    }
+
+    .search-form .form-floating {
+        margin-bottom: 0;
+    }
+
+    .search-form .form-control,
+    .search-form .form-select {
+        border: 2px solid #e9ecef;
+        border-radius: 0.75rem;
+        transition: var(--transition);
+    }
+
+    .search-form .form-control:focus,
+    .search-form .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+
+    /* Advanced Filters */
+    .advanced-filters-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+    }
+
+    .advanced-filters-card .card-header {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 1.5rem;
+        border: none;
+    }
+
+    .advanced-filters-card .card-body {
+        padding: 2rem;
+    }
+
+    .filter-toggle-icon {
+        transition: var(--transition);
+    }
+
+    .btn[aria-expanded="true"] .filter-toggle-icon {
+        transform: rotate(180deg);
+    }
+
+    /* Price Slider */
+    .price-slider-container {
+        padding: 1rem 0;
+    }
+
+    .price-range {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .form-range {
+        height: 6px;
+        border-radius: 3px;
+        background: #e9ecef;
+    }
+
+    .form-range::-webkit-slider-thumb {
+        background: var(--primary-gradient);
+        border: none;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
+
+    /* Results Header */
+    .results-header {
+        background: white;
+        padding: 1.5rem;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        margin-bottom: 2rem;
+    }
+
+    /* Menu Cards */
+    .menu-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        transition: var(--transition);
+        height: 100%;
+        position: relative;
+    }
+
+    .menu-card:hover {
+        transform: translateY(-10px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .menu-image-container {
+        position: relative;
+        overflow: hidden;
+        height: 250px;
+    }
+
+    .menu-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: var(--transition);
+    }
+
+    .menu-card:hover .menu-image {
+        transform: scale(1.1);
+    }
+
+    .image-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: var(--transition);
+    }
+
+    .menu-card:hover .image-overlay {
+        opacity: 1;
+    }
+
+    .overlay-content {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .status-badge {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        z-index: 2;
+    }
+
+    .price-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        z-index: 2;
+    }
+
+    .price-amount {
+        font-size: 1.25rem;
+        font-weight: bold;
+    }
+
+    .price-currency {
+        font-size: 0.875rem;
+        opacity: 0.8;
+    }
+
+    .category-badge {
+        position: absolute;
+        bottom: 1rem;
+        left: 1rem;
+        z-index: 2;
+    }
+
+    .card-content {
+        padding: 1.5rem;
+    }
+
+    .menu-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .menu-title {
+        font-size: 1.25rem;
+        font-weight: bold;
+        color: #2c3e50;
+        margin: 0;
+    }
+
+    .menu-stock {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .menu-category {
+        color: #6c757d;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .dietary-info {
+        margin-bottom: 1rem;
+    }
+
+    .dietary-tag {
+        background: #f8f9fa;
+        color: #6c757d;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        border: 1px solid #e9ecef;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+        display: inline-block;
+    }
+
+    .menu-description {
+        color: #6c757d;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        margin-bottom: 1rem;
+    }
+
+    .card-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: space-between;
+    }
+
+    /* Buttons */
+    .btn-gradient-primary {
+        background: var(--primary-gradient);
+        border: none;
+        color: white;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+
+    .btn-gradient-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .btn-outline-primary {
+        border: 2px solid #667eea;
+        color: #667eea;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+
+    .btn-outline-primary:hover {
+        background: #667eea;
+        border-color: #667eea;
+        transform: translateY(-2px);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: #f8f9fa;
+        border-radius: var(--border-radius);
+        border: 2px dashed #dee2e6;
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        color: #6c757d;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    /* Pagination */
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+    }
+
+    .pagination-lg .page-link {
+        padding: 0.75rem 1rem;
+        font-size: 1.1rem;
+        border-radius: 0.5rem;
+        margin: 0 0.25rem;
+        border: none;
+        background: white;
+        color: #6c757d;
+        box-shadow: var(--shadow);
+        transition: var(--transition);
+    }
+
+    .pagination-lg .page-link:hover {
+        background: var(--primary-gradient);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .pagination-lg .page-item.active .page-link {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-in {
+        animation: fadeInUp 0.8s ease forwards;
+    }
+
+    .animate-fade-in-delay {
+        animation: fadeInUp 0.8s ease 0.2s forwards;
+        opacity: 0;
+    }
+
+    .animate-fade-in-delay-2 {
+        animation: fadeInUp 0.8s ease 0.4s forwards;
+        opacity: 0;
+    }
+
+    .animate-fade-in-delay-3 {
+        animation: fadeInUp 0.8s ease 0.6s forwards;
+        opacity: 0;
+    }
+
+    .menu-item {
+        animation: fadeInUp 0.6s ease forwards;
+    }
+
+    .menu-item:nth-child(1) { animation-delay: 0.1s; }
+    .menu-item:nth-child(2) { animation-delay: 0.2s; }
+    .menu-item:nth-child(3) { animation-delay: 0.3s; }
+    .menu-item:nth-child(4) { animation-delay: 0.4s; }
+    .menu-item:nth-child(5) { animation-delay: 0.5s; }
+    .menu-item:nth-child(6) { animation-delay: 0.6s; }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .hero-section {
+            padding: 3rem 0;
+            border-radius: 0 0 2rem 2rem;
+        }
+        
+        .hero-stats {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .quick-search-card {
+            margin-top: -2rem;
+            padding: 1.5rem;
+        }
+        
+        .card-actions {
+            flex-direction: column;
+        }
+        
+        .menu-image-container {
+            height: 200px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .hero-section h1 {
+            font-size: 2rem;
+        }
+        
+        .quick-search-card {
+            margin-top: -1rem;
+            padding: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Price range slider functionality
+    const priceMinSlider = document.getElementById('price_min');
+    const priceMaxSlider = document.getElementById('price_max');
+    
+    if (priceMinSlider && priceMaxSlider) {
+        priceMinSlider.addEventListener('input', function() {
+            const minValue = parseInt(this.value);
+            const maxValue = parseInt(priceMaxSlider.value);
+            
+            if (minValue > maxValue) {
+                priceMaxSlider.value = minValue;
+            }
+            
+            updatePriceDisplay();
+        });
+        
+        priceMaxSlider.addEventListener('input', function() {
+            const maxValue = parseInt(this.value);
+            const minValue = parseInt(priceMinSlider.value);
+            
+            if (maxValue < minValue) {
+                priceMinSlider.value = maxValue;
+            }
+            
+            updatePriceDisplay();
+        });
+        
+        function updatePriceDisplay() {
+            const minValue = parseInt(priceMinSlider.value);
+            const maxValue = parseInt(priceMaxSlider.value);
+            
+            const priceMin = document.querySelector('.price-min');
+            const priceMax = document.querySelector('.price-max');
+            
+            if (priceMin) priceMin.textContent = minValue.toLocaleString() + ' XAF';
+            if (priceMax) priceMax.textContent = maxValue.toLocaleString() + ' XAF';
+        }
+        
+        updatePriceDisplay();
+    }
+
+    // View mode toggle
+    const gridView = document.getElementById('gridView');
+    const listView = document.getElementById('listView');
+    const menuItemsGrid = document.getElementById('menuItemsGrid');
+    
+    if (gridView && listView && menuItemsGrid) {
+        gridView.addEventListener('change', function() {
+            if (this.checked) {
+                menuItemsGrid.classList.remove('list-view');
+                menuItemsGrid.classList.add('grid-view');
+            }
+        });
+        
+        listView.addEventListener('change', function() {
+            if (this.checked) {
+                menuItemsGrid.classList.remove('grid-view');
+                menuItemsGrid.classList.add('list-view');
+            }
+        });
+    }
+
+    // Add hover effects for menu cards
+    document.querySelectorAll('.menu-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-10px) scale(1.02)';
+        });
+
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+
+    // Add click effects for buttons
+    document.querySelectorAll('.btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            // Create ripple effect
+            const ripple = document.createElement('span');
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+            
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            ripple.classList.add('ripple');
+            
+            this.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    });
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+});
+
+// Add ripple effect CSS
+const style = document.createElement('style');
+style.textContent = `
+    .btn {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .ripple {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.6);
+        transform: scale(0);
+        animation: ripple-animation 0.6s linear;
+        pointer-events: none;
+    }
+    
+    @keyframes ripple-animation {
+        to {
+            transform: scale(4);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}
+
+ 

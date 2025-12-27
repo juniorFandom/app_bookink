@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Verified Guides" %}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">{% trans "Verified Guides" %}</h1>
+            
+            {% if profiles %}
+                <div class="row">
+                    {% for profile in profiles %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ profile.full_name }}</h5>
+                                    <p class="card-text text-muted">
+                                        <i class="fas fa-map-marker-alt"></i> {{ profile.business_location }}
+                                    </p>
+                                    
+                                    {% if profile.years_of_experience %}
+                                        <p class="card-text">
+                                            <small class="text-muted">
+                                                <i class="fas fa-clock"></i> 
+                                                {% blocktrans count years=profile.years_of_experience %}
+                                                    {{ years }} year of experience
+                                                {% plural %}
+                                                    {{ years }} years of experience
+                                                {% endblocktrans %}
+                                            </small>
+                                        </p>
+                                    {% endif %}
+                                    
+                                    {% if profile.languages_spoken %}
+                                        <p class="card-text">
+                                            <small class="text-muted">
+                                                <i class="fas fa-language"></i> 
+                                                {{ profile.languages_spoken|join:", " }}
+                                            </small>
+                                        </p>
+                                    {% endif %}
+                                    
+                                    {% if profile.specializations %}
+                                        <p class="card-text">
+                                            <small class="text-muted">
+                                                <i class="fas fa-star"></i> 
+                                                {{ profile.specializations|join:", " }}
+                                            </small>
+                                        </p>
+                                    {% endif %}
+                                    
+                                    {% if profile.hourly_rate %}
+                                        <p class="card-text">
+                                            <strong class="text-primary">
+                                                ${{ profile.hourly_rate }}/{% trans "hour" %}
+                                            </strong>
+                                        </p>
+                                    {% endif %}
+                                    
+                                    {% if profile.bio %}
+                                        <p class="card-text">{{ profile.bio|truncatewords:20 }}</p>
+                                    {% endif %}
+                                </div>
+                                <div class="card-footer">
+                                    <a href="{% url 'guides:profile_detail' profile.id %}" 
+                                       class="btn btn-primary btn-sm">
+                                        {% trans "View Profile" %}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                {% if is_paginated %}
+                    <nav aria-label="{% trans 'Guide profiles pagination' %}">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                        {% trans "Previous" %}
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                        {% trans "Next" %}
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <h3>{% trans "No verified guides found" %}</h3>
+                    <p class="text-muted">{% trans "Check back later for new guides." %}</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

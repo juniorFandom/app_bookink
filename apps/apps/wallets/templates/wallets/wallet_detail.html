@@ -1,0 +1,621 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "My Wallet" %}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .wallet-hero {
+    background: linear-gradient(135deg, rgba(44, 90, 160, 0.8) 0%, rgba(255, 107, 53, 0.8) 100%);
+    color: white;
+    padding: 3rem 0;
+  }
+  
+  .balance-card {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transition: all 0.3s ease;
+  }
+  
+  .balance-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+  }
+  
+  .balance-amount {
+    font-size: 3rem;
+    font-weight: 800;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  }
+  
+  .action-card {
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    height: 100%;
+    background: white;
+  }
+  
+  .action-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+  }
+  
+  .action-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .transaction-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  }
+  
+  .transaction-card .card-header {
+    background: linear-gradient(135deg, var(--primary-color), #1e4a8a);
+    color: white;
+    border: none;
+    border-radius: 15px 15px 0 0 !important;
+  }
+  
+  .stats-item {
+    text-align: center;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 15px;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+  }
+  
+  .stats-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  }
+  
+  .stats-number {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--primary-color);
+    display: block;
+  }
+  
+  .btn-action {
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    border: none;
+  }
+  
+  .btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  }
+  
+  .transaction-row {
+    transition: all 0.3s ease;
+    border-radius: 10px;
+    margin-bottom: 0.5rem;
+  }
+  
+  .transaction-row:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+  }
+  
+  .badge-transaction {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.8rem;
+  }
+  
+  .modal-content {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  }
+  
+  .modal-header {
+    background: linear-gradient(135deg, var(--primary-color), #1e4a8a);
+    color: white;
+    border-radius: 20px 20px 0 0;
+    border: none;
+  }
+  
+  .form-control {
+    border-radius: 10px;
+    border: 2px solid #e9ecef;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+  }
+  
+  .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+  }
+  
+  .form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+  }
+  
+  .currency-badge {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-weight: 600;
+    font-size: 0.8rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <!-- Wallet Hero Section -->
+  <section class="wallet-hero">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <h1 class="display-5 fw-bold mb-2">
+            <i class="fas fa-wallet me-3"></i>{% trans "My Wallet" %}
+          </h1>
+          <p class="lead mb-0">{% trans "Manage your funds and transactions" %}</p>
+        </div>
+        <div class="col-md-4 text-end">
+          <span class="currency-badge">
+            <i class="fas fa-coins me-1"></i>{{ wallet.currency }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Balance and Stats Section -->
+  <section class="py-4 bg-light">
+    <div class="container">
+      <div class="row">
+        <!-- Balance Card -->
+        <div class="col-lg-4 col-md-6 mb-4">
+          <div class="card balance-card">
+            <div class="card-body text-center p-4">
+              <i class="fas fa-coins mb-3" style="font-size: 3rem; opacity: 0.8;"></i>
+              <h5 class="card-title mb-3">{% trans "Current Balance" %}</h5>
+              <div class="balance-amount mb-2">{{ wallet.balance|floatformat:0 }}</div>
+              <p class="mb-0 opacity-75">
+                <i class="fas fa-clock me-1"></i>
+                {% trans "Last updated" %}: {{ wallet.modified|date:"SHORT_DATETIME_FORMAT" }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="col-lg-8 col-md-6">
+          <div class="row">
+            <div class="col-md-4">
+              <div class="stats-item">
+                <i class="fas fa-arrow-up text-success mb-2" style="font-size: 1.5rem;"></i>
+                <span class="stats-number">{{ wallet_stats.total_deposits|default:0 }}</span>
+                <p class="mb-0 text-muted">{% trans "Total Deposits" %}</p>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="stats-item">
+                <i class="fas fa-arrow-down text-warning mb-2" style="font-size: 1.5rem;"></i>
+                <span class="stats-number">{{ wallet_stats.total_withdrawals|default:0 }}</span>
+                <p class="mb-0 text-muted">{% trans "Total Withdrawals" %}</p>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="stats-item">
+                <i class="fas fa-exchange-alt text-info mb-2" style="font-size: 1.5rem;"></i>
+                <span class="stats-number">{{ transaction_stats.total_transactions|default:0 }}</span>
+                <p class="mb-0 text-muted">{% trans "Total Transactions" %}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Actions Section -->
+  <section class="py-5">
+    <div class="container">
+      <h2 class="text-center mb-5">
+        <i class="fas fa-bolt text-primary me-2"></i>{% trans "Quick Actions" %}
+      </h2>
+      <div class="row g-4">
+        <div class="col-lg-4 col-md-6">
+          <div class="card action-card">
+            <div class="card-body text-center p-4">
+              <i class="fas fa-plus-circle action-icon text-success"></i>
+              <h5 class="card-title">{% trans "Deposit" %}</h5>
+              <p class="card-text text-muted">{% trans "Add funds to your wallet" %}</p>
+              <button type="button" class="btn btn-success btn-action w-100" data-bs-toggle="modal" data-bs-target="#depositModal">
+                <i class="fas fa-credit-card me-2"></i>{% trans "Deposit" %}
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6">
+          <div class="card action-card">
+            <div class="card-body text-center p-4">
+              <i class="fas fa-minus-circle action-icon text-warning"></i>
+              <h5 class="card-title">{% trans "Withdraw" %}</h5>
+              <p class="card-text text-muted">{% trans "Withdraw funds from your wallet" %}</p>
+              <button type="button" class="btn btn-warning btn-action w-100" data-bs-toggle="modal" data-bs-target="#withdrawalModal">
+                <i class="fas fa-money-bill-wave me-2"></i>{% trans "Withdraw" %}
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6">
+          <div class="card action-card">
+            <div class="card-body text-center p-4">
+              <i class="fas fa-exchange-alt action-icon text-info"></i>
+              <h5 class="card-title">{% trans "Transfer" %}</h5>
+              <p class="card-text text-muted">{% trans "Transfer funds to another user" %}</p>
+              <button type="button" class="btn btn-info btn-action w-100" data-bs-toggle="modal" data-bs-target="#transferModal">
+                <i class="fas fa-share-alt me-2"></i>{% trans "Transfer" %}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent Transactions Section -->
+  <section class="py-5 bg-light">
+    <div class="container">
+      <div class="card transaction-card">
+        <div class="card-header">
+          <div class="d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">
+              <i class="fas fa-history me-2"></i>{% trans "Recent Transactions" %}
+            </h4>
+            <a href="{% url 'wallets:transaction_list' %}" class="btn btn-light btn-sm">
+              <i class="fas fa-list me-1"></i>{% trans "View All" %}
+            </a>
+          </div>
+        </div>
+        <div class="card-body">
+          {% if recent_transactions %}
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th><i class="fas fa-calendar me-1"></i>{% trans "Date" %}</th>
+                    <th><i class="fas fa-tag me-1"></i>{% trans "Type" %}</th>
+                    <th><i class="fas fa-money-bill me-1"></i>{% trans "Amount" %}</th>
+                    <th><i class="fas fa-hashtag me-1"></i>{% trans "Reference" %}</th>
+                    <th><i class="fas fa-info-circle me-1"></i>{% trans "Status" %}</th>
+                    <th><i class="fas fa-comment me-1"></i>{% trans "Description" %}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for transaction in recent_transactions %}
+                  <tr class="transaction-row">
+                    <td>
+                      <small class="text-muted">{{ transaction.created|date:"SHORT_DATETIME_FORMAT" }}</small>
+                    </td>
+                    <td>
+                      <span class="badge badge-transaction 
+                        {% if transaction.transaction_type == 'DEPOSIT' %}bg-success
+                        {% elif transaction.transaction_type == 'WITHDRAWAL' %}bg-warning
+                        {% elif transaction.transaction_type == 'TRANSFER' %}bg-info
+                        {% elif transaction.transaction_type == 'PAYMENT' %}bg-primary
+                        {% else %}bg-secondary{% endif %}">
+                        <i class="fas fa-{% if transaction.transaction_type == 'DEPOSIT' %}arrow-up
+                          {% elif transaction.transaction_type == 'WITHDRAWAL' %}arrow-down
+                          {% elif transaction.transaction_type == 'TRANSFER' %}exchange-alt
+                          {% elif transaction.transaction_type == 'PAYMENT' %}credit-card
+                          {% else %}circle{% endif %} me-1"></i>
+                        {{ transaction.get_transaction_type_display }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="fw-bold {% if transaction.transaction_type == 'DEPOSIT' %}text-success{% elif transaction.transaction_type == 'WITHDRAWAL' %}text-warning{% endif %}">
+                        {{ transaction.amount }} {{ wallet.currency }}
+                      </span>
+                    </td>
+                    <td>
+                      <small class="text-muted font-monospace">{{ transaction.reference|truncatechars:12 }}</small>
+                    </td>
+                    <td>
+                      <span class="badge badge-transaction 
+                        {% if transaction.status == 'COMPLETED' %}bg-success
+                        {% elif transaction.status == 'PENDING' %}bg-warning
+                        {% elif transaction.status == 'FAILED' %}bg-danger
+                        {% else %}bg-secondary{% endif %}">
+                        <i class="fas fa-{% if transaction.status == 'COMPLETED' %}check-circle
+                          {% elif transaction.status == 'PENDING' %}clock
+                          {% elif transaction.status == 'FAILED' %}times-circle
+                          {% else %}question-circle{% endif %} me-1"></i>
+                        {{ transaction.get_status_display }}
+                      </span>
+                    </td>
+                    <td>
+                      <small class="text-muted">{{ transaction.description|truncatechars:30|default:"-" }}</small>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="text-center py-5">
+              <i class="fas fa-inbox text-muted mb-3" style="font-size: 3rem;"></i>
+              <h5 class="text-muted">{% trans "No transactions found" %}</h5>
+              <p class="text-muted">{% trans "Your transaction history will appear here" %}</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Deposit Modal -->
+<div class="modal fade" id="depositModal" tabindex="-1" aria-labelledby="depositModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form method="post" action="{% url 'wallets:deposit' %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="depositModalLabel">
+            <i class="fas fa-plus-circle me-2"></i>{% trans "Make a Deposit" %}
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="{{ deposit_form.amount.id_for_label }}" class="form-label">
+              <i class="fas fa-money-bill me-1"></i>{% trans "Amount" %}
+            </label>
+            {{ deposit_form.amount }}
+            {% if deposit_form.amount.errors %}
+              <div class="text-danger mt-1">
+                {% for error in deposit_form.amount.errors %}
+                  <small><i class="fas fa-exclamation-triangle me-1"></i>{{ error }}</small>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <label for="{{ deposit_form.description.id_for_label }}" class="form-label">
+              <i class="fas fa-comment me-1"></i>{% trans "Description (Optional)" %}
+            </label>
+            {{ deposit_form.description }}
+            {% if deposit_form.description.errors %}
+              <div class="text-danger mt-1">
+                {% for error in deposit_form.description.errors %}
+                  <small><i class="fas fa-exclamation-triangle me-1"></i>{{ error }}</small>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i>{% trans "Cancel" %}
+          </button>
+          <button type="submit" class="btn btn-success">
+            <i class="fas fa-check me-1"></i>{% trans "Deposit" %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Withdrawal Modal -->
+<div class="modal fade" id="withdrawalModal" tabindex="-1" aria-labelledby="withdrawalModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form method="post" action="{% url 'wallets:withdraw' %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="withdrawalModalLabel">
+            <i class="fas fa-minus-circle me-2"></i>{% trans "Make a Withdrawal" %}
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="{{ withdrawal_form.amount.id_for_label }}" class="form-label">
+              <i class="fas fa-money-bill me-1"></i>{% trans "Amount" %}
+            </label>
+            {{ withdrawal_form.amount }}
+            {% if withdrawal_form.amount.errors %}
+              <div class="text-danger mt-1">
+                {% for error in withdrawal_form.amount.errors %}
+                  <small><i class="fas fa-exclamation-triangle me-1"></i>{{ error }}</small>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <label for="{{ withdrawal_form.description.id_for_label }}" class="form-label">
+              <i class="fas fa-comment me-1"></i>{% trans "Description (Optional)" %}
+            </label>
+            {{ withdrawal_form.description }}
+            {% if withdrawal_form.description.errors %}
+              <div class="text-danger mt-1">
+                {% for error in withdrawal_form.description.errors %}
+                  <small><i class="fas fa-exclamation-triangle me-1"></i>{{ error }}</small>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i>{% trans "Cancel" %}
+          </button>
+          <button type="submit" class="btn btn-warning">
+            <i class="fas fa-check me-1"></i>{% trans "Withdraw" %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Transfer Modal -->
+<div class="modal fade" id="transferModal" tabindex="-1" aria-labelledby="transferModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form method="post" action="{% url 'wallets:transfer' %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="transferModalLabel">
+            <i class="fas fa-exchange-alt me-2"></i>{% trans "Transfer Funds" %}
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="{{ transfer_form.recipient.id_for_label }}" class="form-label">
+              <i class="fas fa-user me-1"></i>{% trans "Recipient" %}
+            </label>
+            {{ transfer_form.recipient }}
+            {% if transfer_form.recipient.errors %}
+              <div class="text-danger mt-1">
+                {% for error in transfer_form.recipient.errors %}
+                  <small><i class="fas fa-exclamation-triangle me-1"></i>{{ error }}</small>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <label for="{{ transfer_form.amount.id_for_label }}" class="form-label">
+              <i class="fas fa-money-bill me-1"></i>{% trans "Amount" %}
+            </label>
+            {{ transfer_form.amount }}
+            {% if transfer_form.amount.errors %}
+              <div class="text-danger mt-1">
+                {% for error in transfer_form.amount.errors %}
+                  <small><i class="fas fa-exclamation-triangle me-1"></i>{{ error }}</small>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <label for="{{ transfer_form.description.id_for_label }}" class="form-label">
+              <i class="fas fa-comment me-1"></i>{% trans "Description (Optional)" %}
+            </label>
+            {{ transfer_form.description }}
+            {% if transfer_form.description.errors %}
+              <div class="text-danger mt-1">
+                {% for error in transfer_form.description.errors %}
+                  <small><i class="fas fa-exclamation-triangle me-1"></i>{{ error }}</small>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i>{% trans "Cancel" %}
+          </button>
+          <button type="submit" class="btn btn-info">
+            <i class="fas fa-check me-1"></i>{% trans "Transfer" %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Initialize tooltips
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+  })
+
+  // Add animation on scroll for action cards
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, observerOptions);
+
+  // Observe all action cards
+  document.querySelectorAll('.action-card').forEach(card => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(20px)';
+    card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    observer.observe(card);
+  });
+
+  // Show error messages in modals if present
+  {% if messages %}
+  document.addEventListener('DOMContentLoaded', function() {
+    {% for message in messages %}
+    {% if message.tags == 'error' %}
+      var modal = document.getElementById('{{ message.extra_tags }}Modal');
+      if (modal) {
+        var modalInstance = new bootstrap.Modal(modal);
+        modalInstance.show();
+      }
+    {% endif %}
+    {% endfor %}
+  });
+  {% endif %}
+
+  // Add form validation and enhancement
+  document.addEventListener('DOMContentLoaded', function() {
+    // Add currency symbol to amount fields
+    const amountFields = document.querySelectorAll('input[name="amount"]');
+    amountFields.forEach(field => {
+      field.classList.add('form-control');
+      field.setAttribute('placeholder', '0.00');
+    });
+
+    // Add recipient field styling
+    const recipientField = document.querySelector('select[name="recipient"]');
+    if (recipientField) {
+      recipientField.classList.add('form-select');
+    }
+
+    // Add description field styling
+    const descriptionFields = document.querySelectorAll('textarea[name="description"]');
+    descriptionFields.forEach(field => {
+      field.classList.add('form-control');
+      field.setAttribute('rows', '3');
+      field.setAttribute('placeholder', '{% trans "Optional description..." %}');
+    });
+  });
+</script>
+{% endblock %} 

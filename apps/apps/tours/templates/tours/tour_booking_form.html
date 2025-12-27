@@ -1,0 +1,911 @@
+{% extends "tours/base.html" %}
+{% load i18n %}
+{% load static %}
+{% load booking_extras %}
+
+{% block extra_css %}
+<style>
+  body {
+    background: linear-gradient(135deg, #f8fafc 0%, #e9f0fa 100%);
+  }
+  
+  .booking-hero {
+    background: linear-gradient(135deg, rgba(44, 90, 160, 0.9) 0%, rgba(255, 107, 53, 0.9) 100%);
+    color: white;
+    padding: 3rem 0;
+    margin-top: 70px;
+  }
+  
+  .booking-container {
+    margin-top: -2rem;
+    position: relative;
+    z-index: 10;
+  }
+  
+  .form-card {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    background: white;
+  }
+  
+  .form-card .card-header {
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    color: white;
+    border: none;
+    padding: 2rem;
+    text-align: center;
+  }
+  
+  .form-card .card-body {
+    padding: 3rem;
+  }
+  
+  .form-label {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+  }
+  
+  .form-control, .form-select {
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+    padding: 1rem 1.25rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #f9fafb;
+  }
+  
+  .form-control:focus, .form-select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    background: white;
+  }
+  
+  .form-control:hover, .form-select:hover {
+    border-color: #d1d5db;
+    background: white;
+  }
+  
+  .btn-booking {
+    padding: 1rem 2.5rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    border: none;
+    color: white;
+  }
+  
+  .btn-booking:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(37, 99, 235, 0.4);
+    color: white;
+  }
+  
+  .tour-summary-card {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    background: white;
+    height: 100%;
+  }
+  
+  .tour-summary-card .card-header {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    color: white;
+    border: none;
+    padding: 1.5rem;
+  }
+  
+  .tour-image {
+    height: 200px;
+    object-fit: cover;
+    width: 100%;
+  }
+  
+  .price-highlight {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #92400e;
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-align: center;
+    margin: 1.5rem 0;
+  }
+  
+  .price-amount {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  
+  .form-section {
+    background: #f8fafc;
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border: 1px solid #e5e7eb;
+  }
+  
+  .form-section h5 {
+    color: #2563eb;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+  }
+  
+  .alert {
+    border-radius: 12px;
+    border: none;
+    padding: 1rem 1.5rem;
+  }
+  
+  .alert-danger {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    color: #dc2626;
+    border-left: 4px solid #dc2626;
+  }
+  
+  .alert-success {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    color: #16a34a;
+    border-left: 4px solid #16a34a;
+  }
+  
+  .invalid-feedback {
+    color: #dc2626;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+  }
+  
+  .form-control.is-invalid,
+  .form-select.is-invalid {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 0.2rem rgba(220, 38, 38, 0.25);
+  }
+  
+  .form-control.is-valid,
+  .form-select.is-valid {
+    border-color: #059669;
+    box-shadow: 0 0 0 0.2rem rgba(5, 150, 105, 0.25);
+  }
+  
+  .form-floating {
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-floating .form-control {
+    height: 60px;
+  }
+  
+  .form-floating label {
+    padding: 1rem 1.25rem;
+  }
+  
+  .participants-input {
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
+  
+  .back-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    border-radius: 50px;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+  }
+  
+  .back-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: white;
+  }
+  
+  .feature-list {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .feature-list li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .feature-list li:last-child {
+    border-bottom: none;
+  }
+  
+  .feature-list i {
+    color: #059669;
+    margin-right: 0.75rem;
+    width: 20px;
+  }
+  
+  .payment-options {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  
+  .payment-option {
+    background: #f8fafc;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1rem;
+    margin: 0;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+  
+  .payment-option:hover {
+    border-color: #2563eb;
+    background: #eff6ff;
+  }
+  
+  .payment-option input[type="radio"]:checked + label {
+    color: #2563eb;
+    font-weight: 600;
+  }
+  
+  .payment-option input[type="radio"]:checked ~ .payment-option {
+    border-color: #2563eb;
+    background: #eff6ff;
+  }
+  
+  .payment-option.is-invalid {
+    border-color: #dc2626;
+    background: #fef2f2;
+  }
+  
+  .amount-to-pay {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    margin-top: 1rem;
+  }
+  
+  .amount-to-pay .amount {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  
+  .booking-summary-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .booking-summary-item:last-child {
+    border-bottom: none;
+  }
+  
+  .booking-summary-item strong {
+    color: #374151;
+    min-width: 120px;
+    display: inline-block;
+  }
+  
+  .modal-content {
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  
+  .modal-header {
+    border-radius: 15px 15px 0 0;
+    border-bottom: none;
+  }
+  
+  .modal-footer {
+    border-radius: 0 0 15px 15px;
+    border-top: none;
+  }
+  
+  @media (max-width: 768px) {
+    .booking-hero {
+      padding: 2rem 0;
+    }
+    
+    .form-card .card-body {
+      padding: 2rem 1.5rem;
+    }
+    
+    .booking-container {
+      margin-top: -1rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block tour_content %}
+<!-- Booking Hero Section -->
+<section class="booking-hero">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <h1 class="display-5 fw-bold mb-3">
+          <i class="fas fa-calendar-check me-3"></i>{% trans "Réserver votre tour" %}
+        </h1>
+        <p class="lead mb-0">{{ tour.name }}</p>
+        {% if tour.destinations.exists %}
+        <p class="mb-0 opacity-75">{{ tour.destinations.first.name }}</p>
+        {% endif %}
+      </div>
+      <div class="col-md-4 text-end">
+        <a href="{% url 'tours:tour_detail' tour.slug %}" class="btn back-btn">
+          <i class="fas fa-arrow-left me-2"></i>{% trans "Retour au tour" %}
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Booking Form Section -->
+<section class="py-5">
+  <div class="container booking-container">
+    <div class="row g-4">
+      <!-- Formulaire de réservation -->
+      <div class="col-lg-8">
+        <div class="card form-card">
+          <div class="card-header">
+            <h3 class="mb-0">
+              <i class="fas fa-route me-2"></i>{% trans "Formulaire de réservation" %}
+            </h3>
+            <p class="mb-0 mt-2 opacity-75">{% trans "Remplissez les informations ci-dessous pour réserver votre place" %}</p>
+          </div>
+          
+          <div class="card-body">
+            <form method="post" class="booking-form">
+              {% csrf_token %}
+              
+              {% if form.errors %}
+              <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>{% trans "Erreurs détectées" %}:</strong>
+                <ul class="mb-0 mt-2">
+                  {% for field, errors in form.errors.items %}
+                    {% if field != '__all__' %}
+                      {% for error in errors %}
+                        <li><strong>{{ form|field_label:field }}</strong>: {{ error }}</li>
+                      {% endfor %}
+                    {% else %}
+                      {% for error in errors %}
+                        <li>{{ error }}</li>
+                      {% endfor %}
+                    {% endif %}
+                  {% endfor %}
+                </ul>
+              </div>
+              {% endif %}
+              
+              <!-- Informations du tour -->
+                <div class="form-section">
+                  <h5>
+                  <i class="fas fa-calendar-alt me-2"></i>{% trans "Détails de la réservation" %}
+                  </h5>
+                  
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                    <label for="{{ form.number_of_participants.id_for_label }}" class="form-label">
+                      <i class="fas fa-users me-1"></i>{% trans "Nombre de participants" %}
+                      </label>
+                    {{ form.number_of_participants }}
+                    {% if form.number_of_participants.errors %}
+                      <div class="invalid-feedback d-block">
+                        <i class="fas fa-exclamation-circle me-1"></i>
+                        {{ form.number_of_participants.errors.0 }}
+                      </div>
+                    {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                    <label for="{{ form.special_requirements.id_for_label }}" class="form-label">
+                      <i class="fas fa-clipboard-list me-1"></i>{% trans "Exigences spéciales" %}
+                    </label>
+                    {{ form.special_requirements }}
+                    {% if form.special_requirements.errors %}
+                    <div class="invalid-feedback d-block">
+                      <i class="fas fa-exclamation-circle me-1"></i>
+                      {{ form.special_requirements.errors.0 }}
+                    </div>
+                    {% endif %}
+                  </div>
+                </div>
+                
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="{{ form.total_amount.id_for_label }}" class="form-label">
+                      <i class="fas fa-calculator me-1"></i>{% trans "Montant total" %}
+                    </label>
+                    {{ form.total_amount }}
+                    <!-- Champ caché pour stocker le montant brut -->
+                    <input type="hidden" name="total_amount_hidden" id="id_total_amount_hidden" value="{{ tour.price_per_person|floatformat:0 }}">
+                    <small class="form-text text-muted">{% trans "Calculé automatiquement selon le nombre de participants" %}</small>
+                  </div>
+                </div>
+                
+                <!-- Pourcentage de paiement -->
+                <div class="row">
+                  <div class="col-12 mb-3">
+                    <label class="form-label">
+                      <i class="fas fa-percentage me-1"></i>{% trans "Pourcentage de paiement" %}
+                    </label>
+                    <div class="payment-options">
+                      {% for choice in form.payment_percentage %}
+                      <div class="form-check form-check-inline payment-option">
+                        {{ choice.tag }}
+                        <label class="form-check-label" for="{{ choice.id_for_label }}">
+                          {{ choice.choice_label }}
+                        </label>
+                      </div>
+                      {% endfor %}
+                    </div>
+                    <div class="mt-2">
+                      <small class="form-text text-muted">
+                        <i class="fas fa-info-circle me-1"></i>{% trans "Choisissez le pourcentage que vous souhaitez payer maintenant" %}
+                      </small>
+                    </div>
+                    <div class="invalid-feedback d-block" id="payment-percentage-error" style="display: none;">
+                      <i class="fas fa-exclamation-circle me-1"></i>{% trans "Veuillez sélectionner un pourcentage de paiement" %}
+                    </div>
+                    
+                    <!-- Montant à payer -->
+                    <div class="amount-to-pay" id="amount-to-pay" style="display: none;">
+                      <div class="text-sm mb-1">{% trans "Montant à payer maintenant" %}:</div>
+                      <div class="amount" id="amount-to-pay-value">0 FCFA</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="mb-3">
+                  <small class="form-text text-muted">
+                    <i class="fas fa-info-circle me-1"></i>{% trans "Informations supplémentaires, allergies, préférences alimentaires, etc." %}
+                  </small>
+                </div>
+              </div>
+
+              <!-- Informations personnelles -->
+                <div class="form-section">
+                  <h5>
+                  <i class="fas fa-user me-2"></i>{% trans "Informations personnelles" %}
+                  </h5>
+                <div class="alert alert-info mb-3">
+                  <i class="fas fa-info-circle me-2"></i>{% trans "Vos informations personnelles sont pré-remplies. Vous pouvez les modifier si nécessaire." %}
+                </div>
+                  
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                      <i class="fas fa-user me-1"></i>{% trans "Prénom" %}
+                      </label>
+                      {{ form.first_name }}
+                      {% if form.first_name.errors %}
+                      <div class="invalid-feedback d-block">
+                        <i class="fas fa-exclamation-circle me-1"></i>
+                        {{ form.first_name.errors.0 }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                      <label for="{{ form.email.id_for_label }}" class="form-label">
+                        <i class="fas fa-envelope me-1"></i>{% trans "Email" %}
+                      </label>
+                      {{ form.email }}
+                      {% if form.email.errors %}
+                      <div class="invalid-feedback d-block">
+                        <i class="fas fa-exclamation-circle me-1"></i>
+                        {{ form.email.errors.0 }}
+                      </div>
+                      {% endif %}
+                    </div>
+                </div>
+              </div>
+
+              <!-- Bouton de soumission -->
+              <div class="d-grid">
+                <button type="button" class="btn btn-booking" id="showConfirmationModal">
+                  <i class="fas fa-credit-card me-2"></i>{% trans "Confirmer la réservation" %}
+                  </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Résumé du tour -->
+      <div class="col-lg-4">
+        <div class="tour-summary-card">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-info-circle me-2"></i>{% trans "Résumé du tour" %}
+            </h5>
+          </div>
+          
+          <div class="card-body">
+            {% if tour.images.exists %}
+            <img src="{{ tour.images.first.image.url }}" class="tour-image rounded mb-3" alt="{{ tour.name }}">
+            {% endif %}
+            
+            <h6 class="fw-bold mb-3">{{ tour.name }}</h6>
+            
+            <div class="price-highlight">
+              <div class="price-amount">{{ tour.price_per_person|floatformat:0 }} FCFA</div>
+              <div class="text-sm">{% trans "par personne" %}</div>
+            </div>
+            
+            <!-- Places disponibles -->
+            <div class="availability-info p-3 bg-light rounded mb-3">
+              <h6 class="fw-bold mb-2">{% trans "Disponibilité" %}:</h6>
+              <div class="d-flex justify-content-between align-items-center">
+                <span>{% trans "Places disponibles" %}:</span>
+                <span class="badge bg-success fs-6">{{ tour.max_participants }}</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center mt-2">
+                <span>{% trans "Participants min" %}:</span>
+                <span class="badge bg-info">{{ tour.min_participants }}</span>
+              </div>
+            </div>
+            
+            <ul class="feature-list">
+              <li>
+                <i class="fas fa-clock"></i>
+                <strong>{% trans "Durée" %}:</strong> {{ tour.duration_days }} {% trans "jours" %}
+              </li>
+              <li>
+                <i class="fas fa-users"></i>
+                <strong>{% trans "Participants max" %}:</strong> {{ tour.max_participants }}
+              </li>
+              <li>
+                <i class="fas fa-mountain"></i>
+                <strong>{% trans "Difficulté" %}:</strong> {{ tour.get_difficulty_display }}
+              </li>
+              {% if tour.guide %}
+              <li>
+                <i class="fas fa-user-tie"></i>
+                <strong>{% trans "Guide" %}:</strong> {{ tour.guide.user.get_full_name }}
+              </li>
+              {% endif %}
+            </ul>
+            
+            <div class="mt-4 p-3 bg-light rounded">
+              <h6 class="fw-bold mb-2">{% trans "Ce qui est inclus" %}:</h6>
+              <ul class="list-unstyled mb-0">
+                <li><i class="fas fa-check text-success me-2"></i>{% trans "Guide professionnel" %}</li>
+                <li><i class="fas fa-check text-success me-2"></i>{% trans "Transport" %}</li>
+                <li><i class="fas fa-check text-success me-2"></i>{% trans "Équipement" %}</li>
+                <li><i class="fas fa-check text-success me-2"></i>{% trans "Assurance" %}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Modal de confirmation -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="confirmationModalLabel">
+          <i class="fas fa-check-circle me-2"></i>{% trans "Confirmation de réservation" %}
+          </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle me-2"></i>{% trans "Veuillez vérifier les détails de votre réservation avant de confirmer." %}
+        </div>
+        
+          <div class="row">
+          <div class="col-md-6">
+            <h6 class="fw-bold text-primary mb-3">
+              <i class="fas fa-route me-2"></i>{% trans "Détails du tour" %}
+            </h6>
+            <div class="booking-summary-item">
+              <strong>{% trans "Tour" %}:</strong>
+              <span id="modal-tour-name">{{ tour.name }}</span>
+            </div>
+            <div class="booking-summary-item">
+              <strong>{% trans "Durée" %}:</strong>
+              <span>{{ tour.duration_days }} {% trans "jours" %}</span>
+            </div>
+            <div class="booking-summary-item">
+              <strong>{% trans "Prix par personne" %}:</strong>
+              <span>{{ tour.price_per_person|floatformat:0 }} FCFA</span>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <h6 class="fw-bold text-primary mb-3">
+              <i class="fas fa-user me-2"></i>{% trans "Informations personnelles" %}
+            </h6>
+            <div class="booking-summary-item">
+              <strong>{% trans "Prénom" %}:</strong>
+              <span id="modal-first-name"></span>
+            </div>
+            <div class="booking-summary-item">
+              <strong>{% trans "Email" %}:</strong>
+              <span id="modal-email"></span>
+            </div>
+          </div>
+        </div>
+
+        <hr>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <h6 class="fw-bold text-primary mb-3">
+              <i class="fas fa-calendar-check me-2"></i>{% trans "Détails de la réservation" %}
+            </h6>
+            <div class="booking-summary-item">
+              <strong>{% trans "Nombre de participants" %}:</strong>
+              <span id="modal-participants"></span>
+            </div>
+            <div class="booking-summary-item">
+              <strong>{% trans "Montant total" %}:</strong>
+              <span id="modal-total-amount"></span>
+            </div>
+            <div class="booking-summary-item">
+              <strong>{% trans "Pourcentage de paiement" %}:</strong>
+              <span id="modal-payment-percentage"></span>
+            </div>
+            <div class="booking-summary-item">
+              <strong>{% trans "Montant à payer" %}:</strong>
+              <span id="modal-amount-to-pay" class="fw-bold text-success"></span>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <h6 class="fw-bold text-primary mb-3">
+              <i class="fas fa-clipboard-list me-2"></i>{% trans "Demandes spéciales" %}
+            </h6>
+            <div class="booking-summary-item">
+              <span id="modal-special-requirements" class="text-muted">
+                {% trans "Aucune demande spéciale" %}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="alert alert-warning mt-3">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          <strong>{% trans "Important" %}:</strong> {% trans "En confirmant cette réservation, vous acceptez les conditions générales et vous serez contacté pour finaliser les détails." %}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times me-2"></i>{% trans "Annuler" %}
+        </button>
+        <button type="button" class="btn btn-success" id="confirmBooking">
+          <i class="fas fa-check me-2"></i>{% trans "Confirmer la réservation" %}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Améliorer l'apparence des champs de formulaire
+    const formControls = document.querySelectorAll('.form-control, .form-select');
+    formControls.forEach(control => {
+        control.classList.add('form-control-lg');
+    });
+    
+    // Ajouter les classes d'erreur aux champs avec erreurs
+    const errorFields = document.querySelectorAll('.invalid-feedback');
+    errorFields.forEach(errorField => {
+        const fieldId = errorField.previousElementSibling?.id;
+        if (fieldId) {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.classList.add('is-invalid');
+            }
+        }
+    });
+    
+    // Gestion de la modale de confirmation
+    const showConfirmationBtn = document.getElementById('showConfirmationModal');
+    const confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+    const confirmBookingBtn = document.getElementById('confirmBooking');
+    const form = document.querySelector('.booking-form');
+    
+    if (showConfirmationBtn) {
+        showConfirmationBtn.addEventListener('click', function() {
+            // Récupérer les valeurs du formulaire
+            const participants = document.getElementById('id_number_of_participants').value;
+            const firstName = document.getElementById('id_first_name').value;
+            const email = document.getElementById('id_email').value;
+            const specialRequirements = document.getElementById('id_special_requirements').value;
+            // Utiliser le champ caché pour le montant total brut
+            const totalAmountHidden = document.getElementById('id_total_amount_hidden').value;
+            const totalAmount = parseFloat(totalAmountHidden);
+            const paymentPercentage = document.querySelector('input[name="payment_percentage"]:checked').value;
+            
+            // Calculer le montant à payer
+            const amountToPay = (totalAmount * parseInt(paymentPercentage)) / 100;
+            
+            // Mettre à jour la modale
+            document.getElementById('modal-participants').textContent = participants;
+            document.getElementById('modal-first-name').textContent = firstName;
+            document.getElementById('modal-email').textContent = email;
+            document.getElementById('modal-total-amount').textContent = totalAmount.toLocaleString('fr-FR') + ' FCFA';
+            document.getElementById('modal-payment-percentage').textContent = paymentPercentage + '%';
+            document.getElementById('modal-amount-to-pay').textContent = amountToPay.toLocaleString('fr-FR') + ' FCFA';
+            
+            // Gérer les demandes spéciales
+            if (specialRequirements.trim()) {
+                document.getElementById('modal-special-requirements').textContent = specialRequirements;
+                document.getElementById('modal-special-requirements').classList.remove('text-muted');
+            } else {
+                document.getElementById('modal-special-requirements').textContent = '{% trans "Aucune demande spéciale" %}';
+                document.getElementById('modal-special-requirements').classList.add('text-muted');
+            }
+            
+            // Afficher la modale
+            confirmationModal.show();
+        });
+    }
+    
+    // Confirmation de la réservation
+    if (confirmBookingBtn) {
+        confirmBookingBtn.addEventListener('click', function() {
+            // Validation côté client avant soumission
+            const requiredFields = form.querySelectorAll('[required]');
+            let hasErrors = false;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    hasErrors = true;
+                } else {
+                    field.classList.remove('is-invalid');
+                    field.classList.add('is-valid');
+                }
+            });
+            
+            // Validation spécifique pour le nombre de participants
+            const participantsField = document.getElementById('id_number_of_participants');
+            if (participantsField) {
+                const participants = parseInt(participantsField.value);
+                const minParticipants = parseInt(participantsField.getAttribute('min')) || 1;
+                const maxParticipants = parseInt(participantsField.getAttribute('max')) || 20;
+                
+                if (participants < minParticipants || participants > maxParticipants) {
+                    participantsField.classList.add('is-invalid');
+                    hasErrors = true;
+                }
+            }
+            
+            // Validation pour le pourcentage de paiement
+            const paymentPercentageField = document.querySelector('input[name="payment_percentage"]:checked');
+            const paymentErrorDiv = document.getElementById('payment-percentage-error');
+            if (!paymentPercentageField) {
+                const paymentOptions = document.querySelectorAll('input[name="payment_percentage"]');
+                paymentOptions.forEach(option => {
+                    option.closest('.payment-option').classList.add('is-invalid');
+                });
+                if (paymentErrorDiv) {
+                    paymentErrorDiv.style.display = 'block';
+                }
+                hasErrors = true;
+            } else {
+                const paymentOptions = document.querySelectorAll('input[name="payment_percentage"]');
+                paymentOptions.forEach(option => {
+                    option.closest('.payment-option').classList.remove('is-invalid');
+                });
+                if (paymentErrorDiv) {
+                    paymentErrorDiv.style.display = 'none';
+                }
+            }
+            
+            if (hasErrors) {
+                // Afficher un message d'erreur dans la modale
+                const modalBody = document.querySelector('.modal-body');
+                const errorAlert = document.createElement('div');
+                errorAlert.className = 'alert alert-danger';
+                errorAlert.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>{% trans "Veuillez corriger les erreurs avant de confirmer." %}';
+                modalBody.insertBefore(errorAlert, modalBody.firstChild);
+                
+                // Fermer la modale pour permettre la correction
+                confirmationModal.hide();
+                return;
+            }
+            
+            // Désactiver le bouton et afficher le spinner
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>{% trans "Traitement..." %}';
+            this.disabled = true;
+            
+            // Fermer la modale
+            confirmationModal.hide();
+            
+            // Soumettre le formulaire
+            form.submit();
+        });
+    }
+    
+    // Validation en temps réel
+    const inputs = document.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.value.trim() === '') {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+    });
+    
+    // Calcul du montant total en temps réel
+    const participantsInput = document.getElementById('id_number_of_participants');
+    const totalAmountInput = document.getElementById('id_total_amount');
+    const pricePerPerson = parseFloat('{{ tour.price_per_person }}');
+    
+    function calculateTotal() {
+        const participants = parseInt(participantsInput.value) || 0;
+        const total = participants * pricePerPerson;
+        // Afficher le montant formaté pour l'utilisateur
+        totalAmountInput.value = total.toLocaleString('fr-FR') + ' FCFA';
+        // Stocker le montant brut dans un champ caché pour le formulaire
+        const hiddenTotalField = document.getElementById('id_total_amount_hidden');
+        if (hiddenTotalField) {
+            hiddenTotalField.value = total;
+        }
+    }
+    
+    if (participantsInput && totalAmountInput) {
+        // Calculer le montant initial (pour 1 participant par défaut)
+        const initialParticipants = participantsInput.value || 1;
+        participantsInput.value = initialParticipants;
+        calculateTotal();
+        
+        // Recalculer à chaque changement
+        participantsInput.addEventListener('input', calculateTotal);
+        participantsInput.addEventListener('change', calculateTotal);
+        
+        // Debug: Afficher les valeurs initiales
+        console.log('Valeurs initiales:');
+        console.log('  participants:', participantsInput.value);
+        console.log('  price per person:', pricePerPerson);
+        console.log('  total amount input:', totalAmountInput.value);
+        console.log('  hidden total field:', document.getElementById('id_total_amount_hidden')?.value);
+    }
+    
+    // Gestion des options de paiement
+    const paymentOptions = document.querySelectorAll('input[name="payment_percentage"]');
+    paymentOptions.forEach(option => {
+        option.addEventListener('change', function() {
+            const paymentErrorDiv = document.getElementById('payment-percentage-error');
+            if (paymentErrorDiv) {
+                paymentErrorDiv.style.display = 'none';
+            }
+            paymentOptions.forEach(opt => {
+                opt.closest('.payment-option').classList.remove('is-invalid');
+            });
+        });
+    });
+    
+    // Debug: Afficher les valeurs des champs utilisateur
+    console.log('Données utilisateur pré-remplies:');
+    const firstNameField = document.getElementById('id_first_name');
+    const emailField = document.getElementById('id_email');
+    
+    if (firstNameField) console.log('Prénom:', firstNameField.value);
+    if (emailField) console.log('Email:', emailField.value);
+  });
+</script>
+{% endblock %} 

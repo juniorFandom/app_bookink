@@ -1,0 +1,203 @@
+{% extends "business/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Manage Images" %} | {{ business.name }} | {{ block.super }}{% endblock %}
+
+{% block business_content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="h3 mb-0">{% translate "Manage Images" %}</h1>
+                    <a href="{% url 'business:business-detail' business.pk %}" 
+                       class="btn btn-outline-secondary">
+                        {% translate "Back to Business" %}
+                    </a>
+                </div>
+
+                <!-- Current Images -->
+                {% if business.images.exists %}
+                <div class="mb-4">
+                    <h2 class="h5 mb-3">{% translate "Current Images" %}</h2>
+                    <div class="row g-3">
+                        {% for image in business.images.all %}
+                        <div class="col-md-6">
+                            <div class="card">
+                                <img src="{{ image.image.url }}" 
+                                     class="card-img-top" 
+                                     alt="{{ image.caption|default:business.name }}"
+                                     style="height: 200px; object-fit: cover;">
+                                <div class="card-body">
+                                    <form method="post" action="{% url 'business:delete-image' business.pk image.pk %}"
+                                          class="image-delete-form">
+                                        {% csrf_token %}
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                {% if image.caption %}
+                                                <p class="card-text mb-2">{{ image.caption }}</p>
+                                                {% endif %}
+                                                {% if image.is_primary %}
+                                                <span class="badge bg-primary">{% translate "Primary Image" %}</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="btn-group">
+                                                {% if not image.is_primary %}
+                                                <form method="post" action="{% url 'business:set-primary-image' business.pk image.pk %}">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-star"></i>
+                                                        {% translate "Set as Primary" %}
+                                                    </button>
+                                                </form>
+                                                {% endif %}
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="fas fa-trash"></i>
+                                                    {% translate "Delete" %}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Upload New Images -->
+                <div class="mb-4">
+                    <h2 class="h5 mb-3">{% translate "Upload New Images" %}</h2>
+                    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        {{ formset.management_form }}
+                        
+                        <div id="image-formset">
+                            {% for form in formset %}
+                            <div class="card mb-3 image-form">
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-8">
+                                            <label for="{{ form.image.id_for_label }}" class="form-label">
+                                                {{ form.image.label }}
+                                            </label>
+                                            {{ form.image }}
+                                            {% if form.image.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.image.errors|join:", " }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="{{ form.caption.id_for_label }}" class="form-label">
+                                                {{ form.caption.label }}
+                                            </label>
+                                            {{ form.caption }}
+                                            {% if form.caption.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.caption.errors|join:", " }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        {% if forloop.first %}
+                                        <div class="col-12">
+                                            <div class="form-check">
+                                                {{ form.is_primary }}
+                                                <label class="form-check-label" for="{{ form.is_primary.id_for_label }}">
+                                                    {{ form.is_primary.label }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <button type="button" id="add-image" class="btn btn-outline-secondary mb-3">
+                            <i class="fas fa-plus"></i> {% translate "Add Another Image" %}
+                        </button>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-primary">
+                                {% translate "Upload Images" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add Bootstrap classes to form fields
+        const formFields = document.querySelectorAll('input[type="text"], input[type="file"]');
+        formFields.forEach(field => {
+            if (field.type === 'checkbox') {
+                field.classList.add('form-check-input');
+            } else if (field.type === 'file') {
+                field.classList.add('form-control');
+            } else {
+                field.classList.add('form-control');
+            }
+        });
+
+        // Handle image formset
+        const addImageBtn = document.getElementById('add-image');
+        const totalFormsInput = document.querySelector('[name="images-TOTAL_FORMS"]');
+        const imageFormset = document.getElementById('image-formset');
+        const emptyForm = imageFormset.querySelector('.image-form').cloneNode(true);
+        
+        addImageBtn.addEventListener('click', function() {
+            const formCount = parseInt(totalFormsInput.value);
+            const newForm = emptyForm.cloneNode(true);
+            
+            newForm.querySelectorAll('input, select, textarea').forEach(input => {
+                input.name = input.name.replace('-0-', `-${formCount}-`);
+                input.id = input.id.replace('-0-', `-${formCount}-`);
+                input.value = '';
+            });
+            
+            newForm.querySelectorAll('label').forEach(label => {
+                label.setAttribute('for', label.getAttribute('for').replace('-0-', `-${formCount}-`));
+            });
+            
+            // Remove is_primary checkbox from additional forms
+            const primaryCheck = newForm.querySelector('[id$="-is_primary"]');
+            if (primaryCheck) {
+                primaryCheck.closest('.col-12').remove();
+            }
+            
+            imageFormset.appendChild(newForm);
+            totalFormsInput.value = formCount + 1;
+        });
+
+        // Handle image deletion confirmation
+        document.querySelectorAll('.image-delete-form').forEach(form => {
+            form.addEventListener('submit', function(event) {
+                if (!confirm('{% translate "Are you sure you want to delete this image?" %}')) {
+                    event.preventDefault();
+                }
+            });
+        });
+
+        // Initialize form validation
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+    });
+</script>
+{% endblock %} 

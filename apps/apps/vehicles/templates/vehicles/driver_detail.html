@@ -1,0 +1,181 @@
+{% extends "vehicles/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block vehicle_content %}
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">{{ driver.get_full_name }}</h2>
+            <div class="btn-group">
+                <a href="{% url 'vehicles:driver_update' driver.pk %}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> {% trans "Edit" %}
+                </a>
+                <a href="{% url 'vehicles:rental_create' %}?driver={{ driver.pk }}" class="btn btn-success">
+                    <i class="fas fa-calendar-plus"></i> {% trans "New Assignment" %}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <div class="row">
+            <!-- Driver Status -->
+            <div class="col-md-12 mb-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="badge {% if driver.is_available %}bg-success{% else %}bg-danger{% endif %} me-2">
+                            {% if driver.is_available %}
+                                {% trans "Available" %}
+                            {% else %}
+                                {% trans "Unavailable" %}
+                            {% endif %}
+                        </span>
+                        <span class="badge {% if driver.is_license_valid %}bg-success{% else %}bg-danger{% endif %}">
+                            {% if driver.is_license_valid %}
+                                {% trans "License Valid" %}
+                            {% else %}
+                                {% trans "License Expired" %}
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div>
+                        <strong>{% trans "Joined" %}:</strong> {{ driver.created_at|date:"DATE_FORMAT" }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personal Information -->
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-user"></i> {% trans "Personal Information" %}
+                        </h5>
+                    </div>
+                    <div class="card-body text-center">
+                        {% if driver.photo %}
+                            <img src="{{ driver.photo.url }}" 
+                                 class="img-fluid rounded mb-3" 
+                                 alt="{{ driver }}"
+                                 style="max-height: 200px;">
+                        {% else %}
+                            <img src="{% static 'images/driver-placeholder.jpg' %}" 
+                                 class="img-fluid rounded mb-3" 
+                                 alt="{{ driver }}"
+                                 style="max-height: 200px;">
+                        {% endif %}
+
+                        <h5>{{ driver.get_full_name }}</h5>
+                        <p class="text-muted">{{ driver.get_gender_display }}</p>
+                        
+                        <div class="text-start">
+                            <p class="mb-1">
+                                <strong>{% trans "Date of Birth" %}:</strong><br>
+                                {{ driver.date_of_birth|date:"DATE_FORMAT" }}
+                            </p>
+                            <p class="mb-1">
+                                <strong>{% trans "Phone" %}:</strong><br>
+                                {{ driver.phone_number }}
+                            </p>
+                            <p class="mb-1">
+                                <strong>{% trans "Email" %}:</strong><br>
+                                {{ driver.email|default:_("Not provided") }}
+                            </p>
+                            <p class="mb-0">
+                                <strong>{% trans "Address" %}:</strong><br>
+                                {{ driver.address }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- License Information -->
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-id-card"></i> {% trans "License Information" %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-1">
+                            <strong>{% trans "License Number" %}:</strong><br>
+                            {{ driver.license_number }}
+                        </p>
+                        <p class="mb-1">
+                            <strong>{% trans "License Type" %}:</strong><br>
+                            {{ driver.get_license_type_display }}
+                        </p>
+                        <p class="mb-1">
+                            <strong>{% trans "License Expiry" %}:</strong><br>
+                            {{ driver.license_expiry|date:"DATE_FORMAT" }}
+                        </p>
+                        <p class="mb-0">
+                            <strong>{% trans "Years of Experience" %}:</strong><br>
+                            {{ driver.years_of_experience }} {% trans "years" %}
+                        </p>
+                    </div>
+                </div>
+
+                {% if driver.notes %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-sticky-note"></i> {% trans "Notes" %}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {{ driver.notes|linebreaks }}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Recent Assignments -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-history"></i> {% trans "Recent Assignments" %}
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            {% for rental in driver.rentals.all|slice:":5" %}
+                                <a href="{% url 'vehicles:rental_detail' rental.pk %}" 
+                                   class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ rental.vehicle }}</h6>
+                                        <small class="text-muted">
+                                            {{ rental.start_date|date:"SHORT_DATE_FORMAT" }}
+                                        </small>
+                                    </div>
+                                    <p class="mb-1">{{ rental.customer }}</p>
+                                    <small>
+                                        <span class="badge bg-{{ rental.status|lower }}">
+                                            {{ rental.get_status_display }}
+                                        </span>
+                                    </small>
+                                </a>
+                            {% empty %}
+                                <div class="list-group-item text-center text-muted">
+                                    {% trans "No recent assignments" %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% if driver.rentals.count > 5 %}
+                        <div class="card-footer text-center">
+                            <a href="{% url 'vehicles:rental_list' %}?driver={{ driver.pk }}" class="text-decoration-none">
+                                {% trans "View all assignments" %} <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,236 @@
+{% extends "vehicles/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Vehicle Rentals" %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .rental-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    .rental-card {
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        border: 1px solid #e0e0e0;
+        margin-bottom: 2rem;
+        background: #fff;
+        transition: box-shadow 0.2s;
+    }
+    .rental-card:hover {
+        box-shadow: 0 8px 24px rgba(44,90,160,0.10);
+    }
+    .rental-header {
+        display: flex;
+        align-items: center;
+        border-bottom: 2px solid var(--primary-color);
+        padding: 1.5rem 1.5rem 1rem 1.5rem;
+    }
+    .rental-header i {
+        font-size: 2rem;
+        color: var(--primary-color);
+        margin-right: 1rem;
+    }
+    .rental-header h3 {
+        margin: 0;
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+    .rental-body {
+        padding: 1.5rem;
+    }
+    .rental-footer {
+        border-top: 1px solid #f0f0f0;
+        padding: 1rem 1.5rem;
+        background: #fafbfc;
+        display: flex;
+        justify-content: flex-end;
+    }
+    .text-gradient {
+        background: linear-gradient(90deg, #2c5aa0 0%, #ff6b35 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-fill-color: transparent;
+    }
+    .rental-glass {
+        background: rgba(255,255,255,0.85);
+        border-radius: 1.25rem;
+        box-shadow: 0 8px 32px rgba(44,90,160,0.10);
+        backdrop-filter: blur(6px);
+        border: 1.5px solid rgba(44,90,160,0.08);
+        transition: transform 0.25s cubic-bezier(.4,2,.3,1), box-shadow 0.25s;
+        overflow: hidden;
+        position: relative;
+    }
+    .rental-glass:hover {
+        transform: translateY(-8px) scale(1.03) rotateZ(-0.5deg);
+        box-shadow: 0 16px 48px rgba(44,90,160,0.18);
+        border-color: #2c5aa022;
+        z-index: 2;
+    }
+    .btn-gradient {
+        background: linear-gradient(90deg, #2c5aa0 0%, #ff6b35 100%);
+        color: #fff !important;
+        border: none;
+        transition: background 0.2s, box-shadow 0.2s;
+    }
+    .btn-gradient:hover {
+        background: linear-gradient(90deg, #ff6b35 0%, #2c5aa0 100%);
+        color: #fff !important;
+        box-shadow: 0 8px 32px rgba(44,90,160,0.18);
+    }
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    .status-pending { background: linear-gradient(45deg, #ffc107, #ff9800); color: #fff; }
+    .status-confirmed { background: linear-gradient(45deg, #28a745, #20c997); color: #fff; }
+    .status-completed { background: linear-gradient(45deg, #6c757d, #495057); color: #fff; }
+    .status-cancelled { background: linear-gradient(45deg, #dc3545, #c82333); color: #fff; }
+    .payment-paid { background: linear-gradient(45deg, #28a745, #20c997); color: #fff; }
+    .payment-pending { background: linear-gradient(45deg, #ffc107, #ff9800); color: #fff; }
+    .payment-failed { background: linear-gradient(45deg, #dc3545, #c82333); color: #fff; }
+</style>
+{% endblock %}
+
+{% block vehicle_content %}
+<div class="rental-container">
+    <!-- Header Section -->
+    <div class="section-header mb-5 position-relative" style="background: linear-gradient(120deg, #2c5aa0 0%, #4a7bc8 100%); box-shadow: 0 8px 32px rgba(44,90,160,0.18); overflow: hidden;">
+        <i class="fas fa-clipboard-list fa-3x me-3" style="filter: drop-shadow(0 4px 16px #fff8);"></i>
+        <h2 class="mb-0 display-5 fw-bold" style="letter-spacing:1px;">{% trans "Locations de Véhicules" %}</h2>
+        <span class="position-absolute top-0 end-0 opacity-25" style="font-size:7rem; pointer-events:none;">
+            <i class="fas fa-car"></i>
+        </span>
+    </div>
+
+    {% if location %}
+    <a href="{% url 'business:business_location_dashboard' location.pk %}" class="btn btn-gradient mb-4">
+        <i class="fas fa-arrow-left me-2"></i> Retour au dashboard
+    </a>
+    {% endif %}
+
+    {% if bookings %}
+        <div class="rental-grid">
+            {% for booking in bookings %}
+            <div class="rental-item rental-glass shadow-lg position-relative mb-4">
+                <div class="rental-header">
+                    <i class="fas fa-car"></i>
+                    <h3 class="h4 mb-0">{{ booking.vehicle.name }}</h3>
+                    <span class="badge bg-primary ms-auto">{{ booking.booking_reference }}</span>
+                </div>
+                
+                <div class="rental-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <h5 class="text-primary mb-2"><i class="fas fa-user me-2"></i>{% trans "Client" %}</h5>
+                                <p class="mb-0">{{ booking.customer.get_full_name|default:booking.customer.username }}</p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <h5 class="text-primary mb-2"><i class="fas fa-calendar-alt me-2"></i>{% trans "Période" %}</h5>
+                                <p class="mb-1"><strong>{% trans "Début:" %}</strong> {{ booking.pickup_datetime|date:"d/m/Y H:i" }}</p>
+                                <p class="mb-0"><strong>{% trans "Fin:" %}</strong> {{ booking.return_datetime|date:"d/m/Y H:i" }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <h5 class="text-primary mb-2"><i class="fas fa-info-circle me-2"></i>{% trans "Statut" %}</h5>
+                                <span class="status-badge status-{{ booking.status|lower }}">
+                                    {{ booking.get_status_display }}
+                                </span>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <h5 class="text-primary mb-2"><i class="fas fa-money-bill me-2"></i>{% trans "Paiement" %}</h5>
+                                <span class="status-badge payment-{{ booking.payment_status|lower }}">
+                                    {{ booking.get_payment_status_display }}
+                                </span>
+                            </div>
+                            
+                            {% if booking.total_amount %}
+                            <div class="mb-3">
+                                <h5 class="text-primary mb-2"><i class="fas fa-euro-sign me-2"></i>{% trans "Montant" %}</h5>
+                                <p class="mb-0 fw-bold text-success">{{ booking.total_amount }} €</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="rental-footer d-flex gap-2">
+                    <a href="{% url 'vehicles:booking_detail' booking.pk %}" class="btn btn-outline-primary btn-sm px-3 fw-bold shadow-sm">
+                        <i class="fas fa-eye me-1"></i> {% trans "Voir" %}
+                    </a>
+                    
+                    {% if booking.status == 'PENDING' %}
+                    <a href="{% url 'vehicles:booking_update' booking.pk %}" class="btn btn-outline-warning btn-sm px-3 fw-bold shadow-sm">
+                        <i class="fas fa-edit me-1"></i> {% trans "Modifier" %}
+                    </a>
+                    {% endif %}
+                    
+                    {% if booking.payment_status != 'PAID' %}
+                    <a href="{% url 'vehicles:booking_payment' booking.pk %}" class="btn btn-gradient btn-sm px-3 fw-bold shadow-sm">
+                        <i class="fas fa-credit-card me-1"></i> {% trans "Payer" %}
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav aria-label="{% trans 'Rental pagination' %}" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                        <i class="fas fa-chevron-left me-1"></i>{% trans "Précédent" %}
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                        {% trans "Suivant" %}<i class="fas fa-chevron-right ms-1"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+    {% else %}
+        <div class="text-center py-5">
+            <div class="alert alert-info p-5 rounded-4 shadow-lg d-inline-block">
+                <i class="fas fa-clipboard-list fa-4x text-primary mb-3"></i>
+                <h4 class="alert-heading mt-3 mb-2 fw-bold">{% trans "Aucune location trouvée" %}</h4>
+                <p class="mb-3 fs-5">{% trans "Vous n'avez aucune location de véhicule pour le moment." %}</p>
+                <a href="{% url 'vehicles:vehicle_list' %}" class="btn btn-lg btn-gradient px-5 py-3 fw-bold shadow">
+                    <i class="fas fa-car me-2"></i> {% trans "Voir les véhicules disponibles" %}
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 
