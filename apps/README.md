@@ -85,6 +85,3 @@ python manage.py collectstatic
 ```
 3. Configurer un serveur web (nginx, Apache) avec gunicorn
 
-## Licence
-
-[Votre licence] 
