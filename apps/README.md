@@ -12,8 +12,9 @@ Application web de gestion touristique développée avec Django et Django REST F
 
 1. Cloner le dépôt :
 ```bash
+mkdir no_de_votre_dossier
+cd no_de votre_dossier
 git clone <votre-repo>
-cd tourisme
 ```
 
 2. Créer un environnement virtuel et l'activer :
