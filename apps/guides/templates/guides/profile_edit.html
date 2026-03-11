@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Edit Guide Profile" %}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h2 class="h4 mb-0">{% trans "Edit Guide Profile" %}</h2>
+        </div>
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            {{ form|crispy }}
+
+            <div class="mt-4">
+              <button type="submit" class="btn btn-primary">
+                {% trans "Save Changes" %}
+              </button>
+              <a href="{% url 'guides:profile_detail' %}" class="btn btn-outline-secondary">
+                {% trans "Cancel" %}
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  $(document).ready(function() {
+    // Initialize Select2 for multiple select fields
+    $('.select2').select2({
+      theme: 'bootstrap4',
+      width: '100%'
+    });
+  });
+</script>
+{% endblock %} 

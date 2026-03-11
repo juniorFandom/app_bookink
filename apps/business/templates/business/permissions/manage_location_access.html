@@ -1,0 +1,667 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Gestion des accès" %} - {{ location.name }}{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section mb-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="hero-content">
+                    <nav aria-label="breadcrumb" class="mb-3">
+                        <ol class="breadcrumb breadcrumb-modern">
+                            <li class="breadcrumb-item">
+                                <a href="{% url 'business:access_management' %}">
+                                    <i class="fas fa-users-cog me-2"></i>{% translate "Gestion des accès" %}
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item active" aria-current="page">{{ location.name }}</li>
+                        </ol>
+                    </nav>
+                    <h1 class="display-4 fw-bold text-white mb-3 animate-fade-in">
+                        {% translate "Gestion des accès" %} - {{ location.name }}
+                    </h1>
+                    <p class="lead text-white-50 mb-4 animate-fade-in-delay">
+                        {{ location.business.name }} <span class="badge bg-info ms-2">{{ location.get_business_location_type_display }}</span>
+                    </p>
+                    <div class="hero-stats animate-fade-in-delay-2">
+                        <div class="stat-item">
+                            <i class="fas fa-key"></i>
+                            <span class="stat-number">{{ permissions.count }}</span>
+                            <span class="stat-label">{% translate "Total" %}</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span class="stat-number">{{ permissions.filter.is_active.count }}</span>
+                            <span class="stat-label">{% translate "Actives" %}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 text-end">
+                <div class="hero-actions animate-fade-in-delay-3">
+                    <a href="{% url 'business:access_management' %}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-arrow-left me-2"></i>{% translate "Retour" %}
+                    </a>
+                    <a href="{% url 'business:location_action_logs' location.pk %}" class="btn btn-outline-info btn-lg ms-2">
+                        <i class="fas fa-history"></i> {% translate "Journal" %}
+                    </a>
+                    <a href="{% url 'business:business_location_dashboard' location.pk %}" class="btn btn-gradient-primary btn-lg ms-2">
+                        <i class="fas fa-tachometer-alt"></i> {% translate "Dashboard" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="hero-overlay"></div>
+</div>
+
+<!-- Main Content -->
+<div class="container">
+    <div class="row g-5">
+        <!-- Recherche et attribution rapide -->
+        <div class="col-lg-4">
+            <div class="modern-card mb-4">
+                <div class="card-header-modern">
+                    <h5 class="mb-0">
+                        <i class="fas fa-search me-2"></i>{% translate "Rechercher un utilisateur" %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="userSearchForm">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="search" class="form-label">{% translate "Email, nom d'utilisateur ou nom" %}</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="search" name="search" value="{{ search_query }}" placeholder="{% translate 'Rechercher...' %}">
+                                <button class="btn btn-gradient-primary" type="submit">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    {% if users %}
+                    <div class="mt-3">
+                        <h6 class="text-muted mb-3">{% translate "Résultats de recherche" %}</h6>
+                        <div class="list-group">
+                            {% for user in users %}
+                            <div class="list-group-item user-result-item">
+                                <div class="d-flex align-items-center">
+                                    <div class="user-avatar bg-primary text-white me-3">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-0">{{ user.get_full_name|default:user.username }}</h6>
+                                        <small class="text-muted">{{ user.email }}</small>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="showQuickGrantModal({{ user.id }}, '{{ user.get_full_name|default:user.username }}', '{{ user.email }}')">
+                                        <i class="fas fa-plus"></i> {% translate "Accorder" %}
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% elif search_query %}
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle"></i> {% translate "Aucun utilisateur trouvé avec ces critères." %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Statistiques -->
+            <div class="modern-card">
+                <div class="card-header-modern">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>{% translate "Statistiques" %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h4 class="text-primary mb-0">{{ permissions.count }}</h4>
+                            <small class="text-muted">{% translate "Total" %}</small>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-success mb-0">{{ permissions.filter.is_active.count }}</h4>
+                            <small class="text-muted">{% translate "Actives" %}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liste des permissions -->
+        <div class="col-lg-8">
+            <div class="modern-card">
+                <div class="card-header-modern d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-key me-2"></i>{% translate "Permissions accordées" %}
+                    </h5>
+                    <span class="badge bg-primary">{{ permissions.count }}</span>
+                </div>
+                <div class="card-body">
+                    {% if permissions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>{% translate "Utilisateur" %}</th>
+                                    <th>{% translate "Type" %}</th>
+                                    <th>{% translate "Accordée le" %}</th>
+                                    <th>{% translate "Expire le" %}</th>
+                                    <th>{% translate "Statut" %}</th>
+                                    <th>{% translate "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for permission in permissions %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="user-avatar bg-primary text-white me-2">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">{{ permission.user.get_full_name|default:permission.user.username }}</div>
+                                                <small class="text-muted">{{ permission.user.email }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ permission.get_permission_type_display }}</span>
+                                    </td>
+                                    <td>
+                                        <small>{{ permission.created_at|date:"d/m/Y H:i" }}</small>
+                                        <br>
+                                        <small class="text-muted">par {{ permission.granted_by.get_full_name|default:permission.granted_by.username }}</small>
+                                    </td>
+                                    <td>
+                                        {% if permission.expires_at %}
+                                            <small>{{ permission.expires_at|date:"d/m/Y H:i" }}</small>
+                                            {% if permission.is_expired %}
+                                                <br><small class="text-danger">{% translate "Expirée" %}</small>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-success">{% translate "Permanente" %}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if permission.is_active %}
+                                            <span class="badge bg-success">{% translate "Active" %}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{% translate "Inactive" %}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-danger" onclick="revokePermission({{ permission.id }}, '{{ permission.user.get_full_name|default:permission.user.username }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            <a href="{% url 'business:permission_edit' permission.pk %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state text-center py-5">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">{% translate "Aucune permission accordée" %}</h5>
+                        <p class="text-muted">{% translate "Commencez par rechercher et accorder des permissions aux utilisateurs." %}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal d'attribution rapide -->
+<div class="modal fade" id="quickGrantModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-plus me-2"></i>{% translate "Accorder une permission" %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="quickGrantForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">{% translate "Utilisateur" %}</label>
+                        <input type="text" class="form-control" id="selectedUserName" readonly>
+                        <input type="hidden" id="selectedUserId">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="permissionType" class="form-label">{% translate "Type de permission" %}</label>
+                        <select class="form-select" id="permissionType" required>
+                            <option value="">{% translate "Sélectionner..." %}</option>
+                            {% if location.business_location_type == 'hotel' %}
+                                <optgroup label="Permissions générales">
+                                    {% for value, label in permission_types %}
+                                        {% if value in 'view_dashboard,view_reports,view_settings' %}
+                                            <option value="{{ value }}">{{ label }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </optgroup>
+                                <optgroup label="Permissions hôtel">
+                                    {% for value, label in permission_types %}
+                                        {% if value not in 'view_dashboard,view_reports,view_settings' %}
+                                            <option value="{{ value }}">{{ label }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </optgroup>
+                            {% elif location.business_location_type == 'restaurant' %}
+                                <optgroup label="Permissions générales">
+                                    {% for value, label in permission_types %}
+                                        {% if value in 'view_dashboard,view_reports,view_settings' %}
+                                            <option value="{{ value }}">{{ label }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </optgroup>
+                                <optgroup label="Permissions restaurant">
+                                    {% for value, label in permission_types %}
+                                        {% if value not in 'view_dashboard,view_reports,view_settings' %}
+                                            <option value="{{ value }}">{{ label }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </optgroup>
+                            {% elif location.business_location_type == 'vehicle_rental' %}
+                                <optgroup label="Permissions générales">
+                                    {% for value, label in permission_types %}
+                                        {% if value in 'view_dashboard,view_reports,view_settings' %}
+                                            <option value="{{ value }}">{{ label }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </optgroup>
+                                <optgroup label="Permissions location de véhicules">
+                                    {% for value, label in permission_types %}
+                                        {% if value not in 'view_dashboard,view_reports,view_settings' %}
+                                            <option value="{{ value }}">{{ label }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </optgroup>
+                            {% elif location.business_location_type == 'tour' %}
+                                <optgroup label="Permissions générales">
+                                    {% for value, label in permission_types %}
+                                        {% if value in 'view_dashboard,view_reports,view_settings' %}
+                                            <option value="{{ value }}">{{ label }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </optgroup>
+                                <optgroup label="Permissions tour">
+                                    {% for value, label in permission_types %}
+                                        {% if value not in 'view_dashboard,view_reports,view_settings' %}
+                                            <option value="{{ value }}">{{ label }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </optgroup>
+                            {% else %}
+                                {% for value, label in permission_types %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="duration" class="form-label">{% translate "Durée" %}</label>
+                        <select class="form-select" id="duration" onchange="toggleCustomDate()">
+                            <option value="1_month">{% translate "1 mois" %}</option>
+                            <option value="3_months">{% translate "3 mois" %}</option>
+                            <option value="6_months">{% translate "6 mois" %}</option>
+                            <option value="1_year">{% translate "1 an" %}</option>
+                            <option value="permanent">{% translate "Permanente" %}</option>
+                            <option value="custom">{% translate "Date personnalisée" %}</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3" id="customDateDiv" style="display: none;">
+                        <label for="customDate" class="form-label">{% translate "Date d'expiration" %}</label>
+                        <input type="datetime-local" class="form-control" id="customDate">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Annuler" %}</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check"></i> {% translate "Accorder" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --border-radius: 1rem;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.15);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .hero-section {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%), url('https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2074&q=80') center/cover no-repeat;
+        color: white;
+        padding: 4rem 0;
+        border-radius: 0 0 3rem 3rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.1);
+        z-index: 1;
+    }
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+    .hero-stats {
+        display: flex;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+    .stat-item {
+        text-align: center;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        border-radius: var(--border-radius);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: var(--transition);
+    }
+    .stat-item:hover {
+        transform: translateY(-5px);
+        background: rgba(255, 255, 255, 0.2);
+    }
+    .stat-number {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+    }
+    .stat-label {
+        font-size: 0.875rem;
+        opacity: 0.8;
+    }
+    .breadcrumb-modern {
+        background: transparent;
+        padding: 0;
+        margin: 0;
+    }
+    .breadcrumb-modern .breadcrumb-item a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: var(--transition);
+    }
+    .breadcrumb-modern .breadcrumb-item a:hover {
+        color: white;
+    }
+    .breadcrumb-modern .breadcrumb-item.active {
+        color: rgba(255, 255, 255, 0.6);
+    }
+    .modern-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        transition: var(--transition);
+    }
+    .modern-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+    .card-header-modern {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 2px solid #f8f9fa;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        background: var(--primary-gradient);
+        color: white;
+    }
+    .user-result-item {
+        transition: var(--transition);
+        border-radius: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+    .user-result-item:hover {
+        background: #f8f9fa;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+    }
+    .btn-gradient-primary {
+        background: var(--primary-gradient);
+        border: none;
+        color: white;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+    .btn-gradient-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+    }
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    .animate-fade-in {
+        animation: fadeInUp 0.8s ease forwards;
+    }
+    .animate-fade-in-delay {
+        animation: fadeInUp 0.8s ease 0.2s forwards;
+        opacity: 0;
+    }
+    .animate-fade-in-delay-2 {
+        animation: fadeInUp 0.8s ease 0.4s forwards;
+        opacity: 0;
+    }
+    .animate-fade-in-delay-3 {
+        animation: fadeInUp 0.8s ease 0.6s forwards;
+        opacity: 0;
+    }
+    @media (max-width: 768px) {
+        .hero-section {
+            padding: 2rem 0;
+            border-radius: 0 0 2rem 2rem;
+        }
+        .hero-stats {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .modern-card {
+            padding: 1.5rem;
+        }
+    }
+    @media (max-width: 576px) {
+        .hero-section h1 {
+            font-size: 2rem;
+        }
+        .modern-card {
+            padding: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showQuickGrantModal(userId, userName, userEmail) {
+    document.getElementById('selectedUserId').value = userId;
+    document.getElementById('selectedUserName').value = userName + ' (' + userEmail + ')';
+    document.getElementById('permissionType').value = '';
+    document.getElementById('duration').value = '1_month';
+    toggleCustomDate();
+    
+    const modal = new bootstrap.Modal(document.getElementById('quickGrantModal'));
+    modal.show();
+}
+
+function toggleCustomDate() {
+    const duration = document.getElementById('duration').value;
+    const customDateDiv = document.getElementById('customDateDiv');
+    
+    if (duration === 'custom') {
+        customDateDiv.style.display = 'block';
+    } else {
+        customDateDiv.style.display = 'none';
+    }
+}
+
+document.getElementById('quickGrantForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData();
+    formData.append('user_id', document.getElementById('selectedUserId').value);
+    formData.append('permission_type', document.getElementById('permissionType').value);
+    formData.append('duration', document.getElementById('duration').value);
+    formData.append('custom_date', document.getElementById('customDate').value);
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    
+    fetch('{% url "business:quick_grant_permission" location.pk %}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('quickGrantModal')).hide();
+            location.reload();
+        } else {
+            alert('Erreur: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Une erreur est survenue');
+    });
+});
+
+function revokePermission(permissionId, userName) {
+    if (confirm('Êtes-vous sûr de vouloir révoquer la permission de ' + userName + ' ?')) {
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        fetch('{% url "business:quick_revoke_permission" 0 %}'.replace('0', permissionId), {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erreur: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Une erreur est survenue');
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effects for cards
+    document.querySelectorAll('.modern-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px) scale(1.02)';
+        });
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+    // Add ripple effect for buttons
+    document.querySelectorAll('.btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            const ripple = document.createElement('span');
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            ripple.classList.add('ripple');
+            this.appendChild(ripple);
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    });
+    // Add staggered animation for cards
+    const cards = document.querySelectorAll('.modern-card');
+    cards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.classList.add('animate-fade-in');
+    });
+});
+// Add ripple effect CSS
+const style = document.createElement('style');
+style.textContent = `
+    .btn {
+        position: relative;
+        overflow: hidden;
+    }
+    .ripple {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.6);
+        transform: scale(0);
+        animation: ripple-animation 0.6s linear;
+        pointer-events: none;
+    }
+    @keyframes ripple-animation {
+        to {
+            transform: scale(4);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %} 

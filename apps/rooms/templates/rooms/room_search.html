@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section mb-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold text-white mb-3">
+                    <i class="fas fa-search me-3"></i>{% trans "Recherche Avancée de Chambres" %}
+                </h1>
+                <p class="lead text-white-50 mb-4">
+                    Trouvez la chambre parfaite avec nos filtres avancés
+                </p>
+            </div>
+            <div class="col-lg-4 text-end">
+                <a href="{% url 'rooms:general_room_list' %}" class="btn btn-light btn-lg">
+                    <i class="fas fa-list me-2"></i>{% trans "Voir toutes les chambres" %}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Search Form -->
+<div class="container mb-5">
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-gradient-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-search-plus me-2"></i>{% trans "Recherche Avancée" %}
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="get" action="{% url 'rooms:general_room_list' %}" class="row g-4">
+                <!-- Dates Section -->
+                <div class="col-12">
+                    <h6 class="text-primary mb-3">
+                        <i class="fas fa-calendar-alt me-2"></i>{% trans "Dates de séjour" %}
+                    </h6>
+                </div>
+                
+                <div class="col-lg-6">
+                    <label for="check_in_date" class="form-label fw-bold">
+                        <i class="fas fa-calendar-check me-2 text-success"></i>{% trans "Date d'arrivée" %}
+                    </label>
+                    <input type="date" name="check_in_date" id="check_in_date" 
+                           class="form-control form-control-lg" 
+                           value="{{ request.GET.check_in_date|default:'' }}"
+                           required>
+                </div>
+                
+                <div class="col-lg-6">
+                    <label for="check_out_date" class="form-label fw-bold">
+                        <i class="fas fa-calendar-times me-2 text-danger"></i>{% trans "Date de départ" %}
+                    </label>
+                    <input type="date" name="check_out_date" id="check_out_date" 
+                           class="form-control form-control-lg" 
+                           value="{{ request.GET.check_out_date|default:'' }}"
+                           required>
+                </div>
+
+                <!-- Guests Section -->
+                <div class="col-12">
+                    <h6 class="text-primary mb-3">
+                        <i class="fas fa-users me-2"></i>{% trans "Voyageurs" %}
+                    </h6>
+                </div>
+                
+                <div class="col-lg-4">
+                    <label for="adults" class="form-label fw-bold">{% trans "Adultes" %}</label>
+                    <input type="number" name="adults" id="adults" 
+                           class="form-control form-control-lg" 
+                           min="1" max="10" value="{{ request.GET.adults|default:'2' }}">
+                </div>
+                
+                <div class="col-lg-4">
+                    <label for="children" class="form-label fw-bold">{% trans "Enfants" %}</label>
+                    <input type="number" name="children" id="children" 
+                           class="form-control form-control-lg" 
+                           min="0" max="10" value="{{ request.GET.children|default:'0' }}">
+                </div>
+                
+                <div class="col-lg-4">
+                    <label for="total_guests" class="form-label fw-bold">{% trans "Total voyageurs" %}</label>
+                    <input type="number" name="guests" id="total_guests" 
+                           class="form-control form-control-lg" 
+                           min="1" max="20" value="{{ request.GET.guests|default:'2' }}"
+                           readonly>
+                </div>
+
+                <!-- Room Preferences -->
+                <div class="col-12">
+                    <h6 class="text-primary mb-3">
+                        <i class="fas fa-bed me-2"></i>{% trans "Préférences de chambre" %}
+                    </h6>
+                </div>
+                
+                <div class="col-lg-4">
+                    <label for="room_type" class="form-label fw-bold">
+                        <i class="fas fa-door-open me-2"></i>{% trans "Type de chambre" %}
+                    </label>
+                    <select name="room_type" id="room_type" class="form-select form-select-lg">
+                        <option value="">{% trans "Tous les types" %}</option>
+                        {% for room_type in room_types %}
+                            <option value="{{ room_type.id }}" {% if request.GET.room_type == room_type.id|stringformat:"s" %}selected{% endif %}>
+                                {{ room_type.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-lg-4">
+                    <label for="business_location" class="form-label fw-bold">
+                        <i class="fas fa-building me-2"></i>{% trans "Établissement" %}
+                    </label>
+                    <select name="business_location" id="business_location" class="form-select form-select-lg">
+                        <option value="">{% trans "Tous les établissements" %}</option>
+                        {% for location in business_locations %}
+                            <option value="{{ location.id }}" {% if request.GET.business_location == location.id|stringformat:"s" %}selected{% endif %}>
+                                {{ location.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-lg-4">
+                    <label for="floor" class="form-label fw-bold">
+                        <i class="fas fa-layer-group me-2"></i>{% trans "Étage préféré" %}
+                    </label>
+                    <select name="floor" id="floor" class="form-select form-select-lg">
+                        <option value="">{% trans "Tous les étages" %}</option>
+                        <option value="0" {% if request.GET.floor == "0" %}selected{% endif %}>{% trans "Rez-de-chaussée" %}</option>
+                        <option value="1" {% if request.GET.floor == "1" %}selected{% endif %}>{% trans "1er étage" %}</option>
+                        <option value="2" {% if request.GET.floor == "2" %}selected{% endif %}>{% trans "2ème étage" %}</option>
+                        <option value="3" {% if request.GET.floor == "3" %}selected{% endif %}>{% trans "3ème étage" %}</option>
+                        <option value="4+" {% if request.GET.floor == "4+" %}selected{% endif %}>{% trans "4ème étage et plus" %}</option>
+                    </select>
+                </div>
+
+                <!-- Price Range -->
+                <div class="col-12">
+                    <h6 class="text-primary mb-3">
+                        <i class="fas fa-money-bill-wave me-2"></i>{% trans "Budget" %}
+                    </h6>
+                </div>
+                
+                <div class="col-lg-6">
+                    <label for="min_price" class="form-label fw-bold">{% trans "Prix minimum par nuit" %}</label>
+                    <div class="input-group">
+                        <input type="number" name="min_price" id="min_price" 
+                               class="form-control form-control-lg" 
+                               min="0" step="1000"
+                               value="{{ request.GET.min_price|default:'' }}"
+                               placeholder="0">
+                        <span class="input-group-text">FCFA</span>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <label for="max_price" class="form-label fw-bold">{% trans "Prix maximum par nuit" %}</label>
+                    <div class="input-group">
+                        <input type="number" name="max_price" id="max_price" 
+                               class="form-control form-control-lg" 
+                               min="0" step="1000"
+                               value="{{ request.GET.max_price|default:'' }}"
+                               placeholder="100000">
+                        <span class="input-group-text">FCFA</span>
+                    </div>
+                </div>
+
+                <!-- Amenities -->
+                <div class="col-12">
+                    <h6 class="text-primary mb-3">
+                        <i class="fas fa-star me-2"></i>{% trans "Aménités souhaitées" %}
+                    </h6>
+                </div>
+                
+                <div class="col-12">
+                    <div class="row g-3">
+                        {% for category, amenities in amenities_by_category.items %}
+                            <div class="col-lg-4 col-md-6">
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">{{ category.name }}</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        {% for amenity in amenities %}
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       name="amenities" value="{{ amenity.id }}" 
+                                                       id="amenity_{{ amenity.id }}"
+                                                       {% if amenity.id|stringformat:"s" in request.GET.getlist.amenities %}checked{% endif %}>
+                                                <label class="form-check-label" for="amenity_{{ amenity.id }}">
+                                                    {{ amenity.name }}
+                                                </label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Sort Options -->
+                <div class="col-12">
+                    <h6 class="text-primary mb-3">
+                        <i class="fas fa-sort me-2"></i>{% trans "Trier par" %}
+                    </h6>
+                </div>
+                
+                <div class="col-lg-6">
+                    <label for="sort" class="form-label fw-bold">{% trans "Critère de tri" %}</label>
+                    <select name="sort" id="sort" class="form-select form-select-lg">
+                        <option value="price" {% if request.GET.sort == "price" %}selected{% endif %}>{% trans "Prix (croissant)" %}</option>
+                        <option value="-price" {% if request.GET.sort == "-price" %}selected{% endif %}>{% trans "Prix (décroissant)" %}</option>
+                        <option value="capacity" {% if request.GET.sort == "capacity" %}selected{% endif %}>{% trans "Capacité" %}</option>
+                        <option value="name" {% if request.GET.sort == "name" %}selected{% endif %}>{% trans "Nom" %}</option>
+                        <option value="created" {% if request.GET.sort == "created" %}selected{% endif %}>{% trans "Plus récentes" %}</option>
+                    </select>
+                </div>
+                
+                <div class="col-lg-6">
+                    <label for="results_per_page" class="form-label fw-bold">{% trans "Résultats par page" %}</label>
+                    <select name="per_page" id="results_per_page" class="form-select form-select-lg">
+                        <option value="12" {% if request.GET.per_page == "12" %}selected{% endif %}>12</option>
+                        <option value="24" {% if request.GET.per_page == "24" %}selected{% endif %}>24</option>
+                        <option value="48" {% if request.GET.per_page == "48" %}selected{% endif %}>48</option>
+                    </select>
+                </div>
+
+                <!-- Search Buttons -->
+                <div class="col-12">
+                    <div class="d-flex gap-3 flex-wrap">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-search me-2"></i>{% trans "Rechercher" %}
+                        </button>
+                        <a href="{% url 'rooms:room_search' %}" class="btn btn-outline-secondary btn-lg">
+                            <i class="fas fa-times me-2"></i>{% trans "Effacer" %}
+                        </a>
+                        <a href="{% url 'rooms:general_room_list' %}" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-list me-2"></i>{% trans "Voir toutes les chambres" %}
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .hero-section {
+    background: linear-gradient(135deg, rgba(44, 90, 160, 0.9) 0%, rgba(255, 107, 53, 0.9) 100%), 
+                url('https://images.unsplash.com/photo-1566665797739-1674de7a421a?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80') center/cover no-repeat;
+    color: white;
+    padding: 4rem 0;
+    border-radius: 0 0 2rem 2rem;
+  }
+
+  .bg-gradient-primary {
+    background: linear-gradient(135deg, var(--bs-primary) 0%, #1e4a8a 100%) !important;
+  }
+
+  .form-control-lg, .form-select-lg {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+  }
+
+  .form-label {
+    color: var(--bs-dark);
+    margin-bottom: 0.5rem;
+  }
+
+  .card {
+    border-radius: 0.5rem;
+  }
+
+  .form-check-input:checked {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+  }
+
+  @media (max-width: 768px) {
+    .hero-section {
+      padding: 2rem 0;
+      border-radius: 0 0 1rem 1rem;
+    }
+    
+    .hero-section h1 {
+      font-size: 2rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Calculate total guests
+    function updateTotalGuests() {
+        const adults = parseInt(document.getElementById('adults').value) || 0;
+        const children = parseInt(document.getElementById('children').value) || 0;
+        const total = adults + children;
+        document.getElementById('total_guests').value = total;
+    }
+
+    // Update total when adults or children change
+    document.getElementById('adults').addEventListener('change', updateTotalGuests);
+    document.getElementById('children').addEventListener('change', updateTotalGuests);
+
+    // Initialize total
+    updateTotalGuests();
+
+    // Date validation
+    const checkInDate = document.getElementById('check_in_date');
+    const checkOutDate = document.getElementById('check_out_date');
+
+    checkInDate.addEventListener('change', function() {
+        checkOutDate.min = this.value;
+        if (checkOutDate.value && checkOutDate.value <= this.value) {
+            checkOutDate.value = '';
+        }
+    });
+
+    checkOutDate.addEventListener('change', function() {
+        if (this.value <= checkInDate.value) {
+            alert('La date de départ doit être postérieure à la date d\'arrivée');
+            this.value = '';
+        }
+    });
+});
+</script>
+{% endblock %} 

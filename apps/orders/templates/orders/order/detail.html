@@ -1,0 +1,363 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Order" %} #{{ order.order_number }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'orders:order_list' %}">{% translate "Orders" %}</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                {% translate "Order" %} #{{ order.order_number }}
+            </li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Order Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="h4 mb-0">{% translate "Order Details" %}</h2>
+                        <div>
+                            <span class="badge
+                                {% if order.status == 'PENDING' %}bg-warning
+                                {% elif order.status == 'CONFIRMED' %}bg-primary
+                                {% elif order.status == 'PREPARING' %}bg-info
+                                {% elif order.status == 'READY' %}bg-success
+                                {% elif order.status == 'DELIVERED' %}bg-success
+                                {% elif order.status == 'CANCELLED' %}bg-danger
+                                {% else %}bg-secondary{% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                            <span class="badge
+                                {% if order.payment_status == 'PAID' %}bg-success
+                                {% elif order.payment_status == 'PENDING' %}bg-warning
+                                {% elif order.payment_status == 'FAILED' %}bg-danger
+                                {% else %}bg-secondary{% endif %}">
+                                {{ order.get_payment_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>{% translate "Order Information" %}</h5>
+                            <p><strong>{% translate "Order Number" %}:</strong> {{ order.order_number }}</p>
+                            <p><strong>{% translate "Date" %}:</strong> {{ order.created_at|date:"DATETIME_FORMAT" }}</p>
+                            <p><strong>{% translate "Type" %}:</strong> {{ order.get_order_type_display }}</p>
+                            {% if order.order_type == 'DINE_IN' and order.table_number %}
+                                <p><strong>{% translate "Table" %}:</strong> {{ order.table_number }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h5>{% translate "Customer Information" %}</h5>
+                            <p><strong>{% translate "Name" %}:</strong> {{ order.customer.get_full_name }}</p>
+                            <p><strong>{% translate "Email" %}:</strong> {{ order.customer.email }}</p>
+                            <p><strong>{% translate "Phone" %}:</strong> {{ order.customer.phone_number|default:"-" }}</p>
+                        </div>
+                    </div>
+
+                    {% if order.delivery_address %}
+                        <div class="mb-4">
+                            <h5>{% translate "Delivery Address" %}</h5>
+                            <p>{{ order.delivery_address.street_address }}</p>
+                            <p>{{ order.delivery_address.city }}, {{ order.delivery_address.region }}</p>
+                        </div>
+                    {% endif %}
+
+                    {% if order.special_instructions %}
+                        <div class="mb-4">
+                            <h5>{% translate "Special Instructions" %}</h5>
+                            <p>{{ order.special_instructions }}</p>
+                        </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="search-order-items" placeholder="Rechercher un article...">
+                    </div>
+
+                    <h5>{% translate "Order Items" %}</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>{% translate "Item" %}</th>
+                                    <th>{% translate "Quantity" %}</th>
+                                    <th>{% translate "Unit Price" %}</th>
+                                    <th>{% translate "Total" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order.items.all %}
+                                    <tr>
+                                        <td>
+                                            {{ item.menu_item.name }}
+                                            {% if item.special_instructions %}
+                                                <br>
+                                                <small class="text-muted">
+                                                    {{ item.special_instructions }}
+                                                </small>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ item.quantity }}</td>
+                                        <td>{{ item.unit_price|floatformat:2 }} XAF</td>
+                                        <td>{{ item.total_price|floatformat:2 }} XAF</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-end">
+                                        <strong>{% translate "Subtotal" %}:</strong>
+                                    </td>
+                                    <td>{{ order.subtotal|floatformat:2 }} XAF</td>
+                                </tr>
+                                {% if order.tax_amount %}
+                                    <tr>
+                                        <td colspan="3" class="text-end">
+                                            <strong>{% translate "Tax" %}:</strong>
+                                        </td>
+                                        <td>{{ order.tax_amount|floatformat:2 }} XAF</td>
+                                    </tr>
+                                {% endif %}
+                                {% if order.delivery_fee %}
+                                    <tr>
+                                        <td colspan="3" class="text-end">
+                                            <strong>{% translate "Delivery Fee" %}:</strong>
+                                        </td>
+                                        <td>{{ order.delivery_fee|floatformat:2 }} XAF</td>
+                                    </tr>
+                                {% endif %}
+                                <tr>
+                                    <td colspan="3" class="text-end">
+                                        <strong>{% translate "Total" %}:</strong>
+                                    </td>
+                                    <td>
+                                        <strong>{{ order.total_amount|floatformat:2 }} XAF</strong>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Timeline -->
+            {% if order.restaurant_notes %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3 class="h5 mb-0">{% translate "Order Timeline" %}</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline">
+                            {% for note in order.restaurant_notes.split|dictsort:"timestamp" reversed %}
+                                <div class="timeline-item">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <h4 class="timeline-title">{{ note.timestamp|date:"DATETIME_FORMAT" }}</h4>
+                                        <p>{{ note.text }}</p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-4">
+            <!-- Status Update -->
+            {% if status_form %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3 class="h5 mb-0">{% translate "Update Status" %}</h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="{% url 'orders:order_status_update' order.pk %}">
+                            {% csrf_token %}
+                            {{ status_form|crispy }}
+                            <button type="submit" class="btn btn-primary w-100">
+                                {% translate "Update Status" %}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="h5 mb-0">{% translate "Actions" %}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'orders:order_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> {% translate "Back to Orders" %}
+                        </a>
+                        {% if order.status == 'PENDING' and order.customer == request.user %}
+                            <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                                    data-bs-target="#cancelModal">
+                                <i class="fas fa-times"></i> {% translate "Cancel Order" %}
+                            </button>
+                        {% endif %}
+                        {% if order.status == 'PREPARING' and user.is_authenticated and order.business_location.business.owner == user %}
+                            <form method="post" action="{% url 'orders:validate_order' order.order_number %}" id="form-validation-commande">
+                                {% csrf_token %}
+                                <button type="button" class="btn btn-success w-100 mb-2" id="btn-ouvrir-modale-validation">
+                                    <i class="fas fa-check"></i> Valider la commande
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Modal -->
+{% if order.status == 'PENDING' and order.customer == request.user %}
+    <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cancelModalLabel">
+                        {% translate "Cancel Order" %} #{{ order.order_number }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <form method="post" action="{% url 'orders:order_status_update' order.pk %}">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <p>{% translate "Are you sure you want to cancel this order?" %}</p>
+                        <div class="mb-3">
+                            <label for="cancellationReason" class="form-label">
+                                {% translate "Cancellation Reason" %}
+                            </label>
+                            <textarea class="form-control" id="cancellationReason" name="notes"
+                                      rows="3" required></textarea>
+                        </div>
+                        <input type="hidden" name="status" value="CANCELLED">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            {% translate "Close" %}
+                        </button>
+                        <button type="submit" class="btn btn-danger">
+                            {% translate "Cancel Order" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Modal de confirmation de validation de commande -->
+<div class="modal fade" id="modalValidationCommande" tabindex="-1" aria-labelledby="modalValidationCommandeLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalValidationCommandeLabel">Confirmation</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body">
+        <p>Êtes-vous sûr de vouloir valider cette commande ?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="button" class="btn btn-success" id="btn-confirmer-validation">Confirmer</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    .timeline {
+        position: relative;
+        padding: 20px 0;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-left: 40px;
+        margin-bottom: 20px;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: #007bff;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 2px #007bff;
+    }
+
+    .timeline-item:not(:last-child):before {
+        content: '';
+        position: absolute;
+        left: 5px;
+        top: 12px;
+        height: calc(100% + 8px);
+        width: 2px;
+        background-color: #007bff;
+    }
+
+    .timeline-title {
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Recherche dynamique sur les items de la commande
+    const searchInput = document.getElementById('search-order-items');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const search = this.value.toLowerCase();
+            document.querySelectorAll('table.table tbody tr').forEach(row => {
+                const itemName = row.querySelector('td')?.textContent.toLowerCase() || '';
+                if (itemName.includes(search)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    // ... (le JS de la modale de validation déjà présent)
+    const btnOuvrirModale = document.getElementById('btn-ouvrir-modale-validation');
+    const btnConfirmer = document.getElementById('btn-confirmer-validation');
+    const formValidation = document.getElementById('form-validation-commande');
+    if(btnOuvrirModale && btnConfirmer && formValidation) {
+        btnOuvrirModale.addEventListener('click', function(e) {
+            e.preventDefault();
+            const modal = new bootstrap.Modal(document.getElementById('modalValidationCommande'));
+            modal.show();
+        });
+        btnConfirmer.addEventListener('click', function() {
+            formValidation.submit();
+        });
+    }
+});
+</script>
+{% endblock %} 

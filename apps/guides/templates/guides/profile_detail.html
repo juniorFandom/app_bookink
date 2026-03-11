@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "Guide Profile" %}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row">
+    <!-- Profile Information -->
+    <div class="col-md-4">
+      <div class="card shadow mb-4">
+        <div class="card-body text-center">
+          {% if profile.user.avatar %}
+            <img src="{{ profile.user.avatar.url }}" alt="{{ profile.user.get_full_name }}"
+                 class="rounded-circle img-thumbnail mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+          {% else %}
+            <img src="{% static 'images/default-avatar.png' %}" alt="{{ profile.user.get_full_name }}"
+                 class="rounded-circle img-thumbnail mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+          {% endif %}
+
+          <h3 class="h4 mb-2">{{ profile.user.get_full_name }}</h3>
+          {% if profile.is_verified %}
+            <span class="badge bg-success mb-3">{% trans "Verified Guide" %}</span>
+          {% else %}
+            <span class="badge bg-warning mb-3">{% trans "Pending Verification" %}</span>
+          {% endif %}
+
+          <p class="text-muted">
+            <i class="fas fa-envelope me-2"></i>{{ profile.user.email }}<br>
+            {% if profile.user.phone_number %}
+              <i class="fas fa-phone me-2"></i>{{ profile.user.phone_number }}
+            {% endif %}
+          </p>
+
+          <hr>
+
+          <div class="text-start">
+            <h5>{% trans "Location" %}</h5>
+            <p><i class="fas fa-map-marker-alt me-2"></i>{{ profile.business_location }}</p>
+
+            {% if profile.languages_spoken %}
+              <h5>{% trans "Languages" %}</h5>
+              <p>
+                {% for lang in profile.languages_spoken %}
+                  <span class="badge bg-info me-1">{{ lang }}</span>
+                {% endfor %}
+              </p>
+            {% endif %}
+
+            {% if profile.specializations %}
+              <h5>{% trans "Specializations" %}</h5>
+              <p>
+                {% for spec in profile.specializations %}
+                  <span class="badge bg-secondary me-1">{{ spec }}</span>
+                {% endfor %}
+              </p>
+            {% endif %}
+
+            {% if profile.years_of_experience %}
+              <h5>{% trans "Experience" %}</h5>
+              <p>
+                {% blocktrans count years=profile.years_of_experience %}
+                  {{ years }} year
+                {% plural %}
+                  {{ years }} years
+                {% endblocktrans %}
+              </p>
+            {% endif %}
+
+            {% if profile.hourly_rate %}
+              <h5>{% trans "Hourly Rate" %}</h5>
+              <p class="text-primary fw-bold">${{ profile.hourly_rate }}/{% trans "hour" %}</p>
+            {% endif %}
+
+            {% if profile.license_number %}
+              <h5>{% trans "License Number" %}</h5>
+              <p><code>{{ profile.license_number }}</code></p>
+            {% endif %}
+          </div>
+
+          {% if user == profile.user %}
+            <a href="{% url 'guides:profile_edit' %}" class="btn btn-primary">
+              <i class="fas fa-edit me-2"></i>{% trans "Edit Profile" %}
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Bio -->
+    <div class="col-md-8">
+      <div class="card shadow">
+        <div class="card-header bg-white">
+          <h4 class="mb-0">{% trans "About Me" %}</h4>
+        </div>
+        <div class="card-body">
+          {% if profile.bio %}
+            {{ profile.bio|linebreaks }}
+          {% else %}
+            <p class="text-muted">{% trans "No biography provided yet." %}</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

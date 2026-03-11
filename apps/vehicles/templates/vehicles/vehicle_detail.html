@@ -1,0 +1,764 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{{ vehicle.make }} {{ vehicle.model }}{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section mb-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="hero-content">
+                    <nav aria-label="breadcrumb" class="mb-3">
+                        <ol class="breadcrumb breadcrumb-modern">
+                            <li class="breadcrumb-item">
+                                <a href="{% url 'vehicles:vehicle_list' %}">
+                                    <i class="fas fa-car me-2"></i>{% translate "Véhicules" %}
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item active" aria-current="page">{{ vehicle.make }} {{ vehicle.model }}</li>
+                        </ol>
+                    </nav>
+                    <h1 class="display-4 fw-bold text-white mb-3 animate-fade-in">
+                        {{ vehicle.make }} {{ vehicle.model }}
+                    </h1>
+                    <p class="lead text-white-50 mb-4 animate-fade-in-delay">
+                        {{ vehicle.description|truncatewords:20|default:_("Découvrez ce véhicule de qualité pour vos déplacements") }}
+                    </p>
+                    <div class="hero-stats animate-fade-in-delay-2">
+                        <div class="stat-item">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span class="stat-number">{{ vehicle.daily_rate|floatformat:0 }}</span>
+                            <span class="stat-label">{% translate "FCFA/jour" %}</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-users"></i>
+                            <span class="stat-number">{{ vehicle.passenger_capacity }}</span>
+                            <span class="stat-label">{% translate "places" %}</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-calendar"></i>
+                            <span class="stat-number">{{ vehicle.year }}</span>
+                            <span class="stat-label">{% translate "année" %}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 text-end">
+                <div class="hero-actions animate-fade-in-delay-3">
+                    {% if vehicle.is_available %}
+                        <a href="{% url 'vehicles:booking_create' vehicle.pk %}" class="btn btn-gradient-primary btn-lg">
+                            <i class="fas fa-car me-2"></i>{% translate "Réserver maintenant" %}
+                        </a>
+                    {% else %}
+                        <button class="btn btn-secondary btn-lg" disabled>
+                            <i class="fas fa-times me-2"></i>{% translate "Indisponible" %}
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="hero-overlay"></div>
+</div>
+
+<!-- Main Content -->
+<div class="container">
+    <div class="row g-5">
+        <!-- Image Gallery -->
+        <div class="col-lg-6">
+            <div class="image-gallery-card">
+                <div class="main-image-container">
+                    {% if vehicle.main_image %}
+                        <img src="{{ vehicle.main_image.url }}" class="main-image" alt="{{ vehicle }}" id="mainImage">
+                    {% else %}
+                        <img src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" class="main-image" alt="{{ vehicle }}" id="mainImage">
+                    {% endif %}
+                    
+                    <!-- Status Badge -->
+                    <div class="status-badge">
+                        {% if vehicle.is_available %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle me-1"></i>{% translate "Disponible" %}
+                            </span>
+                        {% else %}
+                            <span class="badge bg-danger">
+                                <i class="fas fa-times-circle me-1"></i>{% translate "Indisponible" %}
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Price Badge -->
+                    <div class="price-badge">
+                        <span class="price-amount">{{ vehicle.daily_rate|floatformat:0 }}</span>
+                        <span class="price-currency">{% translate "FCFA/jour" %}</span>
+                    </div>
+
+                    <!-- Category Badge -->
+                    <div class="category-badge">
+                        <span class="badge bg-primary">
+                            <i class="fas fa-layer-group me-1"></i>{{ vehicle.vehicle_category.name }}
+                        </span>
+                    </div>
+                </div>
+
+                {% if vehicle.images.exists %}
+                <div class="thumbnail-gallery">
+                    <div class="row g-2">
+                        {% for image in vehicle.images.all %}
+                            <div class="col-3">
+                                <div class="thumbnail-container">
+                                    <img src="{{ image.image.url }}" 
+                                         class="thumbnail-image" 
+                                         alt="{{ image.caption|default:'' }}"
+                                         onclick="changeMainImage(this.src)">
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Details -->
+        <div class="col-lg-6">
+            <div class="details-card">
+                <div class="card-header-modern">
+                    <h2 class="item-title">{{ vehicle.make }} {{ vehicle.model }}</h2>
+                    <div class="item-category">
+                        <i class="fas fa-building text-primary me-2"></i>
+                        <span>{{ vehicle.business_location.name }}</span>
+                    </div>
+                </div>
+
+                <!-- Quick Info -->
+                <div class="quick-info-section">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <i class="fas fa-calendar text-info"></i>
+                            <div>
+                                <span class="info-label">{% translate "Année" %}</span>
+                                <span class="info-value">{{ vehicle.year }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <i class="fas fa-users text-warning"></i>
+                            <div>
+                                <span class="info-label">{% translate "Capacité" %}</span>
+                                <span class="info-value">{{ vehicle.passenger_capacity }} {% translate "personnes" %}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <i class="fas fa-cog text-success"></i>
+                            <div>
+                                <span class="info-label">{% translate "Transmission" %}</span>
+                                <span class="info-value">{{ vehicle.get_transmission_display }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <i class="fas fa-gas-pump text-danger"></i>
+                            <div>
+                                <span class="info-label">{% translate "Carburant" %}</span>
+                                <span class="info-value">{{ vehicle.get_fuel_type_display }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vehicle Details -->
+                <div class="section-modern">
+                    <h5 class="section-title">
+                        <i class="fas fa-info-circle text-primary me-2"></i>{% translate "Détails du véhicule" %}
+                    </h5>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">{% translate "Couleur" %}:</span>
+                            <span class="detail-value">{{ vehicle.color }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">{% translate "Plaque d'immatriculation" %}:</span>
+                            <span class="detail-value">{{ vehicle.license_plate }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">{% translate "Kilométrage" %}:</span>
+                            <span class="detail-value">{{ vehicle.mileage }} km</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">{% translate "Catégorie" %}:</span>
+                            <span class="detail-value">{{ vehicle.vehicle_category.name }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Features -->
+                {% if vehicle.features %}
+                <div class="section-modern">
+                    <h5 class="section-title">
+                        <i class="fas fa-star text-warning me-2"></i>{% translate "Équipements" %}
+                    </h5>
+                    <div class="features-list">
+                        {% for feature in vehicle.features %}
+                            <span class="feature-tag">
+                                <i class="fas fa-check me-1"></i>{{ feature }}
+                            </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Description -->
+                {% if vehicle.description %}
+                <div class="section-modern">
+                    <h5 class="section-title">
+                        <i class="fas fa-align-left text-primary me-2"></i>{% translate "Description" %}
+                    </h5>
+                    <p class="section-content">{{ vehicle.description|linebreaks }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Actions -->
+                <div class="actions-section">
+                    <div class="d-flex gap-3 flex-wrap">
+                        {% if vehicle.is_available %}
+                            <a href="{% url 'vehicles:booking_create' vehicle.pk %}" class="btn btn-gradient-primary btn-lg flex-grow-1">
+                                <i class="fas fa-car me-2"></i>{% translate "Réserver maintenant" %}
+                            </a>
+                        {% else %}
+                            <button class="btn btn-secondary btn-lg flex-grow-1" disabled>
+                                <i class="fas fa-times me-2"></i>{% translate "Indisponible" %}
+                            </button>
+                        {% endif %}
+                        
+                        <a href="{% url 'vehicles:vehicle_list' %}" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-arrow-left me-2"></i>{% translate "Retour aux véhicules" %}
+                        </a>
+                        
+                        {% if user.is_staff %}
+                        <a href="{% url 'vehicles:vehicle_update' vehicle.pk %}" class="btn btn-outline-secondary btn-lg">
+                            <i class="fas fa-edit me-2"></i>{% translate "Modifier" %}
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Modern Design Variables */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        --danger-gradient: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        --border-radius: 1rem;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.15);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Hero Section */
+    .hero-section {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%), 
+                url('https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80') center/cover no-repeat;
+        color: white;
+        padding: 4rem 0;
+        border-radius: 0 0 3rem 3rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.1);
+        z-index: 1;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .hero-stats {
+        display: flex;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .stat-item {
+        text-align: center;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        border-radius: var(--border-radius);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .stat-number {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        opacity: 0.8;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb-modern {
+        background: transparent;
+        padding: 0;
+        margin: 0;
+    }
+
+    .breadcrumb-modern .breadcrumb-item a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: var(--transition);
+    }
+
+    .breadcrumb-modern .breadcrumb-item a:hover {
+        color: white;
+    }
+
+    .breadcrumb-modern .breadcrumb-item.active {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* Image Gallery */
+    .image-gallery-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        padding: 1.5rem;
+    }
+
+    .main-image-container {
+        position: relative;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    .main-image {
+        width: 100%;
+        height: 400px;
+        object-fit: cover;
+        transition: var(--transition);
+    }
+
+    .main-image:hover {
+        transform: scale(1.05);
+    }
+
+    .status-badge {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        z-index: 2;
+    }
+
+    .price-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        z-index: 2;
+    }
+
+    .price-amount {
+        font-size: 1.25rem;
+        font-weight: bold;
+    }
+
+    .price-currency {
+        font-size: 0.875rem;
+        opacity: 0.8;
+    }
+
+    .category-badge {
+        position: absolute;
+        bottom: 1rem;
+        left: 1rem;
+        z-index: 2;
+    }
+
+    .thumbnail-gallery {
+        margin-top: 1rem;
+    }
+
+    .thumbnail-container {
+        border-radius: 0.5rem;
+        overflow: hidden;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .thumbnail-container:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+    }
+
+    .thumbnail-image {
+        width: 100%;
+        height: 80px;
+        object-fit: cover;
+        transition: var(--transition);
+    }
+
+    .thumbnail-container:hover .thumbnail-image {
+        transform: scale(1.1);
+    }
+
+    /* Details Card */
+    .details-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        padding: 2rem;
+        height: 100%;
+    }
+
+    .card-header-modern {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 2px solid #f8f9fa;
+    }
+
+    .item-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .item-category {
+        color: #6c757d;
+        font-size: 1.1rem;
+    }
+
+    /* Quick Info */
+    .quick-info-section {
+        margin-bottom: 2rem;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 0.75rem;
+        transition: var(--transition);
+    }
+
+    .info-item:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+    }
+
+    .info-item i {
+        font-size: 1.5rem;
+        margin-right: 1rem;
+        width: 30px;
+        text-align: center;
+    }
+
+    .info-label {
+        display: block;
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+
+    .info-value {
+        display: block;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    /* Sections */
+    .section-modern {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #f8f9fa;
+    }
+
+    .section-modern:last-child {
+        border-bottom: none;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+    }
+
+    .section-content {
+        color: #6c757d;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    /* Details Grid */
+    .details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        background: #f8f9fa;
+        border-radius: 0.5rem;
+        transition: var(--transition);
+    }
+
+    .detail-item:hover {
+        background: #e9ecef;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #6c757d;
+    }
+
+    .detail-value {
+        font-weight: 500;
+        color: #2c3e50;
+    }
+
+    /* Tags */
+    .features-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .feature-tag {
+        background: #e8f5e8;
+        color: #2d5a2d;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border: 1px solid #d4edda;
+    }
+
+    /* Actions */
+    .actions-section {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px solid #f8f9fa;
+    }
+
+    /* Buttons */
+    .btn-gradient-primary {
+        background: var(--primary-gradient);
+        border: none;
+        color: white;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+
+    .btn-gradient-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .btn-outline-primary {
+        border: 2px solid #667eea;
+        color: #667eea;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+
+    .btn-outline-primary:hover {
+        background: #667eea;
+        border-color: #667eea;
+        transform: translateY(-2px);
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-in {
+        animation: fadeInUp 0.8s ease forwards;
+    }
+
+    .animate-fade-in-delay {
+        animation: fadeInUp 0.8s ease 0.2s forwards;
+        opacity: 0;
+    }
+
+    .animate-fade-in-delay-2 {
+        animation: fadeInUp 0.8s ease 0.4s forwards;
+        opacity: 0;
+    }
+
+    .animate-fade-in-delay-3 {
+        animation: fadeInUp 0.8s ease 0.6s forwards;
+        opacity: 0;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .hero-section {
+            padding: 2rem 0;
+            border-radius: 0 0 2rem 2rem;
+        }
+        
+        .hero-stats {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .item-title {
+            font-size: 1.5rem;
+        }
+        
+        .main-image {
+            height: 300px;
+        }
+        
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .details-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .hero-section h1 {
+            font-size: 2rem;
+        }
+        
+        .details-card {
+            padding: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Change main image when thumbnail is clicked
+    window.changeMainImage = function(src) {
+        document.getElementById('mainImage').src = src;
+    };
+
+    // Add hover effects for info items
+    document.querySelectorAll('.info-item').forEach(item => {
+        item.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px) scale(1.02)';
+        });
+
+        item.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+
+    // Add hover effects for detail items
+    document.querySelectorAll('.detail-item').forEach(item => {
+        item.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateX(5px)';
+        });
+
+        item.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateX(0)';
+        });
+    });
+
+    // Add click effects for buttons
+    document.querySelectorAll('.btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            // Create ripple effect
+            const ripple = document.createElement('span');
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+            
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            ripple.classList.add('ripple');
+            
+            this.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    });
+});
+
+// Add ripple effect CSS
+const style = document.createElement('style');
+style.textContent = `
+    .btn {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .ripple {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.6);
+        transform: scale(0);
+        animation: ripple-animation 0.6s linear;
+        pointer-events: none;
+    }
+    
+    @keyframes ripple-animation {
+        to {
+            transform: scale(4);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %} 

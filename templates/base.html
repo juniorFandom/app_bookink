@@ -1,0 +1,755 @@
+{% load static %}
+{% load navigation_tags %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}explorMboa — Découvrez le Cameroun{% endblock %}</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <!-- FontAwesome 6 CSS -->
+    <link href="{% static 'vendor/fontawesome/css/all.min.css' %}" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary-color: #f8fafc;
+            --accent-color: #f59e0b;
+            --accent-hover: #d97706;
+            --dark-color: #0f172a;
+            --dark-light: #1e293b;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+        }
+
+        * {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+
+        /* Navbar Styles */
+        .navbar {
+            background: linear-gradient(135deg, var(--dark-color) 0%, var(--dark-light) 100%) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            min-height: 70px;
+            align-items: center;
+        }
+
+        .navbar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+        }
+
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.75rem;
+            background: linear-gradient(45deg, var(--accent-color), #fbbf24);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            transition: all 0.3s ease;
+            line-height: 2.5rem;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-brand:hover {
+            transform: scale(1.05);
+        }
+
+        .navbar-nav .nav-link {
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 0.75rem 1.25rem !important;
+            border-radius: 0.75rem;
+            margin: 0 0.25rem;
+            position: relative;
+            overflow: hidden;
+            line-height: 2.5rem;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-nav .nav-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .navbar-nav .nav-link:hover::before {
+            left: 100%;
+        }
+
+        .navbar-nav .nav-link:hover {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            color: var(--accent-color) !important;
+        }
+
+        .navbar-nav .nav-link i {
+            margin-right: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-nav .nav-link:hover i {
+            transform: scale(1.2);
+        }
+
+        /* Button Styles */
+        .btn {
+            font-weight: 600;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            border: none;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+            background: transparent;
+        }
+
+        .btn-outline-primary:hover {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            border-color: var(--primary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3);
+        }
+
+        /* Dropdown Styles */
+        .dropdown-menu {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 0.5rem;
+            animation: dropdownFadeIn 0.3s ease;
+        }
+
+        @keyframes dropdownFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dropdown-item {
+            padding: 0.875rem 1.25rem;
+            border-radius: 0.75rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin: 0.125rem 0;
+        }
+
+        .dropdown-item:hover {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            transform: translateX(8px);
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+        }
+
+        .dropdown-item i {
+            width: 20px;
+            margin-right: 0.75rem;
+        }
+
+        /* Notification Badge */
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.375rem 0.625rem;
+            border-radius: 1rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        /* Alert Styles */
+        .alert {
+            border: none;
+            border-radius: 1rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        /* Footer Styles */
+        footer {
+            background: linear-gradient(135deg, var(--dark-color) 0%, var(--dark-light) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+        }
+
+        footer h5,
+        footer h6 {
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        footer h5::after,
+        footer h6::after {
+            content: '';
+            position: absolute;
+            bottom: -0.5rem;
+            left: 0;
+            width: 3rem;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-color), var(--warning-color));
+            border-radius: 2px;
+        }
+
+        footer .list-unstyled li {
+            margin-bottom: 0.75rem;
+        }
+
+        footer .list-unstyled a {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            padding: 0.5rem 0;
+            border-radius: 0.5rem;
+            display: inline-block;
+        }
+
+        footer .list-unstyled a:hover {
+            color: var(--accent-color);
+            transform: translateX(8px);
+            background: rgba(245, 158, 11, 0.1);
+            padding-left: 0.75rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+            color: white;
+            border-radius: 50%;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .social-links a:hover {
+            transform: translateY(-5px) scale(1.1);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+            color: white;
+        }
+
+        /* Navbar Toggler */
+        .navbar-toggler {
+            border: none;
+            padding: 0.5rem;
+            border-radius: 0.75rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .navbar-toggler:focus {
+            box-shadow: 0 0 0 0.25rem rgba(245, 158, 11, 0.25);
+        }
+
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .navbar-nav .nav-link {
+                padding: 1rem 1.5rem !important;
+                margin: 0.25rem 0;
+            }
+
+            .social-links {
+                justify-content: center;
+            }
+
+            footer .col-lg-2,
+            footer .col-lg-4 {
+                text-align: center;
+            }
+
+            footer h5::after,
+            footer h6::after {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, var(--primary-dark), var(--accent-hover));
+        }
+
+        /* Notification dropdown improvements */
+        .dropdown-menu[aria-labelledby="notifDropdown"] {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .dropdown-menu[aria-labelledby="notifDropdown"] .dropdown-item {
+            border-left: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .dropdown-menu[aria-labelledby="notifDropdown"] .dropdown-item:hover {
+            border-left-color: var(--accent-color);
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
+        }
+
+        /* User dropdown improvements */
+        .dropdown-menu[aria-labelledby="userDropdown"] .dropdown-item {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dropdown-menu[aria-labelledby="userDropdown"] .dropdown-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .dropdown-menu[aria-labelledby="userDropdown"] .dropdown-item:hover::before {
+            left: 100%;
+        }
+
+        .badge.bg-danger {
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(255, 0, 0, 0.15);
+            color: #fff !important;
+            font-weight: bold;
+            border: 2px solid #fff;
+        }
+
+        .navbar-nav {
+            overflow: visible !important;
+        }
+
+        @media (max-width: 768px) {
+            .badge.bg-danger {
+                top: 10px !important;
+                right: 10px !important;
+                left: auto !important;
+                transform: none !important;
+            }
+        }
+
+        #notifDropdown {
+            position: relative;
+            display: flex;
+            align-items: center;
+            min-width: 40px;
+            min-height: 48px;
+        }
+
+        #notifDropdown .badge {
+            top: 8px !important;
+            right: 0 !important;
+            left: auto !important;
+        }
+
+        .navbar-nav .nav-link.active,
+        .navbar-nav .nav-link:active {
+            color: var(--accent-color) !important;
+            font-weight: 700;
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05));
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.10);
+        }
+
+        .navbar-nav .nav-link.active i {
+            color: var(--accent-color) !important;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home:home' %}">
+                <i class="fas fa-globe-africa"></i> explorMboa
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'home:home' %}">
+                            <i class="fas fa-home"></i> Accueil
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'tourist_sites:sites_list' %}">
+                            <i class="fas fa-map-marked-alt"></i> Destinations
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'tours:tour_list' %}">
+                            <i class="fas fa-route"></i> Tours
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'tours:itinerary_list' %}">
+                            <i class="fas fa-map"></i> Itinéraires
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'rooms:general_room_list' %}">
+                            <i class="fas fa-bed"></i> Hébergement
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'vehicles:vehicle_list' %}">
+                            <i class="fas fa-car"></i> Transport
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'orders:menu_item_list' %}">
+                            <i class="fas fa-utensils"></i> Restauration
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link position-relative d-flex align-items-center gap-1" href="#"
+                            id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="fw-semibold" style="font-size: 1rem;">Notifications</span>
+                            <i class="fas fa-bell"></i>
+                            {% if notif_count > 0 %}
+                            <span
+                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                {{ notif_count }}
+                            </span>
+                            {% endif %}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notifDropdown"
+                            style="min-width: 350px; max-width: 400px;">
+                            <li class="dropdown-header">Notifications</li>
+                            {% for notif in recent_notifications %}
+                            <li>
+                                <a class="dropdown-item notification-item{% if not notif.is_read %} fw-bold{% endif %}"
+                                    href="{{ notif.url }}" 
+                                    {% if 'zone_id=' in notif.url %}data-zone-id="{{ notif.url|cut:'?zone_id=' }}" {% endif %}>
+                                    {{ notif.message|truncatechars:60 }}<br>
+                                    <small class="text-muted">{{ notif.date|date:'d/m/Y H:i' }}</small>
+                                </a>
+                            </li>
+                            {% empty %}
+                            <li><span class="dropdown-item text-muted">Aucune notification</span></li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                            data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle"></i> {{ user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'users:profile' %}">
+                                    <i class="fas fa-id-card text-primary"></i> Mon Profil
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'wallets:wallet_detail' %}">
+                                    <i class="fas fa-wallet text-success"></i> Mon Wallet
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'tours:booking_list' %}">
+                                    <i class="fas fa-calendar-check text-info"></i> Mes Réservations
+                                </a>
+                            </li>
+                            {% if user.owned_businesses.exists or user.business_permissions.exists %}
+                            <li>
+                                <a class="dropdown-item" href="{% url 'business:my_businesses' %}">
+                                    <i class="fas fa-building text-primary"></i> Mes Entreprises
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'business:my_permissions' %}">
+                                    <i class="fas fa-users-cog text-info"></i> Mes permissions
+                                </a>
+                            </li>
+                            {% endif %}
+                            {% if user.owned_businesses.exists %}
+                            <li>
+                                <a class="dropdown-item" href="{% url 'business:access_management' %}">
+                                    <i class="fas fa-shield-alt text-warning"></i> Gestion des accès
+                                </a>
+                            </li>
+                            {% endif %}
+                            {% if user.is_staff %}
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'admin:index' %}">
+                                    <i class="fas fa-cogs text-warning"></i> Administration
+                                </a>
+                            </li>
+                            {% endif %}
+                            {% if user.is_superuser %}
+                            <li>
+                                <a class="dropdown-item" href="{% url 'business:super_admin:dashboard' %}">
+                                    <i class="fas fa-crown text-warning"></i> Dashboard Super Admin
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'tourist_sites:super_admin_dashboard' %}">
+                                    <i class="fas fa-map-marked-alt text-info"></i> Gestion Sites Touristiques
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item"
+                                    href="{% url 'tourist_sites:super_admin_zones_dangereuses_list' %}">
+                                    <i class="fas fa-exclamation-triangle text-danger"></i> Zones Dangereuses
+                                </a>
+                            </li>
+                            {% endif %}
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <form action="{% url 'users:logout' %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="fas fa-sign-out-alt"></i> Se déconnecter
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-outline-primary me-2" href="{% url 'users:login' %}">
+                            <i class="fas fa-sign-in-alt"></i> Se connecter
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-primary" href="{% url 'users:register' %}">
+                            <i class="fas fa-user-plus"></i> S'inscrire
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+            <i class="fas fa-info-circle me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="py-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-light py-5 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5 class="mb-3">
+                        <i class="fas fa-globe-africa"></i> explorMboa
+                    </h5>
+                    <p class="text-muted">Découvrez les merveilles du Cameroun avec notre plateforme de tourisme
+                        innovante. Des expériences authentiques et des aventures inoubliables vous attendent.</p>
+                    <div class="social-links">
+                        <a href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" title="YouTube"><i class="fab fa-youtube"></i></a>
+                        <a href="#" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h6 class="mb-3"><i class="fas fa-compass"></i> Découvrir</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="{% url 'tourist_sites:sites_list' %}">Destinations</a></li>
+                        <li><a href="{% url 'tours:tour_list' %}">Tours guidés</a></li>
+                        <li><a href="{% url 'tours:itinerary_list' %}">Itinéraires</a></li>
+                        <li><a href="{% url 'rooms:general_room_list' %}">Hébergement</a></li>
+                        <li><a href="{% url 'vehicles:vehicle_list' %}">Transport</a></li>
+                        <li><a href="{% url 'orders:menu_item_list' %}">Gastronomie</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h6 class="mb-3"><i class="fas fa-headset"></i> Support</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#"><i class="fas fa-question-circle"></i> Centre d'aide</a></li>
+                        <li><a href="#"><i class="fas fa-envelope"></i> Contact</a></li>
+                        <li><a href="#"><i class="fas fa-comments"></i> Chat en ligne</a></li>
+                        <li><a href="#"><i class="fas fa-phone"></i> Assistance 24/7</a></li>
+                        <li><a href="#"><i class="fas fa-book"></i> Guide voyageur</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h6 class="mb-3"><i class="fas fa-shield-alt"></i> Légal</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#"><i class="fas fa-file-contract"></i> Conditions</a></li>
+                        <li><a href="#"><i class="fas fa-user-shield"></i> Confidentialité</a></li>
+                        <li><a href="#"><i class="fas fa-cookie-bite"></i> Cookies</a></li>
+                        <li><a href="#"><i class="fas fa-gavel"></i> Mentions légales</a></li>
+                        <li><a href="#"><i class="fas fa-certificate"></i> Certifications</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h6 class="mb-3"><i class="fas fa-info-circle"></i> À propos</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#"><i class="fas fa-history"></i> Notre histoire</a></li>
+                        <li><a href="#"><i class="fas fa-users"></i> Notre équipe</a></li>
+                        <li><a href="#"><i class="fas fa-briefcase"></i> Carrières</a></li>
+                        <li><a href="#"><i class="fas fa-handshake"></i> Partenaires</a></li>
+                        <li><a href="#"><i class="fas fa-newspaper"></i> Blog</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4" style="border-color: rgba(255,255,255,0.1);">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0 text-muted">
+                        <i class="fas fa-copyright"></i> {% now "Y" %} explorMboa. Tous droits réservés.
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0 text-muted">
+                        <i class="fas fa-heart text-danger"></i> Fait avec passion au Cameroun
+                        <i class="fas fa-flag text-warning ms-2"></i>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Custom JavaScript -->
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

@@ -1,0 +1,604 @@
+{% extends "vehicles/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Vehicle Bookings" %}{% endblock %}
+
+{% block content %}
+<div class="booking-dashboard-bg py-4">
+    <div class="container-xxl">
+        <!-- HERO SECTION -->
+        <div class="booking-hero mb-4 p-4 rounded-4 shadow-sm d-flex flex-wrap align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <div class="booking-hero-icon bg-gradient-primary text-white rounded-3 d-flex align-items-center justify-content-center">
+                    <i class="fas fa-key fa-2x"></i>
+                </div>
+                <div>
+                    <h1 class="booking-title mb-1">{% trans "Vehicle Bookings" %}</h1>
+                    {% if location %}
+                        <div class="text-white-50 small">{{ location.name }} &mdash; {{ location.business.name }}</div>
+                    {% else %}
+                        <div class="text-white-50 small">{% trans "All vehicle bookings" %}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-3 mt-md-0">
+                {% if location %}
+                    <a href="{% url 'business:business_location_dashboard' location.pk %}" class="btn btn-outline-light booking-btn-action">
+                        <i class="fas fa-arrow-left"></i> {% trans "Back to dashboard" %}
+                    </a>
+                {% endif %}
+                {% if user.is_staff %}
+                    <a href="{% url 'vehicles:booking_create' %}" class="btn btn-gradient-primary booking-btn-action">
+                        <i class="fas fa-plus"></i> {% trans "New Booking" %}
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- STATS CARDS -->
+        <div class="row g-3 mb-4 booking-stats-row">
+            <div class="col-6 col-md-3">
+                <div class="booking-stat-card bg-gradient-primary text-white animate-fade-in">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="stat-value">{{ bookings.count }}</div>
+                            <div class="stat-label">{% trans "Total Bookings" %}</div>
+                        </div>
+                        <i class="fas fa-list fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="booking-stat-card bg-gradient-success text-white animate-fade-in">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="stat-value">{{ bookings|dictsort:"status"|length }}</div>
+                            <div class="stat-label">{% trans "Active" %}</div>
+                        </div>
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="booking-stat-card bg-gradient-warning text-dark animate-fade-in">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="stat-value">{{ bookings|dictsort:"payment_status"|length }}</div>
+                            <div class="stat-label">{% trans "Pending Payment" %}</div>
+                        </div>
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="booking-stat-card bg-gradient-info text-white animate-fade-in">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="stat-value">{{ page_obj.paginator.num_pages|default:1 }}</div>
+                            <div class="stat-label">{% trans "Pages" %}</div>
+                        </div>
+                        <i class="fas fa-file-alt fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="row g-3">
+            <div class="col-12">
+                <div class="booking-section-card p-4">
+                    <div class="d-flex align-items-center mb-3 gap-2">
+                        <i class="fas fa-calendar-alt text-primary"></i>
+                        <h2 class="h5 mb-0">{% trans "Booking Management" %}</h2>
+                    </div>
+                    
+                    {% if bookings %}
+                    <div class="table-responsive booking-table-responsive">
+                        <table class="table table-hover align-middle booking-table">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Reference" %}</th>
+                                    <th>{% trans "Vehicle" %}</th>
+                                    <th>{% trans "Customer" %}</th>
+                                    <th>{% trans "Pickup" %}</th>
+                                    <th>{% trans "Return" %}</th>
+                                    <th>{% trans "Status" %}</th>
+                                    <th>{% trans "Payment" %}</th>
+                                    <th>{% trans "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in bookings %}
+                                <tr class="booking-table-row">
+                                    <td>
+                                        <div class="booking-reference">
+                                            <span class="fw-bold text-primary">{{ booking.booking_reference }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="vehicle-icon bg-primary text-white me-2">
+                                                <i class="fas fa-car"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">{{ booking.vehicle.make }} {{ booking.vehicle.model }}</div>
+                                                <small class="text-muted">{{ booking.vehicle.category.name }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="customer-avatar bg-success text-white me-2">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">{{ booking.customer.get_full_name }}</div>
+                                                <small class="text-muted">{{ booking.customer.email }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="date-info">
+                                            <div class="fw-semibold">{{ booking.pickup_datetime|date:"d/m/Y" }}</div>
+                                            <small class="text-muted">{{ booking.pickup_datetime|date:"H:i" }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="date-info">
+                                            <div class="fw-semibold">{{ booking.return_datetime|date:"d/m/Y" }}</div>
+                                            <small class="text-muted">{{ booking.return_datetime|date:"H:i" }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge booking-status-badge bg-{{ booking.status|lower }}">
+                                            {{ booking.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge booking-payment-badge bg-{{ booking.payment_status|lower }}">
+                                            {{ booking.get_payment_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="booking-actions">
+                                            <a href="{% url 'vehicles:booking_detail' booking.pk %}" 
+                                               class="btn btn-sm btn-outline-info booking-action-btn" title="{% trans 'View Details' %}">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if booking.status == 'PENDING' %}
+                                            <a href="{% url 'vehicles:booking_update' booking.pk %}" 
+                                               class="btn btn-sm btn-outline-warning booking-action-btn" title="{% trans 'Edit' %}">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% if booking.payment_status != 'PAID' %}
+                                            <a href="{% url 'vehicles:booking_payment' booking.pk %}" 
+                                               class="btn btn-sm btn-outline-success booking-action-btn" title="{% trans 'Payment' %}">
+                                                <i class="fas fa-money-bill"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% if booking.status == 'PENDING' and user == booking.vehicle.business_location.business.owner %}
+                                            <button type="button" class="btn btn-sm btn-outline-primary booking-action-btn" 
+                                                    data-bs-toggle="modal" data-bs-target="#approveModal{{ booking.pk }}" title="{% trans 'Approve' %}">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-warning booking-action-btn" 
+                                                    data-bs-toggle="modal" data-bs-target="#finalizeModal{{ booking.pk }}" title="{% trans 'Finalize Payment' %}">
+                                                <i class="fas fa-cash-register"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if is_paginated %}
+                    <nav aria-label="{% trans 'Page navigation' %}" class="mt-4">
+                        <ul class="pagination justify-content-center booking-pagination">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                    <i class="fas fa-chevron-left"></i> {% trans "Previous" %}
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                    {% trans "Next" %} <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    {% else %}
+                    <div class="empty-state text-center py-5">
+                        <div class="empty-state-icon mb-3">
+                            <i class="fas fa-calendar-times fa-4x text-muted"></i>
+                        </div>
+                        <h5 class="text-muted mb-2">{% trans "No bookings found" %}</h5>
+                        <p class="text-muted mb-4">{% trans "Start by creating your first vehicle booking." %}</p>
+                        {% if user.is_staff %}
+                        <a href="{% url 'vehicles:booking_create' %}" class="btn btn-gradient-primary">
+                            <i class="fas fa-plus me-2"></i>{% trans "Create First Booking" %}
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Approval and Finalization Modals -->
+{% for booking in bookings %}
+    {% if booking.status == 'PENDING' and user == booking.vehicle.business_location.business.owner %}
+        <!-- Approve Modal -->
+        <div class="modal fade" id="approveModal{{ booking.pk }}" tabindex="-1" aria-labelledby="approveModalLabel{{ booking.pk }}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content booking-modal">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="approveModalLabel{{ booking.pk }}">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            {% translate "Approuver la réservation" %}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>{% translate "Êtes-vous sûr de vouloir approuver cette réservation ?" %}</p>
+                        <div class="alert alert-info booking-alert">
+                            <strong>{% translate "Réservation" %}:</strong> {{ booking.booking_reference }}<br>
+                            <strong>{% translate "Client" %}:</strong> {{ booking.customer.get_full_name }}<br>
+                            <strong>{% translate "Véhicule" %}:</strong> {{ booking.vehicle.make }} {{ booking.vehicle.model }}<br>
+                            <strong>{% translate "Montant total" %}:</strong> {{ booking.total_amount|floatformat:0 }} XAF
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>{% translate "Annuler" %}
+                        </button>
+                        <form method="post" action="{% url 'vehicles:approve_booking' booking.pk %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check me-2"></i>{% translate "Approuver" %}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Finalize Payment Modal -->
+        <div class="modal fade" id="finalizeModal{{ booking.pk }}" tabindex="-1" aria-labelledby="finalizeModalLabel{{ booking.pk }}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content booking-modal">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="finalizeModalLabel{{ booking.pk }}">
+                            <i class="fas fa-cash-register text-warning me-2"></i>
+                            {% translate "Finaliser le paiement" %}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>{% translate "Voulez-vous finaliser le paiement en espèces pour cette réservation ?" %}</p>
+                        <div class="alert alert-warning booking-alert">
+                            <strong>{% translate "Réservation" %}:</strong> {{ booking.booking_reference }}<br>
+                            <strong>{% translate "Client" %}:</strong> {{ booking.customer.get_full_name }}<br>
+                            <strong>{% translate "Véhicule" %}:</strong> {{ booking.vehicle.make }} {{ booking.vehicle.model }}<br>
+                            <strong>{% translate "Montant total" %}:</strong> {{ booking.total_amount|floatformat:0 }} XAF
+                        </div>
+                        <div class="alert alert-info booking-alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            {% translate "Cette action va rembourser le montant HOLD et créer les transactions appropriées." %}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>{% translate "Annuler" %}
+                        </button>
+                        <a href="{% url 'vehicles:finalize_payment_admin' booking.pk %}" class="btn btn-warning">
+                            <i class="fas fa-cash-register me-2"></i>{% translate "Finaliser" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endfor %}
+
+<!-- STYLE BOOKING DASHBOARD -->
+<style>
+.booking-dashboard-bg { 
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
+    min-height: 100vh; 
+}
+
+.booking-hero { 
+    background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%); 
+    color: #fff; 
+    box-shadow: 0 4px 24px rgba(59, 130, 246, 0.15); 
+}
+
+.booking-hero-icon { 
+    width: 56px; 
+    height: 56px; 
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); 
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2); 
+}
+
+.booking-title { 
+    font-size: 2.1rem; 
+    font-weight: 700; 
+    letter-spacing: 0.5px; 
+}
+
+.booking-btn-action { 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+    border-radius: 0.7rem; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07); 
+    font-weight: 600;
+}
+
+.booking-btn-action:hover { 
+    transform: translateY(-2px) scale(1.02); 
+    box-shadow: 0 6px 24px rgba(59, 130, 246, 0.2); 
+}
+
+.btn-gradient-primary {
+    background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-gradient-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+    color: white;
+}
+
+.booking-stats-row .booking-stat-card { 
+    border-radius: 1.1rem; 
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07); 
+    padding: 1.2rem 1.3rem; 
+    min-height: 110px; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    animation: fadeInUp 0.7s; 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.booking-stats-row .booking-stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.bg-gradient-primary { background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%) !important; }
+.bg-gradient-success { background: linear-gradient(90deg, #10b981 0%, #059669 100%) !important; }
+.bg-gradient-warning { background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%) !important; }
+.bg-gradient-info { background: linear-gradient(90deg, #06b6d4 0%, #0891b2 100%) !important; }
+
+.booking-stat-card .stat-value { 
+    font-size: 2.1rem; 
+    font-weight: 700; 
+}
+
+.booking-stat-card .stat-label { 
+    font-size: 1.1rem; 
+    font-weight: 500; 
+    opacity: 0.85; 
+}
+
+.booking-section-card { 
+    background: #fff; 
+    border-radius: 1.1rem; 
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07); 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.booking-section-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.booking-table-responsive { 
+    border-radius: 0.7rem; 
+    overflow: hidden; 
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.booking-table th, .booking-table td { 
+    vertical-align: middle; 
+    padding: 1rem 0.75rem;
+}
+
+.booking-table th { 
+    background: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 100%); 
+    font-weight: 600; 
+    color: #475569;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.booking-table-row {
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.booking-table-row:hover { 
+    background: linear-gradient(90deg, #f0f9ff 0%, #e0f2fe 100%); 
+    transform: scale(1.01);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+.booking-reference {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+}
+
+.vehicle-icon, .customer-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.date-info {
+    text-align: center;
+}
+
+.booking-status-badge, .booking-payment-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.bg-pending { background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%) !important; }
+.bg-confirmed { background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%) !important; }
+.bg-active { background: linear-gradient(90deg, #10b981 0%, #059669 100%) !important; }
+.bg-completed { background: linear-gradient(90deg, #6b7280 0%, #4b5563 100%) !important; }
+.bg-cancelled { background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%) !important; }
+
+.bg-paid { background: linear-gradient(90deg, #10b981 0%, #059669 100%) !important; }
+.bg-pending { background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%) !important; }
+.bg-failed { background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%) !important; }
+
+.booking-actions {
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+}
+
+.booking-action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    border: 1px solid #e2e8f0;
+}
+
+.booking-action-btn:hover {
+    transform: translateY(-1px) scale(1.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.booking-pagination .page-link {
+    border-radius: 0.5rem;
+    margin: 0 0.25rem;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    transition: all 0.2s ease;
+}
+
+.booking-pagination .page-link:hover {
+    background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.booking-pagination .page-item.active .page-link {
+    background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
+    border-color: #3b82f6;
+}
+
+.empty-state {
+    background: white;
+    border-radius: 1.1rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    padding: 3rem 2rem;
+}
+
+.empty-state-icon {
+    opacity: 0.6;
+}
+
+.booking-modal {
+    border-radius: 1rem;
+    border: none;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+
+.booking-alert {
+    border-radius: 0.7rem;
+    border: none;
+    background: linear-gradient(90deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+
+@keyframes fadeInUp { 
+    from { 
+        opacity: 0; 
+        transform: translateY(30px); 
+    } 
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    } 
+}
+
+.animate-fade-in { 
+    animation: fadeInUp 0.7s; 
+}
+
+@media (max-width: 991px) { 
+    .booking-hero { 
+        flex-direction: column; 
+        gap: 1.5rem; 
+    } 
+    .booking-title { 
+        font-size: 1.5rem; 
+    } 
+}
+
+@media (max-width: 767px) { 
+    .booking-stats-row .booking-stat-card { 
+        min-height: 90px; 
+        padding: 0.8rem 0.7rem; 
+    } 
+    .booking-title { 
+        font-size: 1.2rem; 
+    }
+    .booking-table-responsive {
+        font-size: 0.875rem;
+    }
+    .booking-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .booking-action-btn {
+        width: 100%;
+        height: auto;
+        padding: 0.5rem;
+    }
+}
+</style>
+{% endblock %} 

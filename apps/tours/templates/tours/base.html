@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Tourist Circuits" %} | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2">
+            <div class="list-group mb-4">
+                <a href="{% url 'tours:tour_list' %}" 
+                   class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'tour_list' %}active{% endif %}">
+                    <i class="fas fa-route"></i> {% trans "Tours" %}
+                </a>
+                <a href="{% url 'tours:destination_list' %}"
+                   class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'destination_list' %}active{% endif %}">
+                    <i class="fas fa-map-marker-alt"></i> {% trans "Destinations" %}
+                </a>
+                <a href="{% url 'tours:activity_list' %}"
+                   class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'activity_list' %}active{% endif %}">
+                    <i class="fas fa-hiking"></i> {% trans "Activities" %}
+                </a>
+               
+                <a href="{% url 'tours:tour_search' %}"
+                   class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'tour_search' %}active{% endif %}">
+                    <i class="fas fa-search"></i> {% trans "Search" %}
+                </a>
+            </div>
+
+            {% block sidebar_extra %}{% endblock %}
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% block tour_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<style>
+    .map-container {
+        height: 400px;
+        border-radius: 0.25rem;
+    }
+    .gallery-image {
+        height: 200px;
+        object-fit: cover;
+    }
+    .tour-card {
+        transition: transform 0.2s;
+    }
+    .tour-card:hover {
+        transform: translateY(-5px);
+    }
+    .difficulty-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1;
+    }
+    .price-badge {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        z-index: 1;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+
+    // Initialize popovers
+    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+        return new bootstrap.Popover(popoverTriggerEl)
+    })
+
+    // Function to initialize maps
+    function initMap(elementId, lat, lng, zoom) {
+        var map = L.map(elementId).setView([lat, lng], zoom);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        return map;
+    }
+</script>
+{% endblock %} 

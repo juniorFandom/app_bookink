@@ -1,0 +1,543 @@
+{% extends "vehicles/base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Finaliser le paiement" %}{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="payment-hero">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="hero-content">
+                    <h1 class="display-4 fw-bold text-white mb-3 animate-fade-in">
+                        <i class="fas fa-credit-card me-3 text-gradient"></i>{% translate "Finaliser le paiement" %}
+                    </h1>
+                    <p class="lead text-white-50 mb-4 animate-fade-in-delay">
+                        {% translate "Confirmez le paiement en espèces pour cette réservation de véhicule" %}
+                    </p>
+                </div>
+            </div>
+            <div class="col-lg-4 text-end">
+                <div class="hero-actions animate-fade-in-delay-2">
+                    <a href="{% url 'vehicles:booking_list' %}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-arrow-left me-2"></i>{% translate "Retour" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="hero-overlay"></div>
+</div>
+
+<!-- Payment Section -->
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="row g-5">
+                <!-- Payment Summary Card -->
+                <div class="col-lg-4">
+                    <div class="payment-summary-card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-receipt me-2"></i>{% translate "Résumé du paiement" %}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Vehicle Info -->
+                            <div class="vehicle-info mb-4">
+                                <div class="vehicle-header">
+                                    <h6 class="vehicle-title">{{ booking.vehicle.make }} {{ booking.vehicle.model }}</h6>
+                                    <p class="vehicle-year">{{ booking.vehicle.year }}</p>
+                                    <div class="vehicle-location">
+                                        <i class="fas fa-building text-primary me-2"></i>
+                                        {{ booking.vehicle.business_location.name }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Payment Details -->
+                            <div class="payment-details">
+                                <div class="payment-item">
+                                    <i class="fas fa-calendar-check text-success"></i>
+                                    <div>
+                                        <span class="label">{% translate "Référence" %}</span>
+                                        <span class="value">{{ booking.booking_reference }}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="payment-item">
+                                    <i class="fas fa-user text-info"></i>
+                                    <div>
+                                        <span class="label">{% translate "Client" %}</span>
+                                        <span class="value">{{ booking.customer.get_full_name }}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="payment-item">
+                                    <i class="fas fa-clock text-warning"></i>
+                                    <div>
+                                        <span class="label">{% translate "Période" %}</span>
+                                        <span class="value">
+                                            {{ booking.pickup_datetime|date:"d/m/Y H:i" }} - {{ booking.return_datetime|date:"d/m/Y H:i" }}
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="payment-item highlight">
+                                    <i class="fas fa-money-bill-wave text-success"></i>
+                                    <div>
+                                        <span class="label">{% translate "Montant HOLD" %}</span>
+                                        <span class="value">{{ hold_amount|floatformat:0 }} XAF</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="payment-item highlight">
+                                    <i class="fas fa-cash-register text-warning"></i>
+                                    <div>
+                                        <span class="label">{% translate "Reste en espèces" %}</span>
+                                        <span class="value">{{ remaining_amount|floatformat:0 }} XAF</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="payment-item highlight">
+                                    <i class="fas fa-calculator text-primary"></i>
+                                    <div>
+                                        <span class="label">{% translate "Total" %}</span>
+                                        <span class="value">{{ total_amount|floatformat:0 }} XAF</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Payment Method -->
+                            <div class="payment-method mt-4">
+                                <div class="method-badge">
+                                    <i class="fas fa-cash-register me-2"></i>
+                                    {% translate "Paiement en espèces" %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Form Card -->
+                <div class="col-lg-8">
+                    <div class="payment-form-card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-credit-card me-2"></i>{% translate "Finalisation du paiement" %}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Booking Reference -->
+                            <div class="booking-reference mb-4">
+                                <div class="reference-badge">
+                                    <i class="fas fa-hashtag me-2"></i>
+                                    {% translate "Référence" %}: {{ booking.booking_reference }}
+                                </div>
+                            </div>
+
+                            <!-- Customer Info -->
+                            <div class="customer-info mb-4">
+                                <h6 class="section-title">
+                                    <i class="fas fa-user me-2"></i>{% translate "Informations client" %}
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>{% translate "Nom" %}:</strong> {{ booking.customer.get_full_name }}</p>
+                                        <p><strong>{% translate "Email" %}:</strong> {{ booking.customer.email }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>{% translate "Téléphone" %}:</strong> {{ booking.customer.phone_number|default:"Non renseigné" }}</p>
+                                        <p><strong>{% translate "Date de réservation" %}:</strong> {{ booking.created_at|date:"d/m/Y H:i" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Vehicle Details -->
+                            <div class="vehicle-details mb-4">
+                                <h6 class="section-title">
+                                    <i class="fas fa-car me-2"></i>{% translate "Détails du véhicule" %}
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>{% translate "Véhicule" %}:</strong> {{ booking.vehicle.make }} {{ booking.vehicle.model }}</p>
+                                        <p><strong>{% translate "Année" %}:</strong> {{ booking.vehicle.year }}</p>
+                                        <p><strong>{% translate "Catégorie" %}:</strong> {{ booking.vehicle.vehicle_category.name }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>{% translate "Prix journalier" %}:</strong> {{ booking.daily_rate|floatformat:0 }} XAF</p>
+                                        <p><strong>{% translate "Durée" %}:</strong> {{ booking.total_days }} {% translate "jour(s)" %}</p>
+                                        <p><strong>{% translate "Avec chauffeur" %}:</strong> {% if booking.with_driver %}{% translate "Oui" %}{% else %}{% translate "Non" %}{% endif %}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Payment Info -->
+                            <div class="payment-info mb-4">
+                                <h6 class="section-title">
+                                    <i class="fas fa-credit-card me-2"></i>{% translate "Informations de paiement" %}
+                                </h6>
+                                <div class="alert alert-info border-0 rounded-3" role="alert">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-info-circle fa-lg me-3"></i>
+                                        <div>
+                                            <strong>{% translate "Information" %}</strong><br>
+                                            {% translate "Lors de la finalisation, le montant HOLD sera remboursé au client et remplacé par une transaction PAYMENT. Le reste sera enregistré comme paiement en espèces." %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div class="action-buttons">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <a href="{% url 'vehicles:booking_list' %}" class="btn btn-outline-secondary btn-lg">
+                                        <i class="fas fa-arrow-left me-2"></i>{% translate "Retour à la liste" %}
+                                    </a>
+                                    <button type="button" class="btn btn-gradient-success btn-lg" data-bs-toggle="modal" data-bs-target="#confirmPaymentModal">
+                                        <i class="fas fa-check me-2"></i>{% translate "Confirmer le paiement" %}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmPaymentModal" tabindex="-1" aria-labelledby="confirmPaymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmPaymentModalLabel">
+                    <i class="fas fa-shield-alt text-success me-2"></i>
+                    {% translate "Confirmation du paiement" %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-question-circle fa-3x text-warning mb-3"></i>
+                    <h5>{% translate "Êtes-vous sûr de vouloir finaliser ce paiement ?" %}</h5>
+                    <p class="text-muted">
+                        {% translate "Cette action va :" %}
+                    </p>
+                    <ul class="text-start">
+                        <li>{% translate "Rembourser le montant HOLD au client" %}</li>
+                        <li>{% translate "Créer une transaction PAYMENT pour le montant HOLD" %}</li>
+                        <li>{% translate "Créer une transaction CASH_PAYMENT pour le reste" %}</li>
+                        <li>{% translate "Confirmer la réservation" %}</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>{% translate "Annuler" %}
+                </button>
+                <form method="post" action="{% url 'vehicles:process_cash_payment' booking.pk %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-gradient-success rounded-pill">
+                        <i class="fas fa-check me-2"></i>{% translate "Confirmer le paiement" %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Modern Design Variables */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-gradient: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        --warning-gradient: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        --danger-gradient: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
+        --border-radius: 1rem;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.15);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Hero Section */
+    .payment-hero {
+        background: linear-gradient(135deg, rgba(40, 167, 69, 0.9) 0%, rgba(32, 201, 151, 0.9) 100%), 
+                    url('https://images.unsplash.com/photo-1563013544-824ae1b704d3?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80') center/cover no-repeat;
+        color: white;
+        padding: 4rem 0;
+        border-radius: 0 0 3rem 3rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.1);
+        z-index: 1;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .text-gradient {
+        background: linear-gradient(45deg, #fff, #f0f0f0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-in {
+        animation: fadeInUp 0.8s ease forwards;
+    }
+
+    .animate-fade-in-delay {
+        animation: fadeInUp 0.8s ease 0.2s forwards;
+        opacity: 0;
+    }
+
+    .animate-fade-in-delay-2 {
+        animation: fadeInUp 0.8s ease 0.4s forwards;
+        opacity: 0;
+    }
+
+    /* Payment Summary Card */
+    .payment-summary-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        position: sticky;
+        top: 2rem;
+    }
+
+    .payment-summary-card .card-header {
+        background: var(--success-gradient);
+        color: white;
+        padding: 1.5rem;
+        border: none;
+    }
+
+    .payment-summary-card .card-body {
+        padding: 2rem;
+    }
+
+    .vehicle-info {
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 1.5rem;
+    }
+
+    .vehicle-title {
+        font-size: 1.25rem;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .vehicle-year {
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+    }
+
+    .vehicle-location {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    .payment-details {
+        margin-bottom: 2rem;
+    }
+
+    .payment-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 0.5rem;
+        transition: var(--transition);
+    }
+
+    .payment-item:hover {
+        background: #e9ecef;
+        transform: translateX(5px);
+    }
+
+    .payment-item.highlight {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        border: 2px solid #ffc107;
+    }
+
+    .payment-item i {
+        font-size: 1.2rem;
+        margin-right: 1rem;
+        width: 20px;
+        text-align: center;
+    }
+
+    .payment-item .label {
+        display: block;
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+
+    .payment-item .value {
+        display: block;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .payment-item.highlight .value {
+        color: #856404;
+        font-weight: bold;
+    }
+
+    .payment-method {
+        text-align: center;
+    }
+
+    .method-badge {
+        background: var(--success-gradient);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 2rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    /* Payment Form Card */
+    .payment-form-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+    }
+
+    .payment-form-card .card-header {
+        background: var(--success-gradient);
+        color: white;
+        padding: 1.5rem;
+        border: none;
+    }
+
+    .payment-form-card .card-body {
+        padding: 2rem;
+    }
+
+    /* Booking Reference */
+    .booking-reference {
+        text-align: center;
+    }
+
+    .reference-badge {
+        background: #f8f9fa;
+        color: #6c757d;
+        padding: 1rem 2rem;
+        border-radius: 2rem;
+        font-size: 1.1rem;
+        display: inline-block;
+        border: 2px solid #e9ecef;
+    }
+
+    /* Customer Info */
+    .section-title {
+        color: #2c3e50;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e9ecef;
+        font-weight: 600;
+    }
+
+    /* Buttons */
+    .btn-gradient-success {
+        background: var(--success-gradient);
+        border: none;
+        color: white;
+        transition: var(--transition);
+    }
+
+    .btn-gradient-success:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+        color: white;
+    }
+
+    .btn-outline-secondary {
+        border: 2px solid #6c757d;
+        color: #6c757d;
+        transition: var(--transition);
+    }
+
+    .btn-outline-secondary:hover {
+        background: #6c757d;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* Modal Styles */
+    .modal-content {
+        border: none;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .modal-header {
+        background: var(--success-gradient);
+        color: white;
+        border-radius: var(--border-radius) var(--border-radius) 0 0;
+        border-bottom: none;
+    }
+
+    .modal-footer .btn {
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: var(--transition);
+    }
+
+    .btn-close {
+        filter: invert(1);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .payment-hero {
+            padding: 2rem 0;
+        }
+        
+        .hero-content h1 {
+            font-size: 2rem;
+        }
+        
+        .payment-summary-card {
+            position: static;
+            margin-bottom: 2rem;
+        }
+    }
+</style>
+{% endblock %} 

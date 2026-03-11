@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Transaction History" %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #e0e7ff 0%, #f8fafc 100%);
+        min-height: 100vh;
+    }
+
+    .wallet-card {
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(44, 62, 80, 0.10);
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .wallet-card .card-header {
+        background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+        color: #2c3e50;
+        border-bottom: none;
+        padding: 1.5rem 2rem 1rem 2rem;
+        text-align: center;
+    }
+
+    .wallet-card .card-title {
+        font-weight: 800;
+        font-size: 1.7rem;
+        letter-spacing: 1px;
+        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .wallet-card .card-body {
+        padding: 2rem;
+    }
+
+    .badge {
+        font-size: 1rem;
+        border-radius: 8px;
+        padding: 0.4em 0.9em;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    .badge-success,
+    .badge.bg-success {
+        background: #10b981 !important;
+        color: #fff !important;
+    }
+
+    .badge-danger,
+    .badge.bg-danger {
+        background: #ef4444 !important;
+        color: #fff !important;
+    }
+
+    .badge-info,
+    .badge.bg-info {
+        background: #3b82f6 !important;
+        color: #fff !important;
+    }
+
+    .badge-warning,
+    .badge.bg-warning {
+        background: #f59e0b !important;
+        color: #fff !important;
+    }
+
+    .badge-secondary,
+    .badge.bg-secondary {
+        background: #64748b !important;
+        color: #fff !important;
+    }
+
+    .table {
+        border-radius: 10px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(44, 62, 80, 0.07);
+    }
+
+    .table th {
+        background: #f3f4f6;
+        color: #2c3e50;
+        font-weight: 700;
+        border: none;
+    }
+
+    .table td {
+        vertical-align: middle;
+        border: none;
+    }
+
+    .btn {
+        border-radius: 10px;
+        font-weight: 600;
+        padding: 0.6rem 1.2rem;
+        transition: all 0.2s;
+        box-shadow: 0 2px 8px rgba(44, 62, 80, 0.07);
+    }
+
+    .btn-outline-primary {
+        border: 2px solid #2563eb;
+        color: #2563eb;
+        background: #fff;
+    }
+
+    .btn-outline-primary:hover {
+        background: linear-gradient(90deg, #2563eb 0%, #3b82f6 100%);
+        color: #fff;
+        border: none;
+    }
+
+    .btn-outline-secondary {
+        border: 2px solid #64748b;
+        color: #64748b;
+        background: #fff;
+    }
+
+    .btn-outline-secondary:hover {
+        background: linear-gradient(90deg, #64748b 0%, #94a3b8 100%);
+        color: #fff;
+        border: none;
+    }
+
+    .card.bg-primary {
+        background: linear-gradient(90deg, #2563eb 0%, #3b82f6 100%) !important;
+        color: #fff !important;
+    }
+
+    .pagination .page-link {
+        border-radius: 8px;
+        font-weight: 600;
+        color: #2563eb;
+    }
+
+    .pagination .page-item.active .page-link {
+        background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+        color: #fff;
+        border: none;
+    }
+
+    .table-hover tbody tr:hover {
+        background: #f3f4f6;
+        transition: background 0.2s;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card wallet-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-history me-2"></i> {% trans "Transaction History" %}</h4>
+                    <a href="{% url 'wallets:wallet_detail' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-wallet"></i> {% trans "Back to Wallet" %}
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if wallet %}
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <h5><i class="fas fa-coins"></i> {% trans "Balance" %}</h5>
+                                    <h3>{{ wallet.balance }} {{ wallet.currency }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <h5 class="text-success"><i class="fas fa-arrow-down"></i> {{
+                                            wallet_stats.total_deposits }}</h5>
+                                        <small>{% trans "Deposits" %}</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <h5 class="text-danger"><i class="fas fa-arrow-up"></i> {{
+                                            wallet_stats.total_withdrawals }}</h5>
+                                        <small>{% trans "Withdrawals" %}</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <h5 class="text-info"><i class="fas fa-exchange-alt"></i> {{
+                                            wallet_stats.total_transfers }}</h5>
+                                        <small>{% trans "Transfers" %}</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <h5 class="text-warning"><i class="fas fa-check-circle"></i> {{
+                                            wallet_stats.completed_transactions }}</h5>
+                                        <small>{% trans "Completed" %}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if transactions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th><i class="fas fa-calendar-alt"></i> {% trans "Date" %}</th>
+                                    <th><i class="fas fa-exchange-alt"></i> {% trans "Type" %}</th>
+                                    <th><i class="fas fa-money-bill-wave"></i> {% trans "Amount" %}</th>
+                                    <th><i class="fas fa-info-circle"></i> {% trans "Status" %}</th>
+                                    <th><i class="fas fa-hashtag"></i> {% trans "Reference" %}</th>
+                                    <th><i class="fas fa-align-left"></i> {% trans "Description" %}</th>
+                                    <th><i class="fas fa-cogs"></i> {% trans "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transaction in transactions %}
+                                <tr>
+                                    <td>{{ transaction.created_at|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        <span
+                                            class="badge badge-{% if transaction.transaction_type == 'DEPOSIT' %}success{% elif transaction.transaction_type == 'WITHDRAWAL' %}danger{% elif transaction.transaction_type == 'TRANSFER' %}info{% else %}secondary{% endif %}">
+                                            {{ transaction.get_transaction_type_display }}
+                                        </span>
+                                    </td>
+                                    <td
+                                        class="{% if transaction.transaction_type == 'DEPOSIT' %}text-success{% elif transaction.transaction_type == 'WITHDRAWAL' %}text-danger{% endif %}">
+                                        {{ transaction.amount }} {{ wallet.currency }}
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="badge badge-{% if transaction.status == 'COMPLETED' %}success{% elif transaction.status == 'PENDING' %}warning{% elif transaction.status == 'FAILED' %}danger{% else %}secondary{% endif %}">
+                                            {{ transaction.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <code>{{ transaction.reference }}</code>
+                                    </td>
+                                    <td>
+                                        {% if transaction.description %}
+                                        {{ transaction.description|truncatechars:50 }}
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'wallets:transaction_detail' transaction.pk %}"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if is_paginated %}
+                    <nav aria-label="Transaction pagination">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">&laquo; {% trans "First" %}</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">{% trans
+                                    "Previous" %}</a>
+                            </li>
+                            {% endif %}
+
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    {% trans "Page" %} {{ page_obj.number }} {% trans "of" %} {{
+                                    page_obj.paginator.num_pages }}
+                                </span>
+                            </li>
+
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">{% trans "Next" %}</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">{% trans "Last" %}
+                                    &raquo;</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">{% trans "No transactions found" %}</h5>
+                        <p class="text-muted">{% trans "Your transaction history will appear here once you make your
+                            first transaction." %}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

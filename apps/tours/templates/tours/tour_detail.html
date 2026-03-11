@@ -1,0 +1,675 @@
+{% extends "tours/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+  body {
+    background: linear-gradient(135deg, #f8fafc 0%, #e9f0fa 100%);
+  }
+  .hero-section {
+    margin-top: 70px;
+    position: relative;
+    min-height: 480px;
+    border-radius: 0 0 2rem 2rem;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(44,90,160,0.16);
+    background: linear-gradient(135deg, #2c5aa0 0%, #ff6b35 100%);
+  }
+  .hero-bg {
+    width: 100%;
+    height: 480px;
+    object-fit: cover;
+    filter: brightness(0.65) saturate(1.1);
+  }
+  .hero-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(135deg, rgba(44,90,160,0.75) 0%, rgba(255,107,53,0.55) 100%);
+    z-index: 1;
+  }
+  .hero-content {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    color: #fff;
+    text-align: center;
+    width: 100%;
+    max-width: 700px;
+    text-shadow: 0 2px 12px rgba(44,90,160,0.18);
+  }
+  .hero-badges .badge {
+    font-size: 1.1rem;
+    margin: 0 0.25rem;
+    padding: 0.7em 1.2em;
+    border-radius: 0.7em;
+    box-shadow: 0 2px 12px rgba(44,90,160,0.10);
+    filter: brightness(1.1) saturate(1.2);
+    text-shadow: 0 1px 6px rgba(44,90,160,0.10);
+  }
+  .badge.bg-primary {
+    background: linear-gradient(90deg, #2563eb 0%, #1e40af 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 0 8px #2563eb44;
+  }
+  .badge.bg-info {
+    background: linear-gradient(90deg, #06b6d4 0%, #2563eb 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 0 8px #06b6d444;
+  }
+  .badge.bg-success {
+    background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 0 8px #22c55e44;
+  }
+  .badge.bg-warning {
+    background: linear-gradient(90deg, #fbbf24 0%, #f59e42 100%) !important;
+    color: #7c4700 !important;
+    box-shadow: 0 0 8px #fbbf2444;
+  }
+  .hero-price {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #ffc107;
+    margin: 1rem 0 0.5rem 0;
+    text-shadow: 0 2px 8px #ff6b3544, 0 2px 12px #2c5aa044;
+  }
+  .hero-btn {
+    font-size: 1.2rem;
+    padding: 0.9em 2.2em;
+    border-radius: 2em;
+    font-weight: 600;
+    box-shadow: 0 4px 16px #ff6b3544;
+    background: linear-gradient(90deg, #ff6b35 0%, #ffb347 100%);
+    color: #fff;
+    border: none;
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+  .hero-btn:hover {
+    background: linear-gradient(90deg, #ffb347 0%, #ff6b35 100%);
+    box-shadow: 0 8px 32px #ff6b3555;
+    color: #fff;
+  }
+  
+  /* Navigation rapide */
+  .quick-nav {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 50px;
+    box-shadow: 0 4px 20px rgba(44,90,160,0.15);
+    padding: 0.5rem;
+    margin: -2rem auto 2rem auto;
+    max-width: 90%;
+    position: relative;
+    z-index: 10;
+  }
+  .quick-nav .nav-link {
+    color: #2c5aa0;
+    border-radius: 25px;
+    padding: 0.5rem 1rem;
+    margin: 0 0.25rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+  .quick-nav .nav-link:hover,
+  .quick-nav .nav-link.active {
+    background: linear-gradient(90deg, #2563eb 0%, #1e40af 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  }
+  
+  .card {
+    border-radius: 1.2rem;
+    box-shadow: 0 4px 32px rgba(44,90,160,0.10);
+    margin-bottom: 2rem;
+    transition: box-shadow 0.3s, transform 0.3s;
+    background: linear-gradient(135deg, #f8fafc 80%, #e9f0fa 100%);
+    border: none;
+  }
+  .card:hover {
+    box-shadow: 0 8px 40px #2c5aa022;
+    transform: translateY(-4px) scale(1.01);
+  }
+  .card-header.bg-gradient-primary {
+    background: linear-gradient(90deg, #2563eb 0%, #1e40af 100%) !important;
+    color: #fff !important;
+  }
+  .card-header.bg-gradient-success {
+    background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%) !important;
+    color: #fff !important;
+  }
+  .card-header.bg-gradient-warning {
+    background: linear-gradient(90deg, #fbbf24 0%, #f59e42 100%) !important;
+    color: #7c4700 !important;
+  }
+  .card-header.bg-gradient-info {
+    background: linear-gradient(90deg, #06b6d4 0%, #2563eb 100%) !important;
+    color: #fff !important;
+  }
+  .list-group-item {
+    border: none;
+    border-bottom: 1px solid #e0e7ef;
+    background: transparent;
+    font-size: 1.08rem;
+  }
+  .list-group-item:last-child {
+    border-bottom: none;
+  }
+  .review-card {
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 2px 12px #2c5aa022;
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+  .review-card:hover {
+    box-shadow: 0 8px 32px #2c5aa044;
+    transform: translateY(-2px) scale(1.01);
+  }
+  .gallery-item {
+    transition: box-shadow 0.2s, transform 0.2s;
+    box-shadow: 0 2px 8px #2c5aa022;
+  }
+  .gallery-item:hover {
+    box-shadow: 0 8px 24px #ff6b3533;
+    transform: scale(1.05);
+  }
+  .gallery-caption {
+    background: linear-gradient(90deg, #2c5aa0cc 0%, #ff6b35cc 100%);
+    color: #fff;
+    border-radius: 0 0 0.7em 0.7em;
+  }
+  .accordion-button:not(.collapsed) {
+    background: linear-gradient(90deg, #2563eb 0%, #1e40af 100%);
+    color: white;
+  }
+  .accordion-button:focus {
+    box-shadow: none;
+    border-color: #2563eb;
+  }
+  .btn-lg {
+    padding: 1rem 2rem;
+    font-weight: 600;
+    border-radius: 50px;
+  }
+  .badge {
+    font-weight: 600;
+    border-radius: 0.5rem;
+  }
+  
+  /* Séparateurs */
+  .section-divider {
+    height: 3px;
+    background: linear-gradient(90deg, #2563eb 0%, #ff6b35 100%);
+    border-radius: 2px;
+    margin: 3rem 0;
+    opacity: 0.3;
+  }
+  
+  /* Bouton flottant de réservation */
+  .floating-booking-btn {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 1000;
+    border-radius: 50px;
+    padding: 1rem 2rem;
+    box-shadow: 0 8px 32px rgba(255, 107, 53, 0.4);
+    background: linear-gradient(90deg, #ff6b35 0%, #ffb347 100%);
+    color: white;
+    border: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+  .floating-booking-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(255, 107, 53, 0.6);
+    color: white;
+  }
+  
+  @media (max-width: 991px) {
+    .hero-content { max-width: 95vw; }
+    .hero-section, .hero-bg { height: 320px; min-height: 320px; }
+    .quick-nav {
+      max-width: 95%;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .quick-nav .nav {
+      flex-wrap: nowrap;
+    }
+  }
+  @media (max-width: 767px) {
+    .hero-section, .hero-bg { height: 220px; min-height: 220px; }
+    .card { margin-bottom: 1.2rem; }
+    .floating-booking-btn {
+      bottom: 1rem;
+      right: 1rem;
+      padding: 0.8rem 1.5rem;
+      font-size: 0.9rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block tour_content %}
+<div class="container-fluid p-0">
+  <!-- Hero Section moderne -->
+  <section class="hero-section mb-5">
+    {% if tour.image %}
+      <img src="{{ tour.image.url }}" class="hero-bg" alt="{{ tour.nom_balade }}">
+    {% else %}
+      <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" class="hero-bg" alt="{{ tour.nom_balade }}">
+    {% endif %}
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1 class="display-4 fw-bold mb-3">{{ tour.nom_balade }}</h1>
+      <div class="hero-badges mb-3">
+        <span class="badge bg-primary"><i class="fas fa-tag me-1"></i>{{ tour.type }}</span>
+        <span class="badge bg-info"><i class="fas fa-clock me-1"></i>{{ tour.duree }} {% trans "jours" %}</span>
+        <span class="badge bg-success"><i class="fas fa-users me-1"></i>{% trans "Max" %} {{ tour.nombre_participant_max }}</span>
+                  {% if tour.date_debut %}
+          <span class="badge bg-warning"><i class="fas fa-calendar-alt me-1"></i>{{ tour.date_debut|date:"d/m/Y" }}</span>
+        {% endif %}
+      </div>
+      <div class="hero-price">{{ tour.prix_par_personne|floatformat:0 }} FCFA</div>
+      <div class="mb-3 text-white-50">{% trans "par personne" %}</div>
+      <a href="{% url 'tours:tour_booking_create' tour.slug %}" class="btn btn-warning hero-btn shadow"><i class="fas fa-calendar-check me-2"></i>{% trans "Réserver maintenant" %}</a>
+    </div>
+  </section>
+
+  <!-- Navigation rapide -->
+  <div class="container">
+    <nav class="quick-nav">
+      <div class="nav nav-pills justify-content-center flex-wrap">
+        <a class="nav-link" href="#description"><i class="fas fa-info-circle me-1"></i>{% trans "Description" %}</a>
+        <a class="nav-link" href="#departure"><i class="fas fa-calendar-alt me-1"></i>{% trans "Départ" %}</a>
+        <a class="nav-link" href="#meeting-point"><i class="fas fa-map-marker-alt me-1"></i>{% trans "Point de rencontre" %}</a>
+        {% if tour.business_location.business.owner %}
+        <a class="nav-link" href="#guide"><i class="fas fa-user-tie me-1"></i>{% trans "Propriétaire" %}</a>
+        {% endif %}
+                  {% if tour.image %}
+        <a class="nav-link" href="#gallery"><i class="fas fa-images me-1"></i>{% trans "Galerie" %}</a>
+        {% endif %}
+      </div>
+    </nav>
+  </div>
+
+  <div class="container mt-5">
+    <div class="row g-4">
+      <!-- Colonne principale -->
+      <div class="col-lg-8">
+        <!-- Description -->
+        <section id="description">
+          <div class="card border-0">
+            <div class="card-header bg-gradient-primary text-white">
+              <i class="fas fa-info-circle me-2"></i>{% trans "Description du Tour" %}
+            </div>
+            <div class="card-body p-4">
+              <p class="lead">{{ tour.description|linebreaks }}</p>
+            </div>
+          </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <!-- Informations de départ -->
+        {% if tour.date_debut or tour.heure_depart %}
+        <section id="departure">
+          <div class="card border-0">
+            <div class="card-header bg-gradient-warning text-dark">
+              <i class="fas fa-calendar-alt me-2"></i>{% trans "Informations de Départ" %}
+            </div>
+            <div class="card-body p-4">
+              <div class="row">
+                {% if tour.date_debut %}
+                <div class="col-md-6 mb-3">
+                  <div class="d-flex align-items-center">
+                    <i class="fas fa-calendar text-warning me-3" style="font-size: 1.5rem;"></i>
+                    <div>
+                      <h6 class="mb-1 fw-bold">{% trans "Date de début" %}</h6>
+                      <p class="mb-0 text-muted">{{ tour.date_debut|date:"l d F Y" }}</p>
+                    </div>
+                  </div>
+                </div>
+                {% endif %}
+                {% if tour.heure_depart %}
+                <div class="col-md-6 mb-3">
+                  <div class="d-flex align-items-center">
+                    <i class="fas fa-clock text-warning me-3" style="font-size: 1.5rem;"></i>
+                    <div>
+                      <h6 class="mb-1 fw-bold">{% trans "Heure de départ" %}</h6>
+                      <p class="mb-0 text-muted">{{ tour.heure_depart|time:"H:i" }}</p>
+                    </div>
+                  </div>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="section-divider"></div>
+        {% endif %}
+
+        <!-- Point de rencontre -->
+        {% if tour.point_rencontre_latitude and tour.point_rencontre_longitude %}
+        <section id="meeting-point">
+          <div class="card border-0">
+            <div class="card-header bg-gradient-info text-white">
+              <i class="fas fa-map-marker-alt me-2"></i>{% trans "Point de Rencontre" %}
+            </div>
+            <div class="card-body p-4">
+              {% if tour.point_rencontre_address %}
+              <div class="mb-3">
+                <h6 class="fw-bold mb-2"><i class="fas fa-map-pin text-info me-2"></i>{% trans "Adresse" %}</h6>
+                <p class="mb-0">{{ tour.point_rencontre_address }}</p>
+              </div>
+              {% endif %}
+              <div class="mb-3">
+                <h6 class="fw-bold mb-2"><i class="fas fa-location-arrow text-info me-2"></i>{% trans "Coordonnées GPS" %}</h6>
+                <p class="mb-0">
+                  <strong>{% trans "Latitude" %}:</strong> {{ tour.point_rencontre_latitude|floatformat:6 }}<br>
+                  <strong>{% trans "Longitude" %}:</strong> {{ tour.point_rencontre_longitude|floatformat:6 }}
+                </p>
+              </div>
+              <div id="meetingPointMap" style="height: 300px; border-radius: 10px; margin-bottom: 1rem; background: #e9f0fa;"></div>
+              <noscript>
+                <div class="alert alert-warning mt-2">{% trans "Activez JavaScript pour afficher la carte du point de rencontre." %}</div>
+              </noscript>
+            </div>
+          </div>
+        </section>
+
+        <div class="section-divider"></div>
+        {% endif %}
+
+        <!-- Galerie Photos -->
+        {% if tour.image %}
+        <div class="section-divider"></div>
+        <section id="gallery">
+          <div class="card border-0">
+            <div class="card-header bg-gradient-primary text-white">
+              <i class="fas fa-images me-2"></i>{% trans "Galerie Photos" %}
+            </div>
+            <div class="card-body p-4">
+              <div class="row g-3">
+                <div class="col-lg-6 col-md-8 col-sm-12">
+                    <div class="gallery-item position-relative overflow-hidden rounded shadow-sm">
+                    <img src="{{ tour.image.url }}" class="w-100" alt="{{ tour.nom_balade }}" style="height: 300px; object-fit: cover; cursor: pointer;" onclick="openLightbox('{{ tour.image.url }}', '{{ tour.nom_balade }}')">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        {% endif %}
+      </div>
+
+      <!-- Colonne latérale -->
+      <div class="col-lg-4">
+        <!-- Guide Info -->
+        {% if tour.business_location.business.owner %}
+        <section id="guide">
+          <div class="card border-0">
+            <div class="card-header bg-gradient-info text-white">
+              <i class="fas fa-user-tie me-2"></i>{% trans "Propriétaire du Tour" %}
+            </div>
+            <div class="card-body text-center p-4">
+              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" class="rounded-circle mb-3 shadow" width="120" height="120" alt="{{ tour.business_location.business.owner.get_full_name }}" style="object-fit: cover;">
+              <h5 class="fw-bold">{{ tour.business_location.business.owner.get_full_name }}</h5>
+              <p class="text-muted">{% trans "Propriétaire du tour" %}</p>
+              <div class="mb-3">
+                <div class="d-flex justify-content-center">
+                  <i class="fas fa-star text-warning"></i>
+                  <i class="fas fa-star text-warning"></i>
+                  <i class="fas fa-star text-warning"></i>
+                  <i class="fas fa-star text-warning"></i>
+                  <i class="fas fa-star text-warning"></i>
+                  <span class="ms-2 fw-bold">4.9</span>
+                </div>
+              </div>
+              <div class="d-grid gap-2">
+                <a href="{% url 'tours:tour_list' %}?business={{ tour.business_location.business.id }}" class="btn btn-primary"><i class="fas fa-route me-2"></i>{% trans "Autres tours de ce business" %}</a>
+                <a href="#" class="btn btn-outline-primary" onclick="showBusinessInfo()"><i class="fas fa-info-circle me-2"></i>{% trans "Informations business" %}</a>
+              </div>
+            </div>
+          </div>
+        </section>
+        {% endif %}
+
+        <!-- Informations pratiques -->
+        <section id="practical-info">
+          <!-- What's Included -->
+          <div class="card border-0">
+            <div class="card-header bg-gradient-success text-white">
+              <i class="fas fa-check-circle me-2"></i>{% trans "Ce qui est inclus" %}
+            </div>
+            <div class="card-body p-4">
+              <ul class="list-unstyled">
+                <li class="mb-3"><i class="fas fa-check text-success me-2"></i><strong>{% trans "Guide professionnel" %}</strong></li>
+                <li class="mb-3"><i class="fas fa-check text-success me-2"></i><strong>{% trans "Transport" %}</strong></li>
+                <li class="mb-3"><i class="fas fa-check text-success me-2"></i><strong>{% trans "Équipement" %}</strong></li>
+                <li class="mb-3"><i class="fas fa-check text-success me-2"></i><strong>{% trans "Briefing de sécurité" %}</strong></li>
+                <li class="mb-3"><i class="fas fa-check text-success me-2"></i><strong>{% trans "Assurance voyage" %}</strong></li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Important Notes -->
+          <div class="card border-0">
+            <div class="card-header bg-gradient-warning text-dark">
+              <i class="fas fa-exclamation-triangle me-2"></i>{% trans "Informations importantes" %}
+            </div>
+            <div class="card-body p-4">
+              <ul class="list-unstyled">
+                <li class="mb-3"><i class="fas fa-info-circle text-info me-2"></i><strong>{% trans "Participants minimum" %}:</strong> {{ tour.nombre_participant_min }}</li>
+                <li class="mb-3"><i class="fas fa-info-circle text-info me-2"></i><strong>{% trans "Participants maximum" %}:</strong> {{ tour.nombre_participant_max }}</li>
+                <li class="mb-3"><i class="fas fa-info-circle text-info me-2"></i><strong>{% trans "Durée" %}:</strong> {{ tour.duree }} {% trans "jours" %}</li>
+                {% if tour.exigence %}
+                <li class="mb-3"><i class="fas fa-info-circle text-info me-2"></i><strong>{% trans "Exigences" %}:</strong> {{ tour.exigence|truncatewords:10 }}</li>
+                {% endif %}
+              </ul>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bouton flottant de réservation -->
+<a href="{% url 'tours:tour_booking_create' tour.slug %}" class="btn floating-booking-btn d-lg-none">
+  <i class="fas fa-calendar-check me-2"></i>{% trans "Réserver" %}
+</a>
+
+<!-- Lightbox Modal -->
+<div class="modal fade" id="lightboxModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content bg-transparent border-0">
+      <div class="modal-header border-0">
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img id="lightboxImage" src="" class="img-fluid rounded" alt="">
+        <h5 id="lightboxCaption" class="text-white mt-3"></h5>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Inquiry Modal -->
+<div class="modal fade" id="inquiryModal" tabindex="-1" aria-labelledby="inquiryModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-gradient-primary text-white">
+        <h5 class="modal-title" id="inquiryModalLabel"><i class="fas fa-question-circle me-2"></i>{% trans "Poser une question" %}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="{% url 'tours:tour_inquiry' tour.slug %}">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="name" class="form-label fw-bold">{% trans "Votre nom" %}</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+          </div>
+          <div class="mb-3">
+            <label for="email" class="form-label fw-bold">{% trans "Votre email" %}</label>
+            <input type="email" class="form-control" id="email" name="email" required>
+          </div>
+          <div class="mb-3">
+            <label for="message" class="form-label fw-bold">{% trans "Votre question" %}</label>
+            <textarea class="form-control" id="message" name="message" rows="4" required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Fermer" %}</button>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane me-2"></i>{% trans "Envoyer" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Lightbox functionality
+    window.openLightbox = function(imageSrc, caption) {
+        document.getElementById('lightboxImage').src = imageSrc;
+        document.getElementById('lightboxCaption').textContent = caption;
+        new bootstrap.Modal(document.getElementById('lightboxModal')).show();
+    };
+    
+    // Navigation active state
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.quick-nav .nav-link');
+    
+    function updateActiveNav() {
+        let current = '';
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.clientHeight;
+            if (window.pageYOffset >= (sectionTop - 200)) {
+                current = section.getAttribute('id');
+            }
+        });
+        
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === '#' + current) {
+                link.classList.add('active');
+            }
+        });
+    }
+    
+    // Smooth scrolling for navigation links
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href').substring(1);
+            const targetSection = document.getElementById(targetId);
+            if (targetSection) {
+                const offsetTop = targetSection.offsetTop - 100;
+                window.scrollTo({
+                    top: offsetTop,
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+    
+    // Update active nav on scroll
+    window.addEventListener('scroll', updateActiveNav);
+    
+    // Add animation on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+    
+    // Observe all cards
+    document.querySelectorAll('.card').forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(card);
+    });
+
+    // Affichage de la carte du point de rencontre si coordonnées présentes
+    {% if tour.point_rencontre_latitude and tour.point_rencontre_longitude %}
+        var meetingLat = {{ tour.point_rencontre_latitude }};
+        var meetingLng = {{ tour.point_rencontre_longitude }};
+        var mapDiv = document.getElementById('meetingPointMap');
+        if (mapDiv && !isNaN(meetingLat) && !isNaN(meetingLng)) {
+            var map = L.map('meetingPointMap').setView([meetingLat, meetingLng], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            var marker = L.marker([meetingLat, meetingLng]).addTo(map);
+            marker.bindPopup("{% trans 'Point de rencontre' %}").openPopup();
+        }
+    {% endif %}
+
+    // Business info function
+    window.showBusinessInfo = function() {
+        var businessName = "{{ tour.business_location.business.nom_entreprise }}";
+        var ownerName = "{{ tour.business_location.business.owner.get_full_name|default:tour.business_location.business.owner.username }}";
+        var businessType = "{{ tour.business_location.business.type_entreprise }}";
+        var businessAddress = "{{ tour.business_location.business.adresse }}";
+        
+        var info = `
+            <div class="text-start">
+                <h6 class="fw-bold mb-3"><i class="fas fa-building me-2"></i>${businessName}</h6>
+                <p><strong>{% trans "Propriétaire" %}:</strong> ${ownerName}</p>
+                <p><strong>{% trans "Type" %}:</strong> ${businessType}</p>
+                <p><strong>{% trans "Adresse" %}:</strong> ${businessAddress}</p>
+            </div>
+        `;
+        
+        // Create and show modal
+        var modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.id = 'businessInfoModal';
+        modal.innerHTML = `
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title"><i class="fas fa-info-circle me-2"></i>{% trans "Informations du business" %}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        ${info}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Fermer" %}</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        new bootstrap.Modal(modal).show();
+        
+        // Remove modal from DOM after it's hidden
+        modal.addEventListener('hidden.bs.modal', function() {
+            document.body.removeChild(modal);
+        });
+    };
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,34 @@
+{% load i18n %}
+{% load business_tags %}
+{% load static %}
+<form id="wizardStep5Form" method="post" novalidate autocomplete="off">
+    {% csrf_token %}
+    <div class="form-section mb-4">
+        <div class="section-header mb-3">
+            <i class="fas fa-images"></i>
+            <h3 class="ms-2 mb-0">{% translate "Images de l'établissement" %}</h3>
+        </div>
+        <div class="alert alert-info mb-3">
+            <i class="fas fa-info-circle me-2"></i>
+            {% translate "Ajoutez jusqu'à 5 images. Faites glisser vos images ici ou cliquez pour sélectionner. Choisissez une image principale." %}
+        </div>
+        <div id="imageDropZone" class="border border-2 border-primary rounded-3 p-4 text-center mb-4 bg-light drag-drop-zone" style="cursor:pointer; min-height: 160px;">
+            <i class="fas fa-cloud-upload-alt fa-2x text-primary mb-2"></i>
+            <div class="mb-2">{% translate "Glissez-déposez vos images ici ou cliquez pour sélectionner" %}</div>
+            <input type="file" id="imageInput" name="images" accept="image/*" multiple style="display:none;">
+            <div id="imageDropZoneError" class="text-danger mt-2" style="display:none;"></div>
+        </div>
+        <div id="imagePreviewList" class="row g-3">
+            {# Les miniatures seront injectées ici par JS #}
+        </div>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mt-4">
+        <button type="button" class="btn btn-outline-secondary btn-prev-step">
+            <i class="fas fa-arrow-left me-2"></i>{% translate "Précédent" %}
+        </button>
+        <button type="button" class="btn btn-success btn-finish-step">
+            <i class="fas fa-check-circle me-2"></i>
+            {% translate "Valider et enregistrer" %}
+        </button>
+    </div>
+</form> 

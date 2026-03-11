@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Mes Réservations{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Mes Réservations</h2>
+    </div>
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" id="bookingTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link {% if tab == 'room' %}active{% endif %}" href="?tab=room"> <i class="fas fa-bed"></i> Chambres</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link {% if tab == 'vehicle' %}active{% endif %}" href="?tab=vehicle"> <i class="fas fa-car"></i> Véhicules</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link {% if tab == 'tour' %}active{% endif %}" href="?tab=tour"> <i class="fas fa-map"></i> Tours</a>
+        </li>
+    </ul>
+    <!-- Cards -->
+    <div class="row g-4">
+        {% for booking in bookings %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        {% if tab == 'room' %}
+                            <h5 class="card-title"><i class="fas fa-bed text-primary"></i> Chambre {{ booking.room.room_number }} - {{ booking.room.room_type.name }}</h5>
+                            <p class="mb-1"><strong>Arrivée :</strong> {{ booking.check_in_date }}</p>
+                            <p class="mb-1"><strong>Départ :</strong> {{ booking.check_out_date }}</p>
+                            <p class="mb-1"><strong>Montant :</strong> {{ booking.total_amount }} XAF</p>
+                            <p class="mb-1"><strong>Déjà payé :</strong> {{ booking.already_paid|floatformat:0 }} XAF</p>
+                            <p class="mb-1"><strong>Reste à payer :</strong> {{ booking.remaining_amount|floatformat:0 }} XAF</p>
+                            <p class="mb-1"><strong>Statut :</strong> <span class="badge bg-info">{{ booking.get_status_display }}</span></p>
+                            {# Pour simplifier, on affiche le lien vers la page détail qui gère le calcul #}
+                        {% elif tab == 'vehicle' %}
+                            <h5 class="card-title"><i class="fas fa-car text-success"></i> {{ booking.vehicle }}</h5>
+                            <p class="mb-1"><strong>Début :</strong> {{ booking.pickup_datetime }}</p>
+                            <p class="mb-1"><strong>Fin :</strong> {{ booking.return_datetime }}</p>
+                            <p class="mb-1"><strong>Montant :</strong> {{ booking.total_amount }} XAF</p>
+                            <p class="mb-1"><strong>Statut :</strong> <span class="badge bg-info">{{ booking.get_status_display }}</span></p>
+                        {% elif tab == 'tour' %}
+                            <h5 class="card-title"><i class="fas fa-map text-warning"></i> {{ booking.tour_schedule.tour.name }}</h5>
+                            <p class="mb-1"><strong>Date :</strong> {{ booking.tour_schedule.date }}</p>
+                            <p class="mb-1"><strong>Participants :</strong> {{ booking.number_of_participants }}</p>
+                            <p class="mb-1"><strong>Statut :</strong> <span class="badge bg-info">{{ booking.get_status_display }}</span></p>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer bg-white border-0 d-flex flex-column gap-2">
+                        {% if tab == 'room' %}
+                            <a href="{% url 'rooms:booking_detail' booking.booking_reference %}" class="btn btn-outline-primary btn-sm mb-2"><i class="fas fa-eye"></i> Voir</a>
+                            {# Bouton annuler avec modal, juste en dessous de Voir #}
+                            {% if booking.can_cancel %}
+                              <button type="button" class="btn btn-outline-danger btn-sm mb-2" data-bs-toggle="modal" data-bs-target="#cancelBookingModal{{ booking.pk }}">
+                                <i class="fas fa-times"></i> Annuler
+                              </button>
+                              <!-- Modal d'annulation -->
+                              <div class="modal fade" id="cancelBookingModal{{ booking.pk }}" tabindex="-1" aria-labelledby="cancelBookingModalLabel{{ booking.pk }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                  <div class="modal-content">
+                                    <form method="post" action="{% url 'rooms:cancel_booking' booking.booking_reference %}">
+                                      {% csrf_token %}
+                                      <div class="modal-header">
+                                        <h5 class="modal-title" id="cancelBookingModalLabel{{ booking.pk }}">Confirmer l'annulation</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                                      </div>
+                                      <div class="modal-body">
+                                        <p>Voulez-vous vraiment annuler cette réservation ?</p>
+                                        <ul>
+                                          <li><strong>Chambre :</strong> {{ booking.room.room_number }} - {{ booking.room.room_type.name }}</li>
+                                          <li><strong>Arrivée :</strong> {{ booking.check_in_date }}</li>
+                                          <li><strong>Départ :</strong> {{ booking.check_out_date }}</li>
+                                          <li><strong>Montant payé :</strong> {{ booking.already_paid|floatformat:0 }} XAF</li>
+                                        </ul>
+                                        <div class="mb-3">
+                                          <label for="cancelReason{{ booking.pk }}" class="form-label">Raison de l'annulation</label>
+                                          <textarea class="form-control" id="cancelReason{{ booking.pk }}" name="reason" rows="2" required></textarea>
+                                        </div>
+                                      </div>
+                                      <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                                        <button type="submit" class="btn btn-danger">Oui, annuler la réservation</button>
+                                      </div>
+                                    </form>
+                                  </div>
+                                </div>
+                              </div>
+                            {% endif %}
+                            {# Bouton finaliser paiement avec modal #}
+                            {% if booking.status == 'PENDING' and booking.remaining_amount > 0 %}
+                              <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#finalizePaymentModal{{ booking.pk }}">
+                                Finaliser paiement
+                              </button>
+                              <div class="modal fade" id="finalizePaymentModal{{ booking.pk }}" tabindex="-1" aria-labelledby="finalizePaymentModalLabel{{ booking.pk }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                  <div class="modal-content">
+                                    <form method="post" action="{% url 'rooms:finalize_payment' booking.booking_reference %}">
+                                      {% csrf_token %}
+                                      <div class="modal-header">
+                                        <h5 class="modal-title" id="finalizePaymentModalLabel{{ booking.pk }}">Confirmer le paiement</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                                      </div>
+                                      <div class="modal-body">
+                                        <p>Voulez-vous vraiment finaliser le paiement de cette réservation ?</p>
+                                        <ul>
+                                          <li><strong>Chambre :</strong> {{ booking.room.room_number }} - {{ booking.room.room_type.name }}</li>
+                                          <li><strong>Arrivée :</strong> {{ booking.check_in_date }}</li>
+                                          <li><strong>Départ :</strong> {{ booking.check_out_date }}</li>
+                                          <li><strong>Montant restant à payer :</strong> <span class="text-danger">{{ booking.remaining_amount|floatformat:0 }} XAF</span></li>
+                                        </ul>
+                                      </div>
+                                      <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                        <button type="submit" class="btn btn-success">Oui, je confirme le paiement</button>
+                                      </div>
+                                    </form>
+                                  </div>
+                                </div>
+                              </div>
+                            {% endif %}
+                        {% else %}
+                        <a href="#" class="btn btn-outline-primary btn-sm"><i class="fas fa-eye"></i> Voir</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-calendar-alt fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Aucune réservation trouvée</h5>
+            </div>
+        {% endfor %}
+    </div>
+    <!-- Pagination -->
+    {% if bookings.has_other_pages %}
+    <div class="d-flex justify-content-center mt-4">
+        <nav aria-label="Pagination">
+            <ul class="pagination">
+                {% if bookings.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?tab={{ tab }}&page=1">&laquo;</a></li>
+                    <li class="page-item"><a class="page-link" href="?tab={{ tab }}&page={{ bookings.previous_page_number }}">&lsaquo;</a></li>
+                {% endif %}
+                {% for num in bookings.paginator.page_range %}
+                    {% if bookings.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > bookings.number|add:'-3' and num < bookings.number|add:'3' %}
+                        <li class="page-item"><a class="page-link" href="?tab={{ tab }}&page={{ num }}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if bookings.has_next %}
+                    <li class="page-item"><a class="page-link" href="?tab={{ tab }}&page={{ bookings.next_page_number }}">&rsaquo;</a></li>
+                    <li class="page-item"><a class="page-link" href="?tab={{ tab }}&page={{ bookings.paginator.num_pages }}">&raquo;</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

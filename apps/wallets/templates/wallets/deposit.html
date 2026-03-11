@@ -1,0 +1,565 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Make a Deposit" %}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .deposit-hero {
+    background: linear-gradient(135deg, rgba(44, 90, 160, 0.8) 0%, rgba(255, 107, 53, 0.8) 100%);
+    color: white;
+    padding: 2rem 0;
+  }
+  
+  .form-card {
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  }
+  
+  .form-card .card-header {
+    background: linear-gradient(135deg, var(--primary-color), #1e4a8a);
+    color: white;
+    border: none;
+    padding: 1.5rem;
+  }
+  
+  .form-label {
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+  }
+  
+  .form-control, .form-select {
+    border-radius: 10px;
+    border: 2px solid #e9ecef;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+  }
+  
+  .form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+  }
+  
+  .btn-action {
+    padding: 0.75rem 2rem;
+    border-radius: 25px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  }
+  
+  .payment-method-card {
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+  }
+  
+  .payment-method-card:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  }
+  
+  .payment-method-card.selected {
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, rgba(44, 90, 160, 0.05), rgba(255, 107, 53, 0.05));
+  }
+  
+  .payment-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .step-indicator {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+  
+  .step {
+    display: flex;
+    align-items: center;
+    margin: 0 1rem;
+  }
+  
+  .step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e9ecef;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 0.5rem;
+  }
+  
+  .step.active .step-number {
+    background: var(--primary-color);
+    color: white;
+  }
+  
+  .step.completed .step-number {
+    background: #28a745;
+    color: white;
+  }
+  
+  .step-line {
+    width: 60px;
+    height: 2px;
+    background: #e9ecef;
+    margin: 0 0.5rem;
+  }
+  
+  .step.active .step-line {
+    background: var(--primary-color);
+  }
+  
+  .form-section {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-section h5 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+  }
+  
+  .alert {
+    border-radius: 10px;
+    border: none;
+  }
+  
+  .alert-danger {
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    color: #721c24;
+  }
+  
+  .alert-success {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    color: #155724;
+  }
+  
+  .amount-input {
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: center;
+  }
+  
+  .confirmation-details {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    border: 2px solid #e9ecef;
+  }
+  
+  .confirmation-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e9ecef;
+  }
+  
+  .confirmation-row:last-child {
+    border-bottom: none;
+    font-weight: bold;
+    font-size: 1.1rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <!-- Deposit Hero Section -->
+  <section class="deposit-hero">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <h1 class="display-5 fw-bold mb-2">
+            <i class="fas fa-wallet me-3"></i>{% trans "Make a Deposit" %}
+          </h1>
+          <p class="lead mb-0">{% trans "Recharge your wallet securely" %}</p>
+        </div>
+        <div class="col-md-4 text-end">
+          <a href="{% url 'wallets:wallet_detail' %}" class="btn btn-outline-light btn-action">
+            <i class="fas fa-arrow-left me-2"></i>{% trans "Back to Wallet" %}
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Deposit Form Section -->
+  <section class="py-5">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+          <div class="card form-card">
+            <div class="card-header text-center">
+              <h3 class="mb-0">
+                <i class="fas fa-credit-card me-2"></i>{% trans "Wallet Recharge" %}
+              </h3>
+            </div>
+            
+            <div class="card-body p-4">
+              <!-- Step Indicator -->
+              <div class="step-indicator">
+                <div class="step active" id="step1">
+                  <div class="step-number">1</div>
+                  <span>{% trans "Payment Method" %}</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step" id="step2">
+                  <div class="step-number">2</div>
+                  <span>{% trans "Details" %}</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step" id="step3">
+                  <div class="step-number">3</div>
+                  <span>{% trans "Confirm" %}</span>
+                </div>
+              </div>
+
+              <form method="post" id="depositForm">
+                {% csrf_token %}
+                
+                {% if form.errors %}
+                <div class="alert alert-danger">
+                  <i class="fas fa-exclamation-triangle me-2"></i>
+                  {% trans "Please correct the errors below." %}
+                </div>
+                {% endif %}
+                
+                <!-- Step 1: Payment Method Selection -->
+                <div id="step1-content" class="step-content">
+                  <div class="form-section">
+                    <h5>
+                      <i class="fas fa-mobile-alt me-2"></i>{% trans "Choose Payment Method" %}
+                    </h5>
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="payment-method-card" data-method="mobile">
+                          <div class="text-center">
+                            <div class="payment-icon text-primary">
+                              <i class="fas fa-mobile-alt"></i>
+                            </div>
+                            <h6>{% trans "Mobile Money" %}</h6>
+                            <p class="text-muted mb-0">{% trans "Pay with your mobile money account" %}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="payment-method-card" data-method="card">
+                          <div class="text-center">
+                            <div class="payment-icon text-success">
+                              <i class="fas fa-credit-card"></i>
+                            </div>
+                            <h6>{% trans "Credit/Debit Card" %}</h6>
+                            <p class="text-muted mb-0">{% trans "Pay with your bank card" %}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-primary btn-action" id="nextStep1" disabled>
+                      <i class="fas fa-arrow-right me-2"></i>{% trans "Continue" %}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Step 2: Payment Details -->
+                <div id="step2-content" class="step-content" style="display: none;">
+                  <div class="form-section">
+                    <h5>
+                      <i class="fas fa-info-circle me-2"></i>{% trans "Payment Details" %}
+                    </h5>
+                    
+                    <!-- Amount Section -->
+                    <div class="mb-4">
+                      <label for="amount" class="form-label">
+                        <i class="fas fa-coins me-1"></i>{% trans "Amount to Deposit" %}
+                      </label>
+                      <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input type="number" class="form-control amount-input" id="amount" name="amount" 
+                               placeholder="0.00" min="1" step="0.01" required>
+                      </div>
+                    </div>
+                    
+                    <!-- Mobile Money Details -->
+                    <div id="mobile-details" class="payment-details" style="display: none;">
+                      <div class="row">
+                        <div class="col-md-6 mb-3">
+                          <label for="mobile_operator" class="form-label">
+                            <i class="fas fa-sim-card me-1"></i>{% trans "Mobile Operator" %}
+                          </label>
+                          <select class="form-select" id="mobile_operator" name="mobile_operator">
+                            <option value="">{% trans "Select operator" %}</option>
+                            <option value="orange">Orange Money</option>
+                            <option value="mtn">MTN Mobile Money</option>
+                            <option value="moov">Moov Money</option>
+                            <option value="mtc">MTC Money</option>
+                          </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                          <label for="mobile_number" class="form-label">
+                            <i class="fas fa-phone me-1"></i>{% trans "Phone Number" %}
+                          </label>
+                          <input type="tel" class="form-control" id="mobile_number" name="mobile_number" 
+                                 placeholder="+1234567890">
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Card Details -->
+                    <div id="card-details" class="payment-details" style="display: none;">
+                      <div class="mb-3">
+                        <label for="card_number" class="form-label">
+                          <i class="fas fa-credit-card me-1"></i>{% trans "Card Number" %}
+                        </label>
+                        <input type="text" class="form-control" id="card_number" name="card_number" 
+                               placeholder="1234 5678 9012 3456" maxlength="19">
+                      </div>
+                      <div class="row">
+                        <div class="col-md-6 mb-3">
+                          <label for="card_expiry" class="form-label">
+                            <i class="fas fa-calendar me-1"></i>{% trans "Expiry Date" %}
+                          </label>
+                          <input type="text" class="form-control" id="card_expiry" name="card_expiry" 
+                                 placeholder="MM/YY" maxlength="5">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                          <label for="card_cvv" class="form-label">
+                            <i class="fas fa-lock me-1"></i>{% trans "CVV" %}
+                          </label>
+                          <input type="text" class="form-control" id="card_cvv" name="card_cvv" 
+                                 placeholder="123" maxlength="4">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-primary btn-action" id="nextStep2">
+                      <i class="fas fa-arrow-right me-2"></i>{% trans "Continue to Confirmation" %}
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-action" id="backStep1">
+                      <i class="fas fa-arrow-left me-2"></i>{% trans "Back" %}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Step 3: Confirmation -->
+                <div id="step3-content" class="step-content" style="display: none;">
+                  <div class="form-section">
+                    <h5>
+                      <i class="fas fa-check-circle me-2"></i>{% trans "Confirm Your Deposit" %}
+                    </h5>
+                    
+                    <div class="confirmation-details">
+                      <div class="confirmation-row">
+                        <span>{% trans "Payment Method:" %}</span>
+                        <span id="confirm-method"></span>
+                      </div>
+                      <div class="confirmation-row">
+                        <span>{% trans "Amount:" %}</span>
+                        <span id="confirm-amount"></span>
+                      </div>
+                      <div class="confirmation-row" id="confirm-details">
+                        <!-- Dynamic details based on payment method -->
+                      </div>
+                      <div class="confirmation-row">
+                        <span>{% trans "Processing Fee:" %}</span>
+                        <span id="confirm-fee">$0.00</span>
+                      </div>
+                      <div class="confirmation-row">
+                        <span>{% trans "Total:" %}</span>
+                        <span id="confirm-total"></span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-success btn-action">
+                      <i class="fas fa-check me-2"></i>{% trans "Confirm Deposit" %}
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-action" id="backStep2">
+                      <i class="fas fa-arrow-left me-2"></i>{% trans "Back" %}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let selectedPaymentMethod = '';
+  let currentStep = 1;
+
+  // Payment method selection
+  document.querySelectorAll('.payment-method-card').forEach(card => {
+    card.addEventListener('click', function() {
+      // Remove selection from all cards
+      document.querySelectorAll('.payment-method-card').forEach(c => c.classList.remove('selected'));
+      // Add selection to clicked card
+      this.classList.add('selected');
+      selectedPaymentMethod = this.dataset.method;
+      document.getElementById('nextStep1').disabled = false;
+    });
+  });
+
+  // Step navigation
+  document.getElementById('nextStep1').addEventListener('click', function() {
+    if (selectedPaymentMethod) {
+      showStep(2);
+      showPaymentDetails(selectedPaymentMethod);
+    }
+  });
+
+  document.getElementById('nextStep2').addEventListener('click', function() {
+    if (validateStep2()) {
+      showStep(3);
+      updateConfirmation();
+    }
+  });
+
+  document.getElementById('backStep1').addEventListener('click', function() {
+    showStep(1);
+  });
+
+  document.getElementById('backStep2').addEventListener('click', function() {
+    showStep(2);
+  });
+
+  function showStep(step) {
+    // Hide all step contents
+    document.querySelectorAll('.step-content').forEach(content => {
+      content.style.display = 'none';
+    });
+    
+    // Show selected step content
+    document.getElementById(`step${step}-content`).style.display = 'block';
+    
+    // Update step indicators
+    document.querySelectorAll('.step').forEach((stepEl, index) => {
+      stepEl.classList.remove('active', 'completed');
+      if (index + 1 < step) {
+        stepEl.classList.add('completed');
+      } else if (index + 1 === step) {
+        stepEl.classList.add('active');
+      }
+    });
+    
+    currentStep = step;
+  }
+
+  function showPaymentDetails(method) {
+    document.querySelectorAll('.payment-details').forEach(detail => {
+      detail.style.display = 'none';
+    });
+    
+    if (method === 'mobile') {
+      document.getElementById('mobile-details').style.display = 'block';
+    } else if (method === 'card') {
+      document.getElementById('card-details').style.display = 'block';
+    }
+  }
+
+  function validateStep2() {
+    const amount = document.getElementById('amount').value;
+    if (!amount || amount <= 0) {
+      alert('{% trans "Please enter a valid amount" %}');
+      return false;
+    }
+    
+    if (selectedPaymentMethod === 'mobile') {
+      const operator = document.getElementById('mobile_operator').value;
+      const number = document.getElementById('mobile_number').value;
+      if (!operator || !number) {
+        alert('{% trans "Please fill in all mobile money details" %}');
+        return false;
+      }
+    } else if (selectedPaymentMethod === 'card') {
+      const cardNumber = document.getElementById('card_number').value;
+      const expiry = document.getElementById('card_expiry').value;
+      const cvv = document.getElementById('card_cvv').value;
+      if (!cardNumber || !expiry || !cvv) {
+        alert('{% trans "Please fill in all card details" %}');
+        return false;
+      }
+    }
+    
+    return true;
+  }
+
+  function updateConfirmation() {
+    const amount = document.getElementById('amount').value;
+    const fee = 0.00; // You can calculate this based on your business logic
+    const total = parseFloat(amount) + fee;
+    
+    document.getElementById('confirm-method').textContent = 
+      selectedPaymentMethod === 'mobile' ? '{% trans "Mobile Money" %}' : '{% trans "Credit/Debit Card" %}';
+    document.getElementById('confirm-amount').textContent = `$${parseFloat(amount).toFixed(2)}`;
+    document.getElementById('confirm-fee').textContent = `$${fee.toFixed(2)}`;
+    document.getElementById('confirm-total').textContent = `$${total.toFixed(2)}`;
+    
+    // Update payment details
+    let detailsHtml = '';
+    if (selectedPaymentMethod === 'mobile') {
+      const operator = document.getElementById('mobile_operator').value;
+      const number = document.getElementById('mobile_number').value;
+      detailsHtml = `<span>{% trans "Operator:" %}</span><span>${operator}</span>`;
+      detailsHtml += `<div class="confirmation-row"><span>{% trans "Phone:" %}</span><span>${number}</span></div>`;
+    } else if (selectedPaymentMethod === 'card') {
+      const cardNumber = document.getElementById('card_number').value;
+      const last4 = cardNumber.slice(-4);
+      detailsHtml = `<span>{% trans "Card:" %}</span><span>**** **** **** ${last4}</span>`;
+    }
+    document.getElementById('confirm-details').innerHTML = detailsHtml;
+  }
+
+  // Card number formatting
+  document.getElementById('card_number').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\s/g, '').replace(/\D/g, '');
+    value = value.replace(/(\d{4})/g, '$1 ').trim();
+    e.target.value = value;
+  });
+
+  // Expiry date formatting
+  document.getElementById('card_expiry').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length >= 2) {
+      value = value.slice(0, 2) + '/' + value.slice(2, 4);
+    }
+    e.target.value = value;
+  });
+
+  // CVV formatting
+  document.getElementById('card_cvv').addEventListener('input', function(e) {
+    e.target.value = e.target.value.replace(/\D/g, '');
+  });
+</script>
+{% endblock %} 

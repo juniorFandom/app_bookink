@@ -1,0 +1,1059 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Véhicules" %}{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section mb-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="hero-content">
+                    <h1 class="display-4 fw-bold text-white mb-3 animate-fade-in">
+                        <i class="fas fa-car me-3 text-gradient"></i>
+                        {% if location %}
+                            {% translate "Véhicules de" %} {{ location.name }}
+                        {% else %}
+                            {% translate "Découvrez nos Véhicules" %}
+                        {% endif %}
+                    </h1>
+                    <p class="lead text-white-50 mb-4 animate-fade-in-delay">
+                        {% if location %}
+                            {% translate "Trouvez le véhicule parfait pour vos déplacements" %}
+                        {% else %}
+                            {% translate "Location de véhicules pour tous vos besoins de transport" %}
+                        {% endif %}
+                    </p>
+                    <div class="hero-stats animate-fade-in-delay-2">
+                        <div class="stat-item">
+                            <i class="fas fa-car"></i>
+                            <span class="stat-number">{{ vehicles|length }}</span>
+                            <span class="stat-label">{% translate "Véhicules" %}</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-star"></i>
+                            <span class="stat-number">4.9</span>
+                            <span class="stat-label">{% translate "Note" %}</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span class="stat-number">{{ business_locations|length|default:"1" }}</span>
+                            <span class="stat-label">{% translate "Établissements" %}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 text-end">
+                <div class="hero-actions animate-fade-in-delay-3">
+                    {% if user.is_staff %}
+                    <a href="{% url 'vehicles:vehicle_create' %}" class="btn btn-gradient-primary btn-lg">
+                        <i class="fas fa-plus me-2"></i>{% translate "Ajouter un véhicule" %}
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="hero-overlay"></div>
+</div>
+
+<!-- Back to Dashboard Button -->
+{% if location %}
+<div class="container mb-4">
+    <a href="{% url 'business:business_location_dashboard' location.pk %}" class="btn btn-gradient-secondary">
+        <i class="fas fa-arrow-left me-2"></i> {% translate "Retour au dashboard" %}
+    </a>
+</div>
+{% endif %}
+
+<!-- Quick Search Bar -->
+<div class="container mb-5">
+    <div class="quick-search-card">
+        <div class="search-form">
+            <form method="get" class="row g-3 align-items-end">
+                <!-- Pickup Date -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="form-floating">
+                        <input type="date" name="pickup_date" id="pickup_date" 
+                               class="form-control" 
+                               value="{{ request.GET.pickup_date|default:'' }}">
+                        <label for="pickup_date">
+                            <i class="fas fa-calendar-check me-2"></i>{% translate "Date de départ" %}
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Return Date -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="form-floating">
+                        <input type="date" name="return_date" id="return_date" 
+                               class="form-control" 
+                               value="{{ request.GET.return_date|default:'' }}">
+                        <label for="return_date">
+                            <i class="fas fa-calendar-times me-2"></i>{% translate "Date de retour" %}
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Vehicle Category -->
+                <div class="col-lg-2 col-md-6">
+                    <div class="form-floating">
+                        <select name="category" id="category" class="form-select">
+                            <option value="">{% translate "Toutes" %}</option>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <label for="category">
+                            <i class="fas fa-car me-2"></i>{% translate "Catégorie" %}
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Search Button -->
+                <div class="col-lg-2">
+                    <button type="submit" class="btn btn-gradient-primary w-100 h-100">
+                        <i class="fas fa-search me-2"></i>{% translate "Rechercher" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Filters Toggle -->
+<div class="container mb-5">
+    <div class="text-center">
+        <button class="btn btn-outline-primary btn-lg rounded-pill" type="button" data-bs-toggle="collapse" data-bs-target="#advancedFilters" aria-expanded="false">
+            <i class="fas fa-sliders-h me-2"></i>{% translate "Filtres Avancés" %}
+            <i class="fas fa-chevron-down ms-2 filter-toggle-icon"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Advanced Filters Section -->
+<div class="container mb-5">
+    <div class="collapse" id="advancedFilters">
+        <div class="advanced-filters-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-filter me-2"></i>{% translate "Filtres Avancés" %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-4">
+                    <!-- Price Range Slider -->
+                    <div class="col-lg-6">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-money-bill-wave me-2 text-success"></i>{% translate "Prix par Jour" %}
+                        </label>
+                        <div class="price-slider-container">
+                            <div class="price-range">
+                                <span class="price-min">0 FCFA</span>
+                                <span class="price-max">100,000+ FCFA</span>
+                            </div>
+                            <input type="range" class="form-range" id="price_min" name="price_min" min="0" max="100000" step="1000" value="{{ request.GET.price_min|default:'0' }}">
+                            <input type="range" class="form-range" id="price_max" name="price_max" min="0" max="100000" step="1000" value="{{ request.GET.price_max|default:'100000' }}">
+                        </div>
+                    </div>
+
+                    <!-- Passenger Capacity Filter -->
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-users me-2 text-info"></i>{% translate "Capacité" %}
+                        </label>
+                        <div class="capacity-buttons">
+                            <input type="radio" class="btn-check" name="capacity" id="capacity_all" value="" {% if not request.GET.capacity %}checked{% endif %}>
+                            <label class="btn btn-outline-primary" for="capacity_all">{% translate "Tous" %}</label>
+                            
+                            <input type="radio" class="btn-check" name="capacity" id="capacity_2" value="2" {% if request.GET.capacity == "2" %}checked{% endif %}>
+                            <label class="btn btn-outline-primary" for="capacity_2">2</label>
+                            
+                            <input type="radio" class="btn-check" name="capacity" id="capacity_4" value="4" {% if request.GET.capacity == "4" %}checked{% endif %}>
+                            <label class="btn btn-outline-primary" for="capacity_4">4</label>
+                            
+                            <input type="radio" class="btn-check" name="capacity" id="capacity_6" value="6" {% if request.GET.capacity == "6" %}checked{% endif %}>
+                            <label class="btn btn-outline-primary" for="capacity_6">6+</label>
+                        </div>
+                    </div>
+
+                    <!-- Transmission Filter -->
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-cog me-2 text-warning"></i>{% translate "Transmission" %}
+                        </label>
+                        <select name="transmission" id="transmission" class="form-select">
+                            <option value="">{% translate "Toutes" %}</option>
+                            <option value="MANUAL" {% if request.GET.transmission == "MANUAL" %}selected{% endif %}>{% translate "Manuelle" %}</option>
+                            <option value="AUTOMATIC" {% if request.GET.transmission == "AUTOMATIC" %}selected{% endif %}>{% translate "Automatique" %}</option>
+                        </select>
+                    </div>
+
+                    <!-- Sort Filter -->
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-sort me-2 text-warning"></i>{% translate "Trier par" %}
+                        </label>
+                        <select name="sort" id="sort" class="form-select">
+                            <option value="name" {% if request.GET.sort == "name" %}selected{% endif %}>{% translate "Nom" %}</option>
+                            <option value="price" {% if request.GET.sort == "price" %}selected{% endif %}>{% translate "Prix" %}</option>
+                            <option value="year" {% if request.GET.sort == "year" %}selected{% endif %}>{% translate "Année" %}</option>
+                            <option value="capacity" {% if request.GET.sort == "capacity" %}selected{% endif %}>{% translate "Capacité" %}</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter Buttons -->
+                    <div class="col-12">
+                        <div class="d-flex gap-3 flex-wrap">
+                            <button type="submit" class="btn btn-gradient-primary btn-lg">
+                                <i class="fas fa-search me-2"></i>{% translate "Appliquer les filtres" %}
+                            </button>
+                            <a href="{% url 'vehicles:vehicle_list' %}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-times me-2"></i>{% translate "Effacer" %}
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Header -->
+<div class="container mb-4">
+    <div class="results-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="results-info">
+                <h4 class="mb-0">
+                    <i class="fas fa-list me-2"></i>{% translate "Résultats" %}
+                </h4>
+                <p class="text-muted mb-0">{{ vehicles|length }} {% translate "véhicule(s) trouvé(s)" %}</p>
+            </div>
+            <div class="view-options">
+                <div class="btn-group" role="group">
+                    <input type="radio" class="btn-check" name="viewMode" id="gridView" checked>
+                    <label class="btn btn-outline-primary" for="gridView">
+                        <i class="fas fa-th"></i>
+                    </label>
+                    <input type="radio" class="btn-check" name="viewMode" id="listView">
+                    <label class="btn btn-outline-primary" for="listView">
+                        <i class="fas fa-list"></i>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Vehicle Grid -->
+<div class="container">
+    <div class="row g-4" id="vehiclesGrid">
+        {% for vehicle in vehicles %}
+            <div class="col-lg-4 col-md-6 vehicle-item" data-vehicle-id="{{ vehicle.id }}">
+                <div class="vehicle-card">
+                    <!-- Vehicle Image -->
+                    <div class="vehicle-image-container">
+                        {% if vehicle.main_image %}
+                            <img src="{{ vehicle.main_image.url }}" class="vehicle-image" alt="{{ vehicle }}" loading="lazy">
+                        {% else %}
+                            <img src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" class="vehicle-image" alt="{{ vehicle }}" loading="lazy">
+                        {% endif %}
+                        
+                        <!-- Image Overlay -->
+                        <div class="image-overlay">
+                            <div class="overlay-content">
+                                <a href="{% url 'vehicles:vehicle_detail' vehicle.pk %}" class="btn btn-light btn-sm">
+                                    <i class="fas fa-eye me-1"></i>{% translate "Voir" %}
+                                </a>
+                                {% if vehicle.is_available %}
+                                    <a href="{% url 'vehicles:booking_create' vehicle.pk %}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-calendar-plus me-1"></i>{% translate "Réserver" %}
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Status Badge -->
+                        <div class="status-badge">
+                            {% if vehicle.is_available %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i>{% translate "Disponible" %}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times-circle me-1"></i>{% translate "Indisponible" %}
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Price Badge -->
+                        <div class="price-badge">
+                            <span class="price-amount">{{ vehicle.daily_rate|floatformat:0 }}</span>
+                            <span class="price-currency">{% translate "FCFA" %}</span>
+                        </div>
+                    </div>
+
+                    <!-- Card Content -->
+                    <div class="card-content">
+                        <div class="vehicle-header">
+                            <h5 class="vehicle-title">{{ vehicle.make }} {{ vehicle.model }}</h5>
+                            <span class="vehicle-year">{{ vehicle.year }}</span>
+                        </div>
+
+                        <div class="vehicle-location">
+                            <i class="fas fa-building text-primary me-2"></i>
+                            <span>{{ vehicle.business_location.name }}</span>
+                        </div>
+
+                        <div class="vehicle-features">
+                            <div class="feature-item">
+                                <i class="fas fa-users text-info"></i>
+                                <span>{% translate "Max" %} {{ vehicle.passenger_capacity }} {% translate "personnes" %}</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-cog text-warning"></i>
+                                <span>{{ vehicle.get_transmission_display }}</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-gas-pump text-success"></i>
+                                <span>{{ vehicle.get_fuel_type_display }}</span>
+                            </div>
+                        </div>
+
+                        <p class="vehicle-description">{{ vehicle.description|truncatewords:15|default:_("Aucune description disponible") }}</p>
+
+                        <!-- Card Actions -->
+                        <div class="card-actions">
+                            <a href="{% url 'vehicles:vehicle_detail' vehicle.pk %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye me-1"></i>{% translate "Détails" %}
+                            </a>
+                            {% if vehicle.is_available %}
+                                <a href="{% url 'vehicles:booking_create' vehicle.pk %}" class="btn btn-gradient-primary btn-sm">
+                                    <i class="fas fa-calendar-plus me-1"></i>{% translate "Réserver" %}
+                                </a>
+                            {% else %}
+                                <button class="btn btn-secondary btn-sm" disabled>
+                                    <i class="fas fa-times me-1"></i>{% translate "Indisponible" %}
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-car"></i>
+                    </div>
+                    <h4>{% translate "Aucun véhicule trouvé" %}</h4>
+                    <p>{% translate "Aucun véhicule ne correspond à vos critères de recherche." %}</p>
+                    <a href="{% url 'vehicles:vehicle_list' %}" class="btn btn-gradient-primary">
+                        <i class="fas fa-refresh me-2"></i>{% translate "Effacer les filtres" %}
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<div class="container mt-5">
+    <nav aria-label="{% translate 'Navigation des véhicules' %}" class="pagination-container">
+        <ul class="pagination pagination-lg">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            {{ num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Modern Design Variables */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        --danger-gradient: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        --border-radius: 1rem;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.15);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Hero Section */
+    .hero-section {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%), 
+                url('https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80') center/cover no-repeat;
+        color: white;
+        padding: 6rem 0;
+        border-radius: 0 0 3rem 3rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.1);
+        z-index: 1;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .text-gradient {
+        background: linear-gradient(45deg, #fff, #f0f0f0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .hero-stats {
+        display: flex;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .stat-item {
+        text-align: center;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        border-radius: var(--border-radius);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .stat-number {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        opacity: 0.8;
+    }
+
+    /* Back to Dashboard Button */
+    .btn-gradient-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        border: none;
+        color: white;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+
+    .btn-gradient-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(108, 117, 125, 0.4);
+        color: white;
+    }
+
+    /* Quick Search Card */
+    .quick-search-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        padding: 2rem;
+        margin-top: -3rem;
+        position: relative;
+        z-index: 10;
+    }
+
+    .search-form .form-floating {
+        margin-bottom: 0;
+    }
+
+    .search-form .form-control,
+    .search-form .form-select {
+        border: 2px solid #e9ecef;
+        border-radius: 0.75rem;
+        transition: var(--transition);
+    }
+
+    .search-form .form-control:focus,
+    .search-form .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+
+    /* Advanced Filters */
+    .advanced-filters-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+    }
+
+    .advanced-filters-card .card-header {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 1.5rem;
+        border: none;
+    }
+
+    .advanced-filters-card .card-body {
+        padding: 2rem;
+    }
+
+    .filter-toggle-icon {
+        transition: var(--transition);
+    }
+
+    .btn[aria-expanded="true"] .filter-toggle-icon {
+        transform: rotate(180deg);
+    }
+
+    /* Price Slider */
+    .price-slider-container {
+        padding: 1rem 0;
+    }
+
+    .price-range {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .form-range {
+        height: 6px;
+        border-radius: 3px;
+        background: #e9ecef;
+    }
+
+    .form-range::-webkit-slider-thumb {
+        background: var(--primary-gradient);
+        border: none;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
+
+    /* Capacity Buttons */
+    .capacity-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .capacity-buttons .btn {
+        border-radius: 0.5rem;
+        padding: 0.5rem 1rem;
+    }
+
+    /* Results Header */
+    .results-header {
+        background: white;
+        padding: 1.5rem;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        margin-bottom: 2rem;
+    }
+
+    /* Vehicle Cards */
+    .vehicle-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        transition: var(--transition);
+        height: 100%;
+        position: relative;
+    }
+
+    .vehicle-card:hover {
+        transform: translateY(-10px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .vehicle-image-container {
+        position: relative;
+        overflow: hidden;
+        height: 250px;
+    }
+
+    .vehicle-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: var(--transition);
+    }
+
+    .vehicle-card:hover .vehicle-image {
+        transform: scale(1.1);
+    }
+
+    .image-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: var(--transition);
+    }
+
+    .vehicle-card:hover .image-overlay {
+        opacity: 1;
+    }
+
+    .overlay-content {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .status-badge {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        z-index: 2;
+    }
+
+    .price-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        z-index: 2;
+    }
+
+    .price-amount {
+        font-size: 1.25rem;
+        font-weight: bold;
+    }
+
+    .price-currency {
+        font-size: 0.875rem;
+        opacity: 0.8;
+    }
+
+    .card-content {
+        padding: 1.5rem;
+    }
+
+    .vehicle-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .vehicle-title {
+        font-size: 1.25rem;
+        font-weight: bold;
+        color: #2c3e50;
+        margin: 0;
+    }
+
+    .vehicle-year {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .vehicle-location {
+        color: #6c757d;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .vehicle-features {
+        margin-bottom: 1rem;
+    }
+
+    .feature-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+
+    .feature-item i {
+        width: 20px;
+        margin-right: 0.5rem;
+    }
+
+    .vehicle-description {
+        color: #6c757d;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        margin-bottom: 1rem;
+    }
+
+    .card-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: space-between;
+    }
+
+    /* Buttons */
+    .btn-gradient-primary {
+        background: var(--primary-gradient);
+        border: none;
+        color: white;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+
+    .btn-gradient-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .btn-outline-primary {
+        border: 2px solid #667eea;
+        color: #667eea;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+
+    .btn-outline-primary:hover {
+        background: #667eea;
+        border-color: #667eea;
+        transform: translateY(-2px);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: #f8f9fa;
+        border-radius: var(--border-radius);
+        border: 2px dashed #dee2e6;
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        color: #6c757d;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    /* Pagination */
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+    }
+
+    .pagination-lg .page-link {
+        padding: 0.75rem 1rem;
+        font-size: 1.1rem;
+        border-radius: 0.5rem;
+        margin: 0 0.25rem;
+        border: none;
+        background: white;
+        color: #6c757d;
+        box-shadow: var(--shadow);
+        transition: var(--transition);
+    }
+
+    .pagination-lg .page-link:hover {
+        background: var(--primary-gradient);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .pagination-lg .page-item.active .page-link {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-in {
+        animation: fadeInUp 0.8s ease forwards;
+    }
+
+    .animate-fade-in-delay {
+        animation: fadeInUp 0.8s ease 0.2s forwards;
+        opacity: 0;
+    }
+
+    .animate-fade-in-delay-2 {
+        animation: fadeInUp 0.8s ease 0.4s forwards;
+        opacity: 0;
+    }
+
+    .animate-fade-in-delay-3 {
+        animation: fadeInUp 0.8s ease 0.6s forwards;
+        opacity: 0;
+    }
+
+    .vehicle-item {
+        animation: fadeInUp 0.6s ease forwards;
+    }
+
+    .vehicle-item:nth-child(1) { animation-delay: 0.1s; }
+    .vehicle-item:nth-child(2) { animation-delay: 0.2s; }
+    .vehicle-item:nth-child(3) { animation-delay: 0.3s; }
+    .vehicle-item:nth-child(4) { animation-delay: 0.4s; }
+    .vehicle-item:nth-child(5) { animation-delay: 0.5s; }
+    .vehicle-item:nth-child(6) { animation-delay: 0.6s; }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .hero-section {
+            padding: 3rem 0;
+            border-radius: 0 0 2rem 2rem;
+        }
+        
+        .hero-stats {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .quick-search-card {
+            margin-top: -2rem;
+            padding: 1.5rem;
+        }
+        
+        .capacity-buttons {
+            justify-content: center;
+        }
+        
+        .card-actions {
+            flex-direction: column;
+        }
+        
+        .vehicle-image-container {
+            height: 200px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .hero-section h1 {
+            font-size: 2rem;
+        }
+        
+        .quick-search-card {
+            margin-top: -1rem;
+            padding: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Price range slider functionality
+    const priceMinSlider = document.getElementById('price_min');
+    const priceMaxSlider = document.getElementById('price_max');
+    
+    if (priceMinSlider && priceMaxSlider) {
+        priceMinSlider.addEventListener('input', function() {
+            const minValue = parseInt(this.value);
+            const maxValue = parseInt(priceMaxSlider.value);
+            
+            if (minValue > maxValue) {
+                priceMaxSlider.value = minValue;
+            }
+            
+            updatePriceDisplay();
+        });
+        
+        priceMaxSlider.addEventListener('input', function() {
+            const maxValue = parseInt(this.value);
+            const minValue = parseInt(priceMinSlider.value);
+            
+            if (maxValue < minValue) {
+                priceMinSlider.value = maxValue;
+            }
+            
+            updatePriceDisplay();
+        });
+        
+        function updatePriceDisplay() {
+            const minValue = parseInt(priceMinSlider.value);
+            const maxValue = parseInt(priceMaxSlider.value);
+            
+            const priceMin = document.querySelector('.price-min');
+            const priceMax = document.querySelector('.price-max');
+            
+            if (priceMin) priceMin.textContent = minValue.toLocaleString() + ' FCFA';
+            if (priceMax) priceMax.textContent = maxValue.toLocaleString() + ' FCFA';
+        }
+        
+        updatePriceDisplay();
+    }
+
+    // View mode toggle
+    const gridView = document.getElementById('gridView');
+    const listView = document.getElementById('listView');
+    const vehiclesGrid = document.getElementById('vehiclesGrid');
+    
+    if (gridView && listView && vehiclesGrid) {
+        gridView.addEventListener('change', function() {
+            if (this.checked) {
+                vehiclesGrid.classList.remove('list-view');
+                vehiclesGrid.classList.add('grid-view');
+            }
+        });
+        
+        listView.addEventListener('change', function() {
+            if (this.checked) {
+                vehiclesGrid.classList.remove('grid-view');
+                vehiclesGrid.classList.add('list-view');
+            }
+        });
+    }
+
+    // Add hover effects for vehicle cards
+    document.querySelectorAll('.vehicle-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-10px) scale(1.02)';
+        });
+
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+
+    // Add click effects for buttons
+    document.querySelectorAll('.btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            // Create ripple effect
+            const ripple = document.createElement('span');
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+            
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            ripple.classList.add('ripple');
+            
+            this.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    });
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+});
+
+// Add ripple effect CSS
+const style = document.createElement('style');
+style.textContent = `
+    .btn {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .ripple {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.6);
+        transform: scale(0);
+        animation: ripple-animation 0.6s linear;
+        pointer-events: none;
+    }
+    
+    @keyframes ripple-animation {
+        to {
+            transform: scale(4);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %} 

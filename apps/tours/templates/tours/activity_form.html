@@ -1,0 +1,184 @@
+{% extends "tours/base.html" %}
+{% load i18n %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block tour_content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-gradient bg-primary text-white rounded-top-4 d-flex align-items-center justify-content-between">
+                    <div>
+                        <h4 class="mb-0"><i class="fas fa-hiking me-2"></i>{% if title %}{{ title }}{% else %}{% translate "Nouvelle activité" %}{% endif %}</h4>
+                        {% if tour %}<span class="badge bg-light text-primary">Tour : {{ tour.name }}</span>{% endif %}
+                    </div>
+                </div>
+                <div class="card-body bg-light-subtle">
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger mb-4">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
+                    <form method="post" enctype="multipart/form-data" autocomplete="off">
+                        {% csrf_token %}
+                        <div class="row g-4">
+                            <!-- Infos de base -->
+                            <div class="col-md-6">
+                                <h6 class="mb-3 text-primary"><i class="fas fa-info-circle me-2"></i>{% translate "Informations de base" %}</h6>
+                                <div class="mb-3">
+                                    <label for="{{ form.name.id_for_label }}" class="form-label fw-semibold">
+                                        <i class="fas fa-signature me-1"></i>{% translate "Nom de l'activité" %} *
+                                    </label>
+                                    {{ form.name|add_class:'form-control form-control-lg' }}
+                                    {% if form.name.errors %}<div class="badge bg-danger-subtle text-danger mt-1">{{ form.name.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ form.day_number.id_for_label }}" class="form-label fw-semibold">
+                                        <i class="fas fa-calendar-day me-1"></i>{% translate "Jour du tour" %} *
+                                    </label>
+                                    {{ form.day_number|add_class:'form-control' }}
+                                    {% if form.day_number.errors %}<div class="badge bg-danger-subtle text-danger mt-1">{{ form.day_number.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ form.duration.id_for_label }}" class="form-label fw-semibold">
+                                        <i class="fas fa-hourglass-half me-1"></i>{% translate "Durée" %} *
+                                    </label>
+                                    {{ form.duration|add_class:'form-control' }}
+                                    {% if form.duration.errors %}<div class="badge bg-danger-subtle text-danger mt-1">{{ form.duration.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ form.difficulty.id_for_label }}" class="form-label fw-semibold">
+                                        <i class="fas fa-mountain me-1"></i>{% translate "Niveau de difficulté" %} *
+                                    </label>
+                                    {{ form.difficulty|add_class:'form-select' }}
+                                    {% if form.difficulty.errors %}<div class="badge bg-danger-subtle text-danger mt-1">{{ form.difficulty.errors.0 }}</div>{% endif %}
+                                </div>
+                            </div>
+                            <!-- Participants et prix -->
+                            <div class="col-md-6">
+                                <h6 class="mb-3 text-primary"><i class="fas fa-users me-2"></i>{% translate "Participants et prix" %}</h6>
+                                <div class="mb-3">
+                                    <label for="{{ form.min_participants.id_for_label }}" class="form-label fw-semibold">
+                                        <i class="fas fa-user-plus me-1"></i>{% translate "Participants minimum" %} *
+                                    </label>
+                                    {{ form.min_participants|add_class:'form-control' }}
+                                    {% if form.min_participants.errors %}<div class="badge bg-danger-subtle text-danger mt-1">{{ form.min_participants.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ form.max_participants.id_for_label }}" class="form-label fw-semibold">
+                                        <i class="fas fa-user-friends me-1"></i>{% translate "Participants maximum" %} *
+                                    </label>
+                                    {{ form.max_participants|add_class:'form-control' }}
+                                    {% if form.max_participants.errors %}<div class="badge bg-danger-subtle text-danger mt-1">{{ form.max_participants.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ form.price.id_for_label }}" class="form-label fw-semibold">
+                                        <i class="fas fa-money-bill-wave me-1"></i>{% translate "Prix par personne (XAF)" %} *
+                                    </label>
+                                    {{ form.price|add_class:'form-control' }}
+                                    {% if form.price.errors %}<div class="badge bg-danger-subtle text-danger mt-1">{{ form.price.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ form.additional_price.id_for_label }}" class="form-label fw-semibold">
+                                        <i class="fas fa-plus-circle me-1"></i>{% translate "Prix supplémentaire (XAF)" %}
+                                    </label>
+                                    {{ form.additional_price|add_class:'form-control' }}
+                                    {% if form.additional_price.errors %}<div class="badge bg-danger-subtle text-danger mt-1">{{ form.additional_price.errors.0 }}</div>{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <hr class="my-4">
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label fw-semibold">
+                                <i class="fas fa-align-left me-1"></i>{% translate "Description" %} *
+                            </label>
+                            {{ form.description|add_class:'form-control' }}
+                            {% if form.description.errors %}<div class="badge bg-danger-subtle text-danger mt-1">{{ form.description.errors.0 }}</div>{% endif %}
+                        </div>
+                        <!-- Exigences -->
+                        <div class="mb-3">
+                            <label for="{{ form.requirements.id_for_label }}" class="form-label fw-semibold">
+                                <i class="fas fa-list-check me-1"></i>{% translate "Exigences" %}
+                            </label>
+                            {{ form.requirements|add_class:'form-control' }}
+                            <div class="form-text">{% translate "Liste des exigences pour les participants (une par ligne)" %}</div>
+                            {% if form.requirements.errors %}<div class="badge bg-danger-subtle text-danger mt-1">{{ form.requirements.errors.0 }}</div>{% endif %}
+                        </div>
+                        <!-- Inclus/Non inclus -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.included.id_for_label }}" class="form-label fw-semibold">
+                                        <i class="fas fa-check-circle me-1"></i>{% translate "Inclus" %}
+                                    </label>
+                                    {{ form.included|add_class:'form-control' }}
+                                    <div class="form-text">{% translate "Services/items inclus (une par ligne)" %}</div>
+                                    {% if form.included.errors %}<div class="badge bg-danger-subtle text-danger mt-1">{{ form.included.errors.0 }}</div>{% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.not_included.id_for_label }}" class="form-label fw-semibold">
+                                        <i class="fas fa-times-circle me-1"></i>{% translate "Non inclus" %}
+                                    </label>
+                                    {{ form.not_included|add_class:'form-control' }}
+                                    <div class="form-text">{% translate "Services/items non inclus (une par ligne)" %}</div>
+                                    {% if form.not_included.errors %}<div class="badge bg-danger-subtle text-danger mt-1">{{ form.not_included.errors.0 }}</div>{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <hr class="my-4">
+                        <!-- Image principale -->
+                        <div class="mb-3">
+                            <label for="{{ form.main_image.id_for_label }}" class="form-label fw-semibold">
+                                <i class="fas fa-image me-1"></i>{% translate "Image principale" %} *
+                            </label>
+                            {{ form.main_image|add_class:'form-control' }}
+                            {% if form.main_image.errors %}<div class="badge bg-danger-subtle text-danger mt-1">{{ form.main_image.errors.0 }}</div>{% endif %}
+                        </div>
+                        <!-- Options -->
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-check mb-3">
+                                    {{ form.is_optional|add_class:'form-check-input' }}
+                                    <label class="form-check-label" for="{{ form.is_optional.id_for_label }}">
+                                        <i class="fas fa-question-circle me-1"></i>{% translate "Activité optionnelle" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check mb-3">
+                                    {{ form.is_active|add_class:'form-check-input' }}
+                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                        <i class="fas fa-toggle-on me-1"></i>{% translate "Activité active" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check mb-3">
+                                    {{ form.is_featured|add_class:'form-check-input' }}
+                                    <label class="form-check-label" for="{{ form.is_featured.id_for_label }}">
+                                        <i class="fas fa-star me-1"></i>{% translate "Activité en vedette" %}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <a href="{% url 'tours:tour_detail' tour.slug %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> {% translate "Retour au tour" %}
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold shadow-sm">
+                                <span class="spinner-border spinner-border-sm d-none" id="formSpinner"></span>
+                                <i class="fas fa-save me-2"></i>{% translate "Enregistrer l'activité" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

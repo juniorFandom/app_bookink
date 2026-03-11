@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Carte des Sites Touristiques{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    .map-container {
+        height: 80vh;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .map-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+
+    .site-popup {
+        max-width: 300px;
+    }
+
+    .site-popup img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+
+    .nearby-businesses {
+        border-top: 1px solid #e9ecef;
+        padding-top: 10px;
+    }
+
+    .business-item {
+        background-color: #f8f9fa;
+        transition: all 0.2s ease;
+    }
+
+    .business-item:hover {
+        background-color: #e9ecef;
+        transform: translateY(-1px);
+    }
+
+    .business-list {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .controls-panel {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+
+    .legend {
+        background: white;
+        border-radius: 10px;
+        padding: 1rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1000;
+        min-width: 200px;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .legend-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        margin-right: 10px;
+    }
+
+    .back-btn {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+    }
+
+    .back-btn:hover {
+        transform: translateX(-5px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête de la carte -->
+    <div class="map-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-3">
+                        <i class="fas fa-map me-2"></i>
+                        Carte des Sites Touristiques
+                    </h1>
+                    <p class="mb-0">Explorez les sites touristiques sur une carte interactive</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="{% url 'tourist_sites:sites_list' %}" class="btn back-btn">
+                        <i class="fas fa-list me-2"></i>
+                        Vue liste
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Panneau de contrôle -->
+        <div class="controls-panel">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h5 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>
+                        Filtres
+                    </h5>
+                </div>
+                <div class="col-md-6 text-end">
+                    <span class="text-muted">
+                        <i class="fas fa-map-marker-alt me-1"></i>
+                        {{ sites.count }} site{{ sites.count|pluralize }} affiché{{ sites.count|pluralize }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Carte interactive -->
+        <div class="position-relative">
+            <div id="map" class="map-container"></div>
+
+            <!-- Légende -->
+            <div class="legend">
+                <h6 class="mb-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Légende
+                </h6>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #ff6b6b;"></div>
+                    <span>Sites actifs</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #667eea;"></div>
+                    <span>Catégorie sélectionnée</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    // Initialiser la carte
+    var map = L.map('map').setView([7.3697, 12.3547], 6); // Centre sur le Cameroun
+
+    // Ajouter la couche de tuiles OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Couleurs pour les marqueurs
+    var colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff', '#5f27cd'];
+
+    // Récupérer les données des sites
+    fetch('{% url "tourist_sites:sites_api" %}')
+        .then(response => response.json())
+        .then(data => {
+            data.sites.forEach((site, index) => {
+                // Créer le contenu du popup
+                var popupContent = `
+                <div class="site-popup">
+                    <h5>${site.name}</h5>
+                    <p class="text-muted">${site.description}</p>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-map-marker-alt me-1"></i>
+                            ${site.latitude.toFixed(4)}, ${site.longitude.toFixed(4)}
+                        </small>
+                        <a href="/tourist-sites/${site.id}/" class="btn btn-sm btn-primary">
+                            <i class="fas fa-eye me-1"></i>
+                            Détails
+                        </a>
+                    </div>
+                    ${site.nearby_businesses && site.nearby_businesses.length > 0 ? `
+                    <div class="nearby-businesses mt-3">
+                        <h6 class="mb-2">
+                            <i class="fas fa-building me-1"></i>
+                            Établissements à proximité
+                        </h6>
+                        <div class="business-list">
+                            ${site.nearby_businesses.map(business => `
+                                <div class="business-item mb-2 p-2 border rounded">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1" style="font-size: 0.9rem; color: #28a745;">${business.name}</h6>
+                                            <p class="mb-1" style="font-size: 0.8rem; color: #6c757d;">${business.type}</p>
+                                            <small class="text-muted">
+                                                <i class="fas fa-ruler me-1"></i>
+                                                ${business.distance} km
+                                            </small>
+                                        </div>
+                                        <a href="/business/${business.business_id}/" class="btn btn-sm btn-outline-success ms-2">
+                                            <i class="fas fa-external-link-alt"></i> Réserver
+                                        </a>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+
+                // Créer le marqueur
+                var marker = L.marker([site.latitude, site.longitude])
+                    .bindPopup(popupContent)
+                    .addTo(map);
+
+                // Ajouter un effet de survol
+                marker.on('mouseover', function () {
+                    this.openPopup();
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des sites:', error);
+        });
+
+    // Fonction pour centrer la carte sur un site spécifique
+    function centerOnSite(lat, lng) {
+        map.setView([lat, lng], 15);
+    }
+
+    // Fonction pour filtrer les sites par catégorie
+    function filterSitesByCategory(categoryId) {
+        // Implémentation du filtrage côté client
+        // Pour l'instant, on recharge la page avec le paramètre
+        window.location.href = `{% url 'tourist_sites:sites_list' %}?category=${categoryId}`;
+    }
+</script>
+{% endblock %}

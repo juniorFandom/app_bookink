@@ -1,0 +1,155 @@
+{% extends "vehicles/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "Payment" %} - {{ booking.booking_reference }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="h5 mb-0">
+                        <i class="fas fa-money-bill-wave me-2"></i>
+                        {% trans "Payment for Booking" %} {{ booking.booking_reference }}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5 class="text-muted">{% trans "Vehicle" %}</h5>
+                            <p>{{ booking.vehicle }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="text-muted">{% trans "Booking Period" %}</h5>
+                            <p>
+                                {{ booking.pickup_datetime|date:"d/m/Y H:i" }} - 
+                                {{ booking.return_datetime|date:"d/m/Y H:i" }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5 class="text-muted">{% trans "Total Amount" %}</h5>
+                            <p class="h4 text-primary">{{ booking.total_amount }} XAF</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="text-muted">{% trans "Amount Paid" %}</h5>
+                            <p class="h4 text-success">{{ booking.amount_paid }} XAF</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="text-muted">{% trans "Balance Due" %}</h5>
+                            <p class="h3 text-warning">{{ booking.balance_due }} XAF</p>
+                        </div>
+                    </div>
+
+                    {% if booking.balance_due > 0 %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">
+                                {% trans "Payment Amount (XAF)" %}
+                            </label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="amount" 
+                                   name="amount" 
+                                   min="0" 
+                                   max="{{ booking.balance_due }}" 
+                                   step="0.01"
+                                   value="{{ booking.balance_due }}"
+                                   required>
+                            <div class="form-text">
+                                {% trans "Maximum amount you can pay:" %} {{ booking.balance_due }} XAF
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-credit-card me-2"></i>
+                            {% trans "Process Payment" %}
+                        </button>
+                    </form>
+                    {% else %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        {% trans "This booking is fully paid!" %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="h5 mb-0">{% trans "Payment Summary" %}</h3>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <td>{% trans "Daily Rate" %}</td>
+                            <td class="text-end">{{ booking.daily_rate }} XAF</td>
+                        </tr>
+                        <tr>
+                            <td>{% trans "Total Days" %}</td>
+                            <td class="text-end">{{ booking.total_days }}</td>
+                        </tr>
+                        <tr>
+                            <td>{% trans "Subtotal" %}</td>
+                            <td class="text-end">{{ booking.subtotal }} XAF</td>
+                        </tr>
+                        {% if booking.driver_fee %}
+                        <tr>
+                            <td>{% trans "Driver Fee" %}</td>
+                            <td class="text-end">{{ booking.driver_fee }} XAF</td>
+                        </tr>
+                        {% endif %}
+                        {% if booking.additional_charges %}
+                        <tr>
+                            <td>{% trans "Additional Charges" %}</td>
+                            <td class="text-end">{{ booking.additional_charges }} XAF</td>
+                        </tr>
+                        {% endif %}
+                        <tr class="table-primary">
+                            <th>{% trans "Total Amount" %}</th>
+                            <th class="text-end">{{ booking.total_amount }} XAF</th>
+                        </tr>
+                        <tr>
+                            <td>{% trans "Amount Paid" %}</td>
+                            <td class="text-end">{{ booking.amount_paid }} XAF</td>
+                        </tr>
+                        <tr class="table-warning">
+                            <th>{% trans "Balance Due" %}</th>
+                            <th class="text-end">{{ booking.balance_due }} XAF</th>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h3 class="h5 mb-0">{% trans "Actions" %}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'vehicles:booking_detail' booking.pk %}" 
+                           class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            {% trans "Back to Booking" %}
+                        </a>
+                        <a href="{% url 'vehicles:booking_list' %}" 
+                           class="btn btn-outline-primary">
+                            <i class="fas fa-list me-2"></i>
+                            {% trans "All Bookings" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

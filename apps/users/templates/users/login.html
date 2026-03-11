@@ -1,0 +1,573 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Connexion - explorMboa{% endblock %}
+
+{% block extra_css %}
+<style>
+  .login-hero {
+    position: relative;
+    background: linear-gradient(135deg, rgba(44, 90, 160, 0.9) 0%, rgba(255, 107, 53, 0.9) 100%), 
+                url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80') center/cover no-repeat;
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+  
+  .login-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    pointer-events: none;
+  }
+  
+  .floating-shapes {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  
+  .floating-shape {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .floating-shape:nth-child(1) {
+    width: 80px;
+    height: 80px;
+    top: 20%;
+    left: 10%;
+    animation-delay: 0s;
+  }
+  
+  .floating-shape:nth-child(2) {
+    width: 120px;
+    height: 120px;
+    top: 60%;
+    right: 10%;
+    animation-delay: 2s;
+  }
+  
+  .floating-shape:nth-child(3) {
+    width: 60px;
+    height: 60px;
+    bottom: 20%;
+    left: 20%;
+    animation-delay: 4s;
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(180deg); }
+  }
+  
+  .login-container {
+    position: relative;
+    z-index: 2;
+  }
+  
+  .welcome-text {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+  
+  .welcome-text h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    margin-bottom: 1rem;
+  }
+  
+  .welcome-text .lead {
+    font-size: 1.25rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    opacity: 0.9;
+  }
+  
+  .login-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  
+  .login-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+  }
+  
+  .login-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+  }
+  
+  .card-header {
+    background: transparent;
+    border: none;
+    padding: 2rem 2rem 1rem;
+    text-align: center;
+  }
+  
+  .login-icon {
+    font-size: 3rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1rem;
+    display: block;
+  }
+  
+  .card-title {
+    color: var(--dark-color);
+    font-weight: 700;
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .card-subtitle {
+    color: #6c757d;
+    font-size: 1rem;
+  }
+  
+  .form-floating {
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-floating .form-control {
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1rem 1rem 1rem 3rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+  }
+  
+  .form-floating .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+    background: #fff;
+  }
+  
+  .form-floating .form-control.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+  }
+  
+  .form-floating .form-control.is-valid {
+    border-color: #198754;
+    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+  }
+  
+  .input-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    z-index: 3;
+    transition: color 0.3s ease;
+  }
+  
+  .form-floating .form-control:focus + .input-icon {
+    color: var(--primary-color);
+  }
+  
+  .form-floating .form-control.is-invalid + .input-icon {
+    color: #dc3545;
+  }
+  
+  .form-floating .form-control.is-valid + .input-icon {
+    color: #198754;
+  }
+  
+  .form-floating label {
+    padding-left: 3rem;
+    color: #6c757d;
+  }
+  
+  .btn-login {
+    background: linear-gradient(135deg, var(--primary-color), #1e4a8a);
+    border: none;
+    border-radius: 12px;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn-login::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+  
+  .btn-login:hover::before {
+    left: 100%;
+  }
+  
+  .btn-login:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(44, 90, 160, 0.3);
+  }
+  
+  .alert {
+    border: none;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .alert-danger {
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+  }
+  
+  .alert-danger::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #dc3545, #c82333);
+  }
+  
+  .links-section {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e9ecef;
+  }
+  
+  .links-section a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    margin: 0 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+  }
+  
+  .links-section a:hover {
+    color: var(--accent-color);
+    background: rgba(44, 90, 160, 0.1);
+    transform: translateY(-2px);
+  }
+  
+  .links-section a i {
+    margin-right: 0.5rem;
+  }
+  
+  .divider {
+    display: flex;
+    align-items: center;
+    margin: 2rem 0;
+    color: #6c757d;
+  }
+  
+  .divider::before,
+  .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e9ecef;
+  }
+  
+  .divider span {
+    padding: 0 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .social-login {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+  
+  .btn-social {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid #e9ecef;
+    background: #fff;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+  
+  .btn-social:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .btn-social.facebook:hover {
+    background: #1877f2;
+    border-color: #1877f2;
+    color: #fff;
+  }
+  
+  .btn-social.google:hover {
+    background: #db4437;
+    border-color: #db4437;
+    color: #fff;
+  }
+  
+  .btn-social.twitter:hover {
+    background: #1da1f2;
+    border-color: #1da1f2;
+    color: #fff;
+  }
+  
+  @media (max-width: 768px) {
+    .welcome-text h1 {
+      font-size: 2rem;
+    }
+    
+    .welcome-text .lead {
+      font-size: 1rem;
+    }
+    
+    .login-card {
+      margin: 1rem;
+    }
+    
+    .floating-shapes {
+      display: none;
+    }
+  }
+  
+  .form-check {
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+  }
+  
+  .form-check-label {
+    color: #6c757d;
+    font-weight: 500;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-hero">
+  <!-- Floating decorative shapes -->
+  <div class="floating-shapes">
+    <div class="floating-shape"></div>
+    <div class="floating-shape"></div>
+    <div class="floating-shape"></div>
+  </div>
+  
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-5 col-md-7 col-sm-9">
+        <div class="login-container">
+          <!-- Welcome Message -->
+          <div class="welcome-text">
+            <h1>
+              <i class="fas fa-globe-africa text-warning me-3"></i>
+              Bienvenue
+            </h1>
+            <p class="lead">Connectez-vous pour découvrir les merveilles du Cameroun</p>
+          </div>
+          
+          <!-- Login Card -->
+          <div class="card login-card">
+            <div class="card-header bg-transparent border-0">
+              <h2 class="card-title">Connexion</h2>
+            </div>
+            <div class="card-body p-4">
+              <form method="post" id="loginForm">
+                {% csrf_token %}
+                
+                {% if form.errors %}
+                <div class="alert alert-danger alert-dismissible fade show">
+                  <i class="fas fa-exclamation-triangle me-2"></i>
+                  <strong>Erreur de connexion :</strong> Veuillez vérifier vos identifiants.
+                  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endif %}
+                
+                <!-- Username/Email Field -->
+                <div class="form-floating">
+                  <input type="text" 
+                         name="username" 
+                         id="id_username" 
+                         class="form-control {% if form.username.errors %}is-invalid{% endif %}" 
+                         placeholder="Email ou nom d'utilisateur"
+                         required>
+                  <i class="fas fa-user input-icon"></i>
+                  <label for="id_username">Email ou nom d'utilisateur</label>
+                  {% if form.username.errors %}
+                  <div class="invalid-feedback">
+                    {{ form.username.errors.0 }}
+                  </div>
+                  {% endif %}
+                </div>
+                
+                <!-- Password Field -->
+                <div class="form-floating">
+                  <input type="password" 
+                         name="password" 
+                         id="id_password" 
+                         class="form-control {% if form.password.errors %}is-invalid{% endif %}" 
+                         placeholder="Mot de passe"
+                         required>
+                  <i class="fas fa-lock input-icon"></i>
+                  <label for="id_password">Mot de passe</label>
+                  {% if form.password.errors %}
+                  <div class="invalid-feedback">
+                    {{ form.password.errors.0 }}
+                  </div>
+                  {% endif %}
+                </div>
+                
+                <!-- Remember Me -->
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="rememberMe">
+                  <label class="form-check-label" for="rememberMe">
+                    <i class="fas fa-clock me-1"></i>Se souvenir de moi
+                  </label>
+                </div>
+                
+                <!-- Login Button -->
+                <div class="d-grid">
+                  <button type="submit" class="btn btn-primary btn-login">
+                    <i class="fas fa-sign-in-alt me-2"></i>Se connecter
+                  </button>
+                </div>
+              </form>
+            </div>
+            <!-- Links Section -->
+            <div class="card-footer bg-transparent border-0">
+              <div class="links-section">
+                <a href="{% url 'users:register' %}">
+                  <i class="fas fa-user-plus"></i>Créer un compte
+                </a>
+                <a href="{% url 'users:password_reset' %}">
+                  <i class="fas fa-key"></i>Mot de passe oublié ?
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Form validation and enhancement
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('loginForm');
+    const inputs = form.querySelectorAll('.form-control');
+    
+    // Add focus effects
+    inputs.forEach(input => {
+      input.addEventListener('focus', function() {
+        this.parentElement.classList.add('focused');
+      });
+      
+      input.addEventListener('blur', function() {
+        this.parentElement.classList.remove('focused');
+        // Add validation classes
+        if (this.value.trim() !== '') {
+          this.classList.add('is-valid');
+          this.classList.remove('is-invalid');
+        } else {
+          this.classList.remove('is-valid');
+        }
+      });
+      
+      // Real-time validation
+      input.addEventListener('input', function() {
+        if (this.value.trim() !== '') {
+          this.classList.add('is-valid');
+          this.classList.remove('is-invalid');
+        } else {
+          this.classList.remove('is-valid', 'is-invalid');
+        }
+      });
+    });
+    
+    // Form submission with loading state
+    form.addEventListener('submit', function(e) {
+      const submitBtn = form.querySelector('.btn-login');
+      const originalText = submitBtn.innerHTML;
+      
+      // Add loading state
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Connexion en cours...';
+      submitBtn.disabled = true;
+      
+      // Re-enable after 3 seconds if no response
+      setTimeout(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+      }, 3000);
+    });
+    
+    // Password visibility toggle
+    const passwordField = document.getElementById('id_password');
+    const passwordIcon = passwordField.nextElementSibling;
+    
+    passwordIcon.addEventListener('click', function() {
+      const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordField.setAttribute('type', type);
+      this.classList.toggle('fa-lock');
+      this.classList.toggle('fa-eye');
+    });
+    
+    // Add animation to floating shapes
+    const shapes = document.querySelectorAll('.floating-shape');
+    shapes.forEach((shape, index) => {
+      shape.style.animationDelay = `${index * 2}s`;
+    });
+  });
+</script>
+{% endblock %} 

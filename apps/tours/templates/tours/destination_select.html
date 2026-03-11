@@ -1,0 +1,191 @@
+{% extends "tours/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block tour_content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-map-marked-alt me-2"></i>{% trans "Sélectionner les Destinations" %}
+                    </h3>
+                    <p class="mb-0 mt-2">{{ tour.name }}</p>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Selected Destinations -->
+                        {% if selected_destinations %}
+                        <div class="mb-4">
+                            <h5 class="text-success mb-3">
+                                <i class="fas fa-check-circle me-2"></i>{% trans "Destinations Sélectionnées" %}
+                            </h5>
+                            <div class="row">
+                                {% for destination in selected_destinations %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-success h-100">
+                                        <div class="card-body">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       name="destinations" value="{{ destination.id }}" 
+                                                       id="dest_{{ destination.id }}" checked>
+                                                <label class="form-check-label fw-bold" for="dest_{{ destination.id }}">
+                                                    {{ destination.name }}
+                                                </label>
+                                            </div>
+                                            <p class="text-muted small mb-2">{{ destination.city }}, {{ destination.region }}</p>
+                                            <p class="small">{{ destination.description|truncatewords:15 }}</p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-primary">
+                                                    <i class="fas fa-calendar-day me-1"></i>{% trans "Jour" %} {{ destination.day_number }}
+                                                </span>
+                                                <span class="badge bg-info">
+                                                    <i class="fas fa-clock me-1"></i>{{ destination.duration }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Available Destinations -->
+                        {% if available_destinations %}
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-plus-circle me-2"></i>{% trans "Destinations Disponibles" %}
+                            </h5>
+                            <div class="row">
+                                {% for destination in available_destinations %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-light h-100">
+                                        <div class="card-body">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       name="destinations" value="{{ destination.id }}" 
+                                                       id="dest_{{ destination.id }}">
+                                                <label class="form-check-label fw-bold" for="dest_{{ destination.id }}">
+                                                    {{ destination.name }}
+                                                </label>
+                                            </div>
+                                            <p class="text-muted small mb-2">{{ destination.city }}, {{ destination.region }}</p>
+                                            <p class="small">{{ destination.description|truncatewords:15 }}</p>
+                                            {% if destination.highlights %}
+                                            <div class="mb-2">
+                                                <strong class="text-success small">{% trans "Points forts" %}:</strong>
+                                                <p class="small text-muted">{{ destination.highlights|truncatewords:10 }}</p>
+                                            </div>
+                                            {% endif %}
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-secondary">
+                                                    <i class="fas fa-map-marker-alt me-1"></i>{{ destination.country }}
+                                                </span>
+                                                {% if destination.is_featured %}
+                                                <span class="badge bg-warning">
+                                                    <i class="fas fa-star me-1"></i>{% trans "Populaire" %}
+                                                </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- No Destinations Available -->
+                        {% if not selected_destinations and not available_destinations %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-map-marked-alt text-muted" style="font-size: 4rem;"></i>
+                            <h4 class="mt-3">{% trans "Aucune destination disponible" %}</h4>
+                            <p class="text-muted">{% trans "Créez d'abord des destinations pour pouvoir les sélectionner." %}</p>
+                            <a href="{% url 'tours:destination_create' %}?tour={{ tour.id }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>{% trans "Créer une destination" %}
+                            </a>
+                        </div>
+                        {% endif %}
+
+                        <!-- Action Buttons -->
+                        {% if selected_destinations or available_destinations %}
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'tours:tour_detail' tour.slug %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>{% trans "Retour au tour" %}
+                            </a>
+                            <div>
+                                <a href="{% url 'tours:destination_create' %}?tour={{ tour.id }}" class="btn btn-outline-primary me-2">
+                                    <i class="fas fa-plus me-2"></i>{% trans "Créer une destination" %}
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>{% trans "Enregistrer la sélection" %}
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+}
+
+.form-check-input:checked + .form-check-label {
+    color: var(--bs-success);
+}
+
+.card.border-success {
+    border-color: var(--bs-success) !important;
+}
+
+.card.border-success .form-check-input:checked {
+    background-color: var(--bs-success);
+    border-color: var(--bs-success);
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add visual feedback when checkboxes are changed
+    document.querySelectorAll('input[name="destinations"]').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const card = this.closest('.card');
+            if (this.checked) {
+                card.classList.remove('border-light');
+                card.classList.add('border-success');
+            } else {
+                card.classList.remove('border-success');
+                card.classList.add('border-light');
+            }
+        });
+    });
+
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const checkedBoxes = document.querySelectorAll('input[name="destinations"]:checked');
+        if (checkedBoxes.length === 0) {
+            e.preventDefault();
+            alert('{% trans "Veuillez sélectionner au moins une destination." %}');
+        }
+    });
+});
+</script>
+{% endblock %} 

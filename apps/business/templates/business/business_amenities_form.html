@@ -1,0 +1,172 @@
+{% extends "business/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Manage Amenities" %} | {{ business.name }} | {{ block.super }}{% endblock %}
+
+{% block business_content %}
+<div class="business-content-area">
+    <!-- Header Section -->
+    <div class="section-header">
+        <i class="fas fa-concierge-bell"></i>
+        <h2>{% translate "Manage Amenities" %}</h2>
+    </div>
+
+    <!-- Back Button -->
+    <div class="d-flex justify-content-end mb-4">
+        <a href="{% url 'business:business-detail' business.pk %}" 
+           class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i> {% translate "Back to Business" %}
+        </a>
+    </div>
+
+    <!-- Form Card -->
+    <div class="business-card">
+        <div class="card-header">
+            <h3 class="h5 mb-0">
+                <i class="fas fa-edit me-2"></i>{% translate "Configure Business Amenities" %}
+            </h3>
+        </div>
+        <div class="card-body">
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {% for error in form.non_field_errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {{ formset.management_form }}
+
+                {% regroup amenities by category as amenity_list %}
+                {% for category in amenity_list %}
+                <div class="amenity-category">
+                    <div class="card-header">
+                        <h4 class="h6 mb-0">
+                            <i class="fas fa-layer-group me-2"></i>{{ category.grouper.name }}
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            {% for amenity in category.list %}
+                            {% with form=formset|get_form_for_amenity:amenity %}
+                            <div class="col-md-6">
+                                <div class="amenity-item">
+                                    <div class="form-check">
+                                        {{ form.is_available }}
+                                        <label class="form-check-label" for="{{ form.is_available.id_for_label }}">
+                                            {% if amenity.icon %}
+                                            <i class="{{ amenity.icon }} me-2 text-primary"></i>
+                                            {% endif %}
+                                            <strong>{{ amenity.name }}</strong>
+                                        </label>
+                                        {{ form.amenity }}
+                                        {{ form.id }}
+                                    </div>
+                                    <div class="amenity-details" style="display: none;">
+                                        <div class="form-check mb-3">
+                                            {{ form.is_highlighted }}
+                                            <label class="form-check-label" for="{{ form.is_highlighted.id_for_label }}">
+                                                <i class="fas fa-star text-warning me-2"></i>{{ form.is_highlighted.label }}
+                                            </label>
+                                        </div>
+                                        <div class="form-floating">
+                                            {{ form.notes }}
+                                            <label for="{{ form.notes.id_for_label }}">
+                                                <i class="fas fa-sticky-note me-2"></i>{{ form.notes.label }}
+                                            </label>
+                                        </div>
+                                        {% if form.notes.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            <i class="fas fa-exclamation-circle me-1"></i>
+                                            {{ form.notes.errors|join:", " }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endwith %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i> {% translate "Save Changes" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add Bootstrap classes to form fields
+        const formFields = document.querySelectorAll('input[type="text"], textarea');
+        formFields.forEach(field => {
+            if (field.type === 'checkbox') {
+                field.classList.add('form-check-input');
+            } else {
+                field.classList.add('form-control');
+            }
+        });
+
+        // Handle amenity availability toggles
+        document.querySelectorAll('[id$="-is_available"]').forEach(checkbox => {
+            const details = checkbox.closest('.col-md-6').querySelector('.amenity-details');
+            
+            function updateDetailsVisibility() {
+                if (details) {
+                    details.style.display = checkbox.checked ? 'block' : 'none';
+                    
+                    // Add animation
+                    if (checkbox.checked) {
+                        details.style.opacity = '0';
+                        details.style.transform = 'translateY(-10px)';
+                        setTimeout(() => {
+                            details.style.transition = 'all 0.3s ease';
+                            details.style.opacity = '1';
+                            details.style.transform = 'translateY(0)';
+                        }, 10);
+                    }
+                }
+            }
+            
+            checkbox.addEventListener('change', updateDetailsVisibility);
+            updateDetailsVisibility();
+        });
+
+        // Initialize form validation
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+
+        // Enhanced form interactions
+        const amenityItems = document.querySelectorAll('.amenity-item');
+        amenityItems.forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                this.style.backgroundColor = 'var(--light-color)';
+            });
+            
+            item.addEventListener('mouseleave', function() {
+                this.style.backgroundColor = 'transparent';
+            });
+        });
+    });
+</script>
+{% endblock %} 

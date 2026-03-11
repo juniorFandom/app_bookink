@@ -1,0 +1,162 @@
+{% load i18n %}
+<form id="wizardStep1Form" method="post" novalidate autocomplete="off">
+    {% csrf_token %}
+    <div class="form-section mb-4">
+        <div class="section-header mb-3">
+            <i class="fas fa-info-circle"></i>
+            <h3 class="ms-2 mb-0">{% translate "Informations de l'établissement" %}</h3>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="name" name="name" placeholder=" " required value="{{ location.name|default:'' }}">
+                    <label for="name">{% translate "Nom de la succursale" %} *</label>
+                    <div class="invalid-feedback">{% translate "Le nom est requis." %}</div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="form-floating">
+                    <select class="form-select" id="business_location_type" name="business_location_type" required>
+                        <option value="">{% translate "Sélectionner le type" %}</option>
+                        {% for value, label in BUSINESS_TYPES %}
+                            <option value="{{ value }}" {% if location.business_location_type == value %}selected{% endif %}>{% translate label %}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="business_location_type">{% translate "Type d'établissement" %} *</label>
+                    <div class="invalid-feedback">{% translate "Le type est requis." %}</div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="phone" name="phone" placeholder=" " value="{{ location.phone|default:'' }}">
+                    <label for="phone">{% translate "Téléphone" %}</label>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="form-floating">
+                    <input type="email" class="form-control" id="email" name="email" placeholder=" " value="{{ location.email|default:'' }}">
+                    <label for="email">{% translate "Email" %}</label>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="registration_number" name="registration_number" placeholder=" " value="{{ location.registration_number|default:'' }}">
+                    <label for="registration_number">{% translate "Numéro d'enregistrement" %}</label>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="founded_date" name="founded_date" placeholder=" " value="{{ location.founded_date|date:'Y-m-d'|default:'' }}">
+                    <label for="founded_date">{% translate "Date de création" %}</label>
+                </div>
+            </div>
+        </div>
+        <div class="mb-3">
+            <div class="form-floating">
+                <textarea class="form-control" id="description" name="description" style="height: 120px" required placeholder=" ">{{ location.description|default:'' }}</textarea>
+                <label for="description">{% translate "Description de l'établissement" %} *</label>
+                <div class="invalid-feedback">{% translate "La description est requise." %}</div>
+            </div>
+        </div>
+    </div>
+    <div class="form-section mb-4">
+        <div class="section-header mb-3">
+            <i class="fas fa-map-marker-alt"></i>
+            <h3 class="ms-2 mb-0">{% translate "Adresse" %}</h3>
+        </div>
+        <div class="mb-3">
+            <button type="button" class="btn btn-outline-primary" id="openMapModal">
+                <i class="fas fa-map-marked-alt me-2"></i>{% translate "Choisir sur la carte" %}
+            </button>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="street_address" name="street_address" placeholder=" " value="{{ location.street_address|default:'' }}">
+                    <label for="street_address">{% translate "Adresse (rue, numéro...)" %}</label>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="neighborhood" name="neighborhood" placeholder=" " value="{{ location.neighborhood|default:'' }}">
+                    <label for="neighborhood">{% translate "Quartier" %}</label>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="city" name="city" placeholder=" " required value="{{ location.city|default:'' }}">
+                    <label for="city">{% translate "Ville" %} *</label>
+                    <div class="invalid-feedback">{% translate "La ville est requise." %}</div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="region" name="region" placeholder=" " value="{{ location.region|default:'' }}">
+                    <label for="region">{% translate "Région" %}</label>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="country" name="country" placeholder=" " value="{{ location.country|default:'Cameroon' }}">
+                    <label for="country">{% translate "Pays" %}</label>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="postal_code" name="postal_code" placeholder=" " value="{{ location.postal_code|default:'' }}">
+                    <label for="postal_code">{% translate "Code postal" %}</label>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="latitude" name="latitude" placeholder=" " value="{{ location.latitude|default:'' }}">
+                    <label for="latitude">{% translate "Latitude" %}</label>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="longitude" name="longitude" placeholder=" " value="{{ location.longitude|default:'' }}">
+                    <label for="longitude">{% translate "Longitude" %}</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal Leaflet -->
+    <div class="modal fade" id="mapModal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="mapModalLabel">{% translate "Sélectionner l'adresse sur la carte" %}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="leafletMap" style="height: 400px;"></div>
+                    <div class="mt-3">
+                        <span id="mapStatus" class="text-muted small"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Annuler" %}</button>
+                    <button type="button" class="btn btn-primary" id="confirmMapSelection">{% translate "Valider l'adresse" %}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mt-4">
+        <button type="button" class="btn btn-outline-secondary" disabled>
+            <i class="fas fa-arrow-left me-2"></i>{% translate "Précédent" %}
+        </button>
+        <button type="button" class="btn btn-primary btn-next-step">
+            {% translate "Suivant" %}
+            <i class="fas fa-arrow-right ms-2"></i>
+        </button>
+    </div>
+</form> 

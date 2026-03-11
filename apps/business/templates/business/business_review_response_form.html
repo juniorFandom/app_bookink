@@ -1,0 +1,219 @@
+{% extends "business/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Respond to Review" %} | {{ business.name }} | {{ block.super }}{% endblock %}
+
+{% block business_content %}
+<div class="business-content-area">
+    <!-- Header Section -->
+    <div class="section-header">
+        <i class="fas fa-reply"></i>
+        <h2>{% translate "Respond to Review" %}</h2>
+    </div>
+
+    <!-- Back Button -->
+    <div class="d-flex justify-content-end mb-4">
+        <a href="{% url 'business:business-detail' business.pk %}" 
+           class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i> {% translate "Back to Business" %}
+        </a>
+    </div>
+
+    <!-- Original Review -->
+    <div class="review-card">
+        <div class="card-header">
+            <h3 class="h5 mb-0">
+                <i class="fas fa-comment me-2"></i>{% translate "Original Review" %}
+            </h3>
+        </div>
+        <div class="card-body">
+            <div class="review">
+                <div class="review-header">
+                    <div>
+                        <h4 class="review-title">{{ review.title }}</h4>
+                        <div class="rating-stars">
+                            {% with ''|center:review.overall_rating|make_list as stars %}
+                            {% for _ in stars %}
+                            <i class="fas fa-star"></i>
+                            {% endfor %}
+                            {% endwith %}
+                        </div>
+                    </div>
+                    <div class="review-date">
+                        <i class="fas fa-calendar-alt me-1"></i>
+                        {{ review.created_at|date:"M d, Y" }}
+                    </div>
+                </div>
+
+                <div class="review-content">
+                    <p class="mb-3">{{ review.content }}</p>
+                </div>
+
+                {% if review.images.exists %}
+                <div class="review-images">
+                    <h5 class="h6 mb-3">
+                        <i class="fas fa-images me-2"></i>{% translate "Review Images" %}
+                    </h5>
+                    <div class="row g-3">
+                        {% for image in review.images.all %}
+                        <div class="col-md-4 col-sm-6">
+                            <img src="{{ image.image.url }}" 
+                                 class="img-fluid rounded" 
+                                 alt="{{ image.caption|default:'Review image' }}">
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="review-footer">
+                    <div>
+                        <i class="fas fa-user me-1"></i>
+                        <small class="text-muted">
+                            {% translate "by" %} {{ review.user.get_full_name|default:review.user.username }}
+                        </small>
+                    </div>
+                    <div>
+                        <i class="fas fa-tag me-1"></i>
+                        <small class="text-muted">
+                            {{ review.get_visit_type_display }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Response Form -->
+    <div class="business-card">
+        <div class="card-header">
+            <h3 class="h5 mb-0">
+                <i class="fas fa-edit me-2"></i>{% translate "Your Response" %}
+            </h3>
+        </div>
+        <div class="card-body">
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {% for error in form.non_field_errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="mb-4">
+                    <label for="{{ form.response.id_for_label }}" class="form-label">
+                        <i class="fas fa-comment-dots me-2"></i>{{ form.response.label }}
+                    </label>
+                    {{ form.response }}
+                    {% if form.response.errors %}
+                    <div class="invalid-feedback d-block">
+                        <i class="fas fa-exclamation-circle me-1"></i>
+                        {{ form.response.errors|join:", " }}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">
+                        <i class="fas fa-info-circle me-1"></i>
+                        {% translate "Your response will be publicly visible on the review." %}
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-2"></i>
+                        {% if review.response %}
+                        {% translate "Update Response" %}
+                        {% else %}
+                        {% translate "Submit Response" %}
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add Bootstrap classes to form fields
+        const formFields = document.querySelectorAll('textarea');
+        formFields.forEach(field => {
+            field.classList.add('form-control');
+            field.style.minHeight = '120px';
+        });
+
+        // Initialize form validation
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+
+        // Character counter for response textarea
+        const responseTextarea = document.getElementById('{{ form.response.id_for_label }}');
+        if (responseTextarea) {
+            const counter = document.createElement('div');
+            counter.className = 'form-text text-end';
+            counter.innerHTML = '<span id="char-count">0</span> / 1000 characters';
+            responseTextarea.parentNode.appendChild(counter);
+
+            responseTextarea.addEventListener('input', function() {
+                const count = this.value.length;
+                document.getElementById('char-count').textContent = count;
+                
+                if (count > 900) {
+                    counter.style.color = '#dc3545';
+                } else if (count > 800) {
+                    counter.style.color = '#ffc107';
+                } else {
+                    counter.style.color = '#6c757d';
+                }
+            });
+
+            // Initialize counter
+            responseTextarea.dispatchEvent(new Event('input'));
+        }
+
+        // Enhanced review image interactions
+        const reviewImages = document.querySelectorAll('.review-images img');
+        reviewImages.forEach(img => {
+            img.addEventListener('click', function() {
+                // Create modal for image preview
+                const modal = document.createElement('div');
+                modal.className = 'modal fade';
+                modal.innerHTML = `
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">{% translate "Review Image" %}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body text-center">
+                                <img src="${this.src}" class="img-fluid" alt="Review image">
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                
+                const modalInstance = new bootstrap.Modal(modal);
+                modalInstance.show();
+                
+                modal.addEventListener('hidden.bs.modal', function() {
+                    document.body.removeChild(modal);
+                });
+            });
+        });
+    });
+</script>
+{% endblock %} 

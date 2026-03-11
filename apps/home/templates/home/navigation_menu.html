@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load navigation_tags %}
+
+{% block title %}{{ page_title }} - explorMboa{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h5><i class="fas fa-info-circle"></i> Menu de Navigation Dynamique</h5>
+                <p class="mb-0">
+                    Cette page affiche automatiquement toutes les routes disponibles dans votre application Django.
+                    Le menu est généré dynamiquement en analysant les fichiers <code>urls.py</code> de chaque application.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    {% navigation_menu %}
+</div>
+{% endblock %} 

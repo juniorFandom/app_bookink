@@ -1,0 +1,773 @@
+{% extends "business/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Ms Entreprises" %} | {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Variables CSS pour la cohérence */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        --card-shadow-hover: 0 20px 60px rgba(102, 126, 234, 0.15);
+        --border-radius: 20px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Reset et base */
+    .business-content-area {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+
+    /* Header avec gradient */
+    .page-header {
+        background: var(--primary-gradient);
+        margin: -2rem -2rem 3rem -2rem;
+        padding: 3rem 2rem;
+        border-radius: 0 0 30px 30px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        opacity: 0.3;
+    }
+
+    .page-title {
+        color: white;
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin: 0;
+        text-align: center;
+        position: relative;
+        z-index: 1;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .page-subtitle {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1.1rem;
+        text-align: center;
+        margin-top: 0.5rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Bouton dashboard principal */
+    .dashboard-btn {
+        display: flex;
+        justify-content: center;
+        margin: 2rem 0 3rem 0;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .dashboard-btn a {
+        display: inline-flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.5rem 3rem;
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: white;
+        background: var(--secondary-gradient);
+        border-radius: 50px;
+        box-shadow: 0 15px 35px rgba(240, 147, 251, 0.3);
+        text-decoration: none;
+        transition: var(--transition);
+        border: none;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .dashboard-btn a::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+    }
+
+    .dashboard-btn a:hover::before {
+        left: 100%;
+    }
+
+    .dashboard-btn a:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 20px 40px rgba(240, 147, 251, 0.4);
+    }
+
+    /* Conteneur principal */
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 2rem;
+    }
+
+    /* Sections */
+    .section {
+        margin-bottom: 4rem;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        position: relative;
+        padding-left: 1rem;
+    }
+
+    .section-title::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 40px;
+        background: var(--primary-gradient);
+        border-radius: 2px;
+    }
+
+    .section-title .icon {
+        font-size: 1.8rem;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* Grille responsive */
+    .business-list,
+    .location-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    /* Cartes modernes */
+    .business-card,
+    .location-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--card-shadow);
+        padding: 2rem;
+        position: relative;
+        transition: var(--transition);
+        border: 1px solid rgba(102, 126, 234, 0.1);
+        overflow: hidden;
+    }
+
+    .business-card::before,
+    .location-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+    }
+
+    .business-card:hover,
+    .location-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--card-shadow-hover);
+        border-color: rgba(102, 126, 234, 0.3);
+    }
+
+    /* En-tête de carte */
+    .card-header {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .card-header .icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: white;
+        background: var(--primary-gradient);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        transition: var(--transition);
+    }
+
+    .business-card:hover .card-header .icon,
+    .location-card:hover .card-header .icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .card-header .title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 0.3rem;
+    }
+
+    .card-header .subtitle {
+        font-size: 1rem;
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    /* Corps de carte */
+    .card-body {
+        margin-bottom: 1.5rem;
+    }
+
+    .card-info {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        margin-bottom: 0.8rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .card-info:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+
+    .card-info .icon {
+        width: 35px;
+        height: 35px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        color: white;
+        background: var(--success-gradient);
+        flex-shrink: 0;
+    }
+
+    .card-info .content {
+        flex: 1;
+        font-size: 0.95rem;
+        color: #555;
+    }
+
+    .card-info .label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-right: 0.5rem;
+    }
+
+    /* Badges modernes */
+    .badge {
+        font-size: 0.85rem;
+        font-weight: 600;
+        border-radius: 25px;
+        padding: 0.4rem 1rem;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+        display: inline-block;
+        transition: var(--transition);
+    }
+
+    .badge.bg-primary {
+        background: var(--primary-gradient) !important;
+        color: white;
+    }
+
+    .badge.bg-success {
+        background: var(--success-gradient) !important;
+        color: white;
+    }
+
+    .badge.bg-warning {
+        background: var(--warning-gradient) !important;
+        color: white;
+    }
+
+    /* Pied de carte */
+    .card-footer {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .card-footer .btn {
+        flex: 1;
+        font-weight: 600;
+        border-radius: 15px;
+        padding: 0.8rem 1.5rem;
+        transition: var(--transition);
+        border: 2px solid transparent;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-outline-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: transparent;
+    }
+
+    .btn-outline-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        color: white;
+    }
+
+    .btn-outline-secondary {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        border-color: transparent;
+    }
+
+    .btn-outline-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(240, 147, 251, 0.3);
+        color: white;
+    }
+
+    .btn-outline-info {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+        border-color: transparent;
+    }
+
+    .btn-outline-info:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(79, 172, 254, 0.3);
+        color: white;
+    }
+
+    /* États vides */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--card-shadow);
+        margin: 2rem 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .empty-state::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+    }
+
+    .empty-state .icon {
+        font-size: 4rem;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 2rem;
+        display: block;
+    }
+
+    .empty-state h3 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state p {
+        font-size: 1.1rem;
+        color: #6c757d;
+        margin-bottom: 2rem;
+    }
+
+    .btn-gradient {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        border-radius: 25px;
+        padding: 1rem 2rem;
+        font-weight: 600;
+        transition: var(--transition);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-gradient:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        color: white;
+    }
+
+    /* Bouton flottant */
+    .fab {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 60px;
+        height: 60px;
+        background: var(--secondary-gradient);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        box-shadow: 0 10px 30px rgba(240, 147, 251, 0.4);
+        transition: var(--transition);
+        z-index: 1000;
+        text-decoration: none;
+    }
+
+    .fab:hover {
+        transform: scale(1.1) rotate(90deg);
+        box-shadow: 0 15px 40px rgba(240, 147, 251, 0.6);
+        color: white;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.05);
+        }
+    }
+
+    .pulse {
+        animation: pulse 2s infinite;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .page-header {
+            margin: -2rem -1rem 2rem -1rem;
+            padding: 2rem 1rem;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .page-title {
+            font-size: 2rem;
+        }
+
+        .main-container {
+            padding: 0 1rem;
+        }
+
+        .business-list,
+        .location-list {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .dashboard-btn a {
+            font-size: 1.1rem;
+            padding: 1.2rem 2rem;
+        }
+
+        .card-header {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+        }
+
+        .card-footer {
+            flex-direction: column;
+        }
+
+        .fab {
+            bottom: 1.5rem;
+            right: 1.5rem;
+            width: 55px;
+            height: 55px;
+            font-size: 1.3rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .page-title {
+            font-size: 1.8rem;
+        }
+
+        .section-title {
+            font-size: 1.6rem;
+        }
+
+        .business-card,
+        .location-card {
+            padding: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block business_content %}
+<div class="business-content-area">
+    <!-- Header moderne -->
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-building me-3"></i>
+            {% translate "Mes Entreprises" %}
+        </h1>
+        <p class="page-subtitle">
+            {% translate "Gérez vos entreprises et accédez à vos établissements" %}
+        </p>
+    </div>
+
+    <div class="main-container">
+        <!-- Debug Info (temporaire)
+        {% if debug_info %}
+        <div
+            style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 1rem; margin-bottom: 2rem; font-family: monospace; font-size: 0.9rem;">
+            <strong>Debug Info:</strong><br>
+            User ID: {{ debug_info.user_id }}<br>
+            Username: {{ debug_info.username }}<br>
+            Owned businesses: {{ debug_info.owned_count }}<br>
+            Accessible locations: {{ debug_info.accessible_count }}<br>
+        </div>
+        {% endif %} -->
+
+        <!-- Bouton Dashboard Financier -->
+        <div class="dashboard-btn">
+            <a href="{% url 'business:financial_dashboard' %}" class="pulse">
+                <i class="fas fa-chart-line"></i>
+                {% translate "Dashboard Financier" %}
+            </a>
+        </div>
+
+        <!-- Section Entreprises Possédées -->
+        <div class="section">
+            <h2 class="section-title">
+                <i class="fas fa-crown icon"></i>
+                {% translate "Mes entreprises (propriétaire)" %}
+            </h2>
+
+            {% if owned_businesses %}
+            <div class="business-list">
+                {% for business in owned_businesses %}
+                <div class="business-card">
+                    <div class="card-header">
+                        <div class="icon">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div>
+                            <div class="title">{{ business.name }}</div>
+                            <div class="subtitle">{{ business.get_business_type_display }}</div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-info">
+                            <div class="icon">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <div class="content">
+                                <span class="badge bg-primary">{{ business.founded_date|date:'Y' }}</span>
+                            </div>
+                        </div>
+                        <div class="card-info">
+                            <div class="icon">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div class="content">
+                                <span class="label">{% translate "Email:" %}</span>
+                                {{ business.email }}
+                            </div>
+                        </div>
+                        <div class="card-info">
+                            <div class="icon">
+                                <i class="fas fa-phone"></i>
+                            </div>
+                            <div class="content">
+                                <span class="label">{% translate "Téléphone:" %}</span>
+                                {{ business.phone }}
+                            </div>
+                        </div>
+                        {% if business.website %}
+                        <div class="card-info">
+                            <div class="icon">
+                                <i class="fas fa-globe"></i>
+                            </div>
+                            <div class="content">
+                                <span class="label">{% translate "Site Web:" %}</span>
+                                <a href="{{ business.website }}" target="_blank" class="text-decoration-none">{{
+                                    business.website }}</a>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="card-info">
+                            <div class="icon">
+                                <i class="fas fa-align-left"></i>
+                            </div>
+                            <div class="content">
+                                <span class="label">{% translate "Description:" %}</span>
+                                {{ business.description|truncatewords:15 }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="{% url 'business:business_detail' business.pk %}" class="btn btn-outline-primary">
+                            <i class="fas fa-eye me-1"></i> {% translate "Voir" %}
+                        </a>
+                        <a href="{% url 'business:business_edit' business.pk %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-edit me-1"></i> {% translate "Modifier" %}
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-building icon"></i>
+                <h3>{% translate "Aucune entreprise trouvée" %}</h3>
+                <p>{% translate "Vous ne possédez aucune entreprise pour le moment." %}</p>
+                <a href="{% url 'business:business_create' %}" class="btn-gradient">
+                    <i class="fas fa-plus"></i>
+                    {% translate "Créer votre première entreprise" %}
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Section Établissements Accessibles -->
+        <div class="section">
+            <h2 class="section-title">
+                <i class="fas fa-key icon"></i>
+                {% translate "Établissements accessibles (permissions)" %}
+            </h2>
+
+            {% if accessible_locations %}
+            <div class="location-list">
+                {% for location in accessible_locations %}
+                <div class="location-card">
+                    <div class="card-header">
+                        <div class="icon">
+                            <i class="fas fa-store"></i>
+                        </div>
+                        <div>
+                            <div class="title">{{ location.name }}</div>
+                            <div class="subtitle">{{ location.get_business_location_type_display }}</div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-info">
+                            <div class="icon">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div class="content">
+                                <span class="badge bg-primary">{{ location.business.name }}</span>
+                            </div>
+                        </div>
+                        {% if location.phone %}
+                        <div class="card-info">
+                            <div class="icon">
+                                <i class="fas fa-phone"></i>
+                            </div>
+                            <div class="content">
+                                <span class="badge bg-success">{{ location.phone }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="card-info">
+                            <div class="icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="content">
+                                <span class="label">{% translate "Adresse:" %}</span>
+                                {{ location.city }}, {{ location.region }}
+                            </div>
+                        </div>
+                        {% if location.email %}
+                        <div class="card-info">
+                            <div class="icon">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div class="content">
+                                <span class="label">{% translate "Email:" %}</span>
+                                {{ location.email }}
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="card-info">
+                            <div class="icon">
+                                <i class="fas fa-align-left"></i>
+                            </div>
+                            <div class="content">
+                                <span class="label">{% translate "Description:" %}</span>
+                                {{ location.description|truncatewords:12 }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="{% url 'business:business_location_dashboard' location.pk %}"
+                            class="btn btn-outline-primary">
+                            <i class="fas fa-tachometer-alt me-1"></i> {% translate "Dashboard" %}
+                        </a>
+                        <a href="{% url 'business:location_detail' location.pk %}" class="btn btn-outline-info">
+                            <i class="fas fa-eye me-1"></i> {% translate "Voir" %}
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-store icon"></i>
+                <h3>{% translate "Aucun établissement accessible" %}</h3>
+                <p>{% translate "Vous n'avez accès à aucun établissement via des permissions." %}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Bouton flottant pour ajouter une entreprise -->
+    <a href="{% url 'business:business_create' %}" class="fab" title="{% translate 'Ajouter une entreprise' %}">
+        <i class="fas fa-plus"></i>
+    </a>
+</div>
+{% endblock %}

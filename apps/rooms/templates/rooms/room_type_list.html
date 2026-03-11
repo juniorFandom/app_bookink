@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Types de chambres" %}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="h3 mb-4">{% translate "Types de chambres" %}</h1>
+    <a href="{% url 'rooms:room_list' business_location_id %}" class="btn btn-secondary mb-3">&larr; {% translate "Retour aux chambres" %}</a>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>{% translate "Nom" %}</th>
+                <th>{% translate "Description" %}</th>
+                <th>{% translate "Capacité max" %}</th>
+                <th>{% translate "Prix de base" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for room_type in room_types %}
+            <tr>
+                <td>{{ room_type.name }}</td>
+                <td>{{ room_type.description }}</td>
+                <td>{{ room_type.max_occupancy }}</td>
+                <td>{{ room_type.base_price }} XAF</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center text-muted">{% translate "Aucun type de chambre." %}</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %} 

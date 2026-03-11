@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-danger text-white">
+            <h4 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Détail de la zone dangereuse</h4>
+        </div>
+        <div class="card-body">
+            <h5 class="fw-bold">{{ zone.nom_zone }}</h5>
+            <p><strong>Type de danger :</strong> {{ zone.get_type_danger_display }}</p>
+            <p><strong>Description :</strong> {{ zone.description_danger }}</p>
+            <p><strong>Latitude :</strong> {{ zone.latitude }} | <strong>Longitude :</strong> {{ zone.longitude }}</p>
+            <div id="zoneMap" style="height: 300px; margin-bottom: 1rem;"></div>
+            <p><strong>Date de signalement :</strong> {{ zone.date_signalement|date:'d/m/Y H:i' }}</p>
+            <p><strong>Statut :</strong> {{ zone.get_statut_display }}</p>
+            <hr>
+            <div class="mb-3">
+                <span class="badge bg-success">👍 {{ likes }}</span>
+                <span class="badge bg-danger ms-2">👎 {{ dislikes }}</span>
+            </div>
+            {% if user_vote %}
+            <div class="alert alert-info">Vous avez déjà voté pour cette zone.</div>
+            {% else %}
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" name="vote" value="like" class="btn btn-success me-2">
+                    <i class="fas fa-thumbs-up"></i> Je confirme ce danger
+                </button>
+                <button type="submit" name="vote" value="dislike" class="btn btn-danger">
+                    <i class="fas fa-thumbs-down"></i> Je ne confirme pas
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var lat = {{ zone.latitude|default: 0
+    }};
+    var lon = {{ zone.longitude|default: 0 }};
+    if (lat && lon) {
+        var map = L.map('zoneMap').setView([lat, lon], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+        L.marker([lat, lon]).addTo(map);
+    } else {
+        document.getElementById('zoneMap').innerHTML = '<div class="text-muted">Coordonnées non disponibles</div>';
+    }
+});
+</script>
+{% endblock %}

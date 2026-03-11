@@ -1,0 +1,485 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load widget_tweaks %}
+
+{% block title %}
+    {% if form.instance.pk %}
+        {% translate "Modifier la catégorie" %}: {{ form.instance.name }}
+    {% else %}
+        {% translate "Créer une nouvelle catégorie" %}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            <!-- Header Section -->
+            <div class="text-center mb-5">
+                <div class="display-6 fw-bold text-gradient mb-3">
+                    {% if form.instance.pk %}
+                        <i class="fas fa-edit text-primary me-3"></i>{% translate "Modifier la catégorie" %}
+                    {% else %}
+                        <i class="fas fa-plus-circle text-success me-3"></i>{% translate "Créer une nouvelle catégorie" %}
+                    {% endif %}
+                </div>
+                <p class="lead text-muted">
+                    {% if form.instance.pk %}
+                        {% translate "Apportez les modifications nécessaires à votre catégorie" %}
+                    {% else %}
+                        {% translate "Ajoutez une nouvelle catégorie pour organiser vos plats" %}
+                    {% endif %}
+                </p>
+            </div>
+
+            <!-- Main Form Card -->
+            <div class="card shadow-2xl border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-gradient-primary text-white py-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="d-flex align-items-center">
+                        <div class="header-icon me-3">
+                            <i class="fas fa-layer-group fa-2x"></i>
+                        </div>
+                        <div>
+                            <h3 class="mb-1 fw-bold">
+                                {% if form.instance.pk %}
+                                    {% translate "Modification de la catégorie" %}
+                                {% else %}
+                                    {% translate "Nouvelle catégorie" %}
+                                {% endif %}
+                            </h3>
+                            <p class="mb-0 opacity-75">
+                        {% if form.instance.pk %}
+                                    {% translate "Modifiez les informations de votre catégorie" %}
+                        {% else %}
+                                    {% translate "Remplissez les informations de votre nouvelle catégorie" %}
+                        {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-5">
+                    <form method="post" action="{% if form.instance.pk %}{% url 'orders:food_category_edit' pk=form.instance.pk %}{% else %}{% url 'orders:food_category_create' %}{% endif %}" enctype="multipart/form-data" class="needs-validation" novalidate id="categoryForm">
+                        {% csrf_token %}
+                        
+                        <!-- Progress Bar -->
+                        <div class="progress mb-4" style="height: 6px;">
+                            <div class="progress-bar bg-gradient-primary" role="progressbar" style="width: 0%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" id="formProgress"></div>
+                        </div>
+
+                        <!-- Form Section -->
+                        <div class="form-section">
+                            <h5 class="section-title mb-4">
+                                <i class="fas fa-info-circle text-primary me-2"></i>
+                                {% translate "Informations de la catégorie" %}
+                            </h5>
+                            
+                            <div class="row g-4">
+                                <!-- Name -->
+                                <div class="col-12">
+                                    <div class="form-floating modern-floating">
+                                        {{ form.name|add_class:'form-control modern-input' }}
+                                        <label for="id_name">
+                                            <i class="fas fa-tag me-2"></i>{% translate "Nom de la catégorie" %}
+                                        </label>
+                                        {% for error in form.name.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <!-- Description -->
+                                <div class="col-12">
+                                    <div class="form-floating modern-floating">
+                                        {{ form.description|add_class:'form-control modern-textarea' }}
+                                        <label for="id_description">
+                                            <i class="fas fa-align-left me-2"></i>{% translate "Description" %}
+                                        </label>
+                                        {% for error in form.description.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <!-- Order -->
+                                <div class="col-md-6">
+                                    <div class="form-floating modern-floating">
+                                        {{ form.order|add_class:'form-control modern-input' }}
+                                        <label for="id_order">
+                                            <i class="fas fa-sort-numeric-up me-2"></i>{% translate "Ordre d'affichage" %}
+                                        </label>
+                                        {% for error in form.order.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <!-- Icon -->
+                                <div class="col-md-6">
+                                    <div class="form-floating modern-floating">
+                                        {{ form.icon|add_class:'form-control modern-input' }}
+                                        <label for="id_icon">
+                                            <i class="fas fa-icons me-2"></i>{% translate "Icône (classe FontAwesome)" %}
+                                        </label>
+                                        {% for error in form.icon.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <!-- Color -->
+                                <div class="col-md-6">
+                                    <div class="form-floating modern-floating">
+                                        {{ form.color|add_class:'form-control modern-input' }}
+                                        <label for="id_color">
+                                            <i class="fas fa-palette me-2"></i>{% translate "Couleur" %}
+                                        </label>
+                                        {% for error in form.color.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <!-- Is Active -->
+                                <div class="col-md-6">
+                                    <div class="modern-switch-container">
+                                        <div class="form-check form-switch modern-switch">
+                                            {{ form.is_active|add_class:'form-check-input' }}
+                                            <label class="form-check-label" for="id_is_active">
+                                                <i class="fas fa-toggle-on me-2"></i>{% translate "Catégorie active" %}
+                                            </label>
+                                        </div>
+                                        {% for error in form.is_active.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Error Messages -->
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger border-0 rounded-3 mt-4" role="alert">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <div>
+                                        {% for error in form.non_field_errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
+                            <a href="{% url 'orders:food_category_list' %}" class="btn btn-outline-secondary btn-lg px-5 rounded-pill">
+                                <i class="fas fa-arrow-left me-2"></i>{% translate "Retour" %}
+                            </a>
+                            <button type="submit" class="btn btn-gradient-primary btn-lg px-5 rounded-pill shadow-lg" id="submitBtn">
+                                <i class="fas fa-save me-2"></i>
+                                {% if form.instance.pk %}
+                                    {% translate "Mettre à jour" %}
+                                {% else %}
+                                    {% translate "Créer la catégorie" %}
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Modern Design Variables */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --border-radius: 1rem;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Text Gradient */
+    .text-gradient {
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* Card Styling */
+    .shadow-2xl {
+        box-shadow: var(--shadow-lg);
+    }
+
+    .card {
+        border-radius: var(--border-radius);
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+    }
+
+    /* Header Styling */
+    .header-icon {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(10px);
+    }
+
+    /* Form Sections */
+    .form-section {
+        background: #f8f9fa;
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+
+    .form-section:hover {
+        background: #fff;
+        box-shadow: var(--shadow);
+        transform: translateY(-2px);
+    }
+
+    .section-title {
+        color: #495057;
+        font-weight: 600;
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 0.5rem;
+    }
+
+    /* Modern Form Controls */
+    .modern-floating {
+        position: relative;
+    }
+
+    .modern-input, .modern-select, .modern-textarea {
+        border: 2px solid #e9ecef;
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: #fff;
+    }
+
+    .modern-input:focus, .modern-select:focus, .modern-textarea:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        transform: translateY(-2px);
+    }
+
+    .modern-textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    /* Modern Switches */
+    .modern-switch-container {
+        background: #fff;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+
+    .modern-switch-container:hover {
+        box-shadow: var(--shadow);
+        transform: translateY(-2px);
+    }
+
+    .modern-switch .form-check-input {
+        width: 3rem;
+        height: 1.5rem;
+        border-radius: 1rem;
+        border: 2px solid #dee2e6;
+        background-color: #fff;
+        transition: all 0.3s ease;
+    }
+
+    .modern-switch .form-check-input:checked {
+        background-color: #667eea;
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+
+    .modern-switch .form-check-label {
+        font-weight: 500;
+        color: #495057;
+        cursor: pointer;
+    }
+
+    /* Buttons */
+    .btn-gradient-primary {
+        background: var(--primary-gradient);
+        border: none;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-gradient-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-outline-secondary {
+        border: 2px solid #6c757d;
+        color: #6c757d;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-secondary:hover {
+        background: #6c757d;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* Progress Bar */
+    .progress {
+        border-radius: 1rem;
+        background: #e9ecef;
+    }
+
+    .progress-bar {
+        border-radius: 1rem;
+        transition: width 0.6s ease;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .form-section {
+        animation: fadeInUp 0.6s ease forwards;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .container-fluid {
+            padding: 1rem;
+        }
+        
+        .card-body {
+            padding: 2rem;
+        }
+        
+        .form-section {
+            padding: 1.5rem;
+        }
+    }
+
+    /* Loading State */
+    .btn-loading {
+        position: relative;
+        pointer-events: none;
+    }
+
+    .btn-loading::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        top: 50%;
+        left: 50%;
+        margin-left: -10px;
+        margin-top: -10px;
+        border: 2px solid transparent;
+        border-top: 2px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('categoryForm');
+    const progressBar = document.getElementById('formProgress');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Progress Bar Update
+    function updateProgress() {
+        const fields = form.querySelectorAll('input, select, textarea');
+        const filledFields = Array.from(fields).filter(field => {
+            if (field.type === 'checkbox') return field.checked;
+            return field.value.trim() !== '';
+        }).length;
+        
+        const progress = (filledFields / fields.length) * 100;
+        progressBar.style.width = progress + '%';
+    }
+
+    // Add event listeners for progress
+    form.querySelectorAll('input, select, textarea').forEach(field => {
+        field.addEventListener('input', updateProgress);
+        field.addEventListener('change', updateProgress);
+    });
+
+    // Form Submission
+    form.addEventListener('submit', function(e) {
+        submitBtn.classList.add('btn-loading');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Enregistrement...';
+    });
+
+    // Auto-save functionality (optional)
+    let autoSaveTimeout;
+    form.addEventListener('input', function() {
+        clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(() => {
+            // You can implement auto-save here
+            console.log('Auto-save triggered');
+        }, 2000);
+    });
+
+    // Initialize progress
+    updateProgress();
+
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey || e.metaKey) {
+            switch(e.key) {
+                case 's':
+                    e.preventDefault();
+                    form.dispatchEvent(new Event('submit'));
+                    break;
+                case 'Enter':
+                    if (e.target.tagName !== 'TEXTAREA') {
+                        e.preventDefault();
+                        form.dispatchEvent(new Event('submit'));
+                    }
+                    break;
+            }
+        }
+    });
+});
+</script>
+{% endblock %} 

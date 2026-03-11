@@ -1,0 +1,943 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .room-form-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+
+    .form-section {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        border: 1px solid #e0e0e0;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 3px solid #2c5aa0;
+    }
+
+    .section-header i {
+        font-size: 1.8rem;
+        color: #2c5aa0;
+        margin-right: 1rem;
+    }
+
+    .section-header h3 {
+        margin: 0;
+        color: #2c5aa0;
+        font-weight: 700;
+    }
+
+    .form-floating {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-floating > .form-control,
+    .form-floating > .form-select {
+        height: calc(3.5rem + 2px);
+        padding: 1rem 0.75rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+    }
+
+    .form-floating > .form-control:focus,
+    .form-floating > .form-select:focus {
+        border-color: #2c5aa0;
+        box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+    }
+
+    .image-upload-section {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: 2px dashed #2c5aa0;
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .image-upload-section:hover {
+        border-color: #1e4a8a;
+        background: linear-gradient(135deg, #e8f4fd 0%, #d1ecf1 100%);
+    }
+
+    .image-upload-section.dragover {
+        border-color: #28a745;
+        background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+    }
+
+    .image-preview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .image-preview-item {
+        position: relative;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.2s ease;
+    }
+
+    .image-preview-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+
+    .image-preview-item img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+    }
+
+    .image-preview-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .image-preview-item:hover .image-preview-overlay {
+        opacity: 1;
+    }
+
+    .image-controls {
+        display: flex;
+        gap: 0.5rem;
+        flex-direction: column;
+    }
+
+    .btn-image-control {
+        background: rgba(255,255,255,0.9);
+        border: none;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-image-control:hover {
+        background: white;
+        transform: scale(1.1);
+    }
+
+    .btn-remove-image {
+        color: #dc3545;
+    }
+
+    .btn-move-up, .btn-move-down {
+        color: #2c5aa0;
+    }
+
+    .image-order-badge {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        background: rgba(44, 90, 160, 0.9);
+        color: white;
+        border-radius: 50%;
+        width: 25px;
+        height: 25px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+
+    .upload-progress {
+        width: 100%;
+        height: 4px;
+        background: #e9ecef;
+        border-radius: 2px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+    }
+
+    .upload-progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #28a745, #20c997);
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+
+    .error-message {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+        display: none;
+    }
+
+    .success-message {
+        color: #28a745;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+        display: none;
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #2c5aa0, #1e4a8a);
+        color: white;
+        padding: 1rem 2.5rem;
+        border-radius: 50px;
+        border: none;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .amenities-section {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .amenity-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        padding: 0.5rem;
+        border-radius: 8px;
+    }
+
+    .amenity-item input[type="checkbox"] {
+        margin-right: 0.75rem;
+        transform: scale(1.2);
+    }
+
+    .image-caption-input {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0,0,0,0.8);
+        padding: 0.5rem;
+        transform: translateY(100%);
+        transition: transform 0.3s ease;
+    }
+
+    .image-preview-item:hover .image-caption-input {
+        transform: translateY(0);
+    }
+
+    .image-caption-input input {
+        width: 100%;
+        background: transparent;
+        border: none;
+        color: white;
+        font-size: 0.8rem;
+        padding: 0.25rem;
+    }
+
+    .image-caption-input input::placeholder {
+        color: rgba(255,255,255,0.7);
+    }
+    
+    /* Styles pour les erreurs de validation */
+    .form-control.is-invalid,
+    .form-select.is-invalid {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+    
+    .form-control.is-invalid:focus,
+    .form-select.is-invalid:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+    
+    .invalid-feedback {
+        display: block;
+        width: 100%;
+        margin-top: 0.25rem;
+        font-size: 0.875em;
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="room-form-container">
+    <div class="section-header mb-4">
+        <i class="fas fa-bed"></i>
+        <h2 class="mb-0">
+            {% if room %}
+                {% translate "Modifier la Chambre" %} - {{ room.room_number }}
+            {% else %}
+                {% translate "Nouvelle Chambre" %}
+            {% endif %}
+        </h2>
+    </div>
+
+    <form id="roomForm" method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <!-- Basic Information -->
+        <div class="form-section">
+            <div class="section-header">
+                <i class="fas fa-info-circle"></i>
+                <h3>{% translate "Informations de Base" %}</h3>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <input type="hidden" id="business_location" name="business_location" value="{{ business_location_id }}">
+                        <input type="text" class="form-control" id="business_location_name" value="{{ business_location_name }}" readonly>
+                        <label for="business_location_name">{% translate "Établissement" %} *</label>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <select class="form-select" id="room_type" name="room_type" required>
+                            <option value="">{% translate "Sélectionnez un type de chambre" %}</option>
+                            {% for room_type in room_types %}
+                                <option value="{{ room_type.id }}" 
+                                    {% if form.room_type.value == room_type.id or room.room_type.id == room_type.id %}selected{% endif %}>
+                                    {{ room_type.name }} - {{ room_type.base_price }} FCFA
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <label for="room_type">{% translate "Type de chambre" %} *</label>
+                        <div class="invalid-feedback">
+                            {% translate "Le type de chambre est requis." %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="room_number" name="room_number" 
+                               placeholder=" " required
+                               value="{% if form.room_number.value %}{{ form.room_number.value }}{% elif room %}{{ room.room_number }}{% else %}{% endif %}">
+                        <label for="room_number">{% translate "Numéro de chambre" %} *</label>
+                        <div class="invalid-feedback">
+                            {% translate "Le numéro de chambre est requis." %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <input type="number" class="form-control" id="floor" name="floor" 
+                               placeholder=" " min="0"
+                               value="{% if form.floor.value %}{{ form.floor.value }}{% elif room %}{{ room.floor }}{% else %}{% endif %}">
+                        <label for="floor">{% translate "Étage" %}</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-floating mb-3">
+                <textarea class="form-control" id="description" name="description" 
+                          style="height: 120px" placeholder=" "
+                          >{% if form.description.value %}{{ form.description.value }}{% elif room %}{{ room.description }}{% else %}{% endif %}</textarea>
+                <label for="description">{% translate "Description de la chambre" %}</label>
+            </div>
+        </div>
+
+        <!-- Pricing & Capacity -->
+        <div class="form-section">
+            <div class="section-header">
+                <i class="fas fa-money-bill-wave"></i>
+                <h3>{% translate "Tarification et Capacité" %}</h3>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <input type="number" class="form-control" id="price_per_night" name="price_per_night" 
+                               placeholder=" " required min="0" step="0.01"
+                               value="{% if form.price_per_night.value %}{{ form.price_per_night.value }}{% elif room %}{{ room.price_per_night }}{% else %}{% endif %}">
+                        <label for="price_per_night">{% translate "Prix par nuit (FCFA)" %} *</label>
+                        <div class="invalid-feedback">
+                            {% translate "Le prix par nuit est requis et doit être supérieur à 0." %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <input type="number" class="form-control" id="max_occupancy" name="max_occupancy" 
+                               placeholder=" " required min="1"
+                               value="{% if form.max_occupancy.value %}{{ form.max_occupancy.value }}{% elif room %}{{ room.max_occupancy }}{% else %}{% endif %}">
+                        <label for="max_occupancy">{% translate "Capacité maximale" %} *</label>
+                        <div class="invalid-feedback">
+                            {% translate "La capacité maximale est requise et doit être supérieure à 0." %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Amenities -->
+        <div class="form-section">
+            <div class="section-header">
+                <i class="fas fa-concierge-bell"></i>
+                <h3>{% translate "Équipements et Services" %}</h3>
+            </div>
+            
+            <div class="amenities-section">
+                <div class="row">
+                    {% for category, amenities in amenities_by_category.items %}
+                        <div class="col-md-6 mb-3">
+                            <h6 class="text-primary mb-2">
+                                <i class="fas fa-{{ category.icon }} me-2"></i>{{ category.name }}
+                            </h6>
+                            {% for amenity in amenities %}
+                                <div class="amenity-item">
+                                    <input type="checkbox" id="amenity_{{ amenity.id }}" 
+                                           name="amenities" value="{{ amenity.name }}"
+                                           {% if amenity.name in selected_amenities %}checked{% endif %}>
+                                    <label for="amenity_{{ amenity.id }}">
+                                        <i class="fas fa-{{ amenity.icon }} me-2"></i>{{ amenity.name }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div class="form-section">
+            <div class="section-header">
+                <i class="fas fa-toggle-on"></i>
+                <h3>{% translate "Statut de la Chambre" %}</h3>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="is_available" name="is_available"
+                               {% if form.is_available.value != False and room.is_available != False %}checked{% endif %}>
+                        <label class="form-check-label" for="is_available">
+                            <i class="fas fa-check-circle me-2"></i>{% translate "Chambre disponible" %}
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="maintenance_mode" name="maintenance_mode"
+                               {% if form.maintenance_mode.value or room.maintenance_mode %}checked{% endif %}>
+                        <label class="form-check-label" for="maintenance_mode">
+                            <i class="fas fa-tools me-2"></i>{% translate "Mode maintenance" %}
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Images -->
+        <div class="form-section">
+            <div class="section-header">
+                <i class="fas fa-images"></i>
+                <h3>{% translate "Galerie d'Images" %}</h3>
+            </div>
+            
+            <div class="alert alert-info mb-3">
+                <i class="fas fa-info-circle me-2"></i>
+                {% translate "Ajoutez jusqu'à 10 images de votre chambre. Faites glisser vos images ici ou cliquez pour sélectionner." %}
+            </div>
+            
+            <div id="imageDropZone" class="image-upload-section">
+                <i class="fas fa-cloud-upload-alt fa-2x text-primary mb-2"></i>
+                <div class="mb-2">
+                    <strong>{% translate "Glissez-déposez vos images ici" %}</strong>
+                </div>
+                <div class="text-muted">{% translate "ou cliquez pour sélectionner" %}</div>
+                <input type="file" id="imageInput" name="images" accept="image/*" multiple style="display:none;">
+                <div class="upload-progress">
+                    <div class="upload-progress-bar"></div>
+                </div>
+                <div class="error-message" id="uploadError"></div>
+                <div class="success-message" id="uploadSuccess"></div>
+            </div>
+            
+            <div id="imagePreviewGrid" class="image-preview-grid">
+                {% if room and room.images.all %}
+                    {% for room_image in room.images.all %}
+                        <div class="image-preview-item" data-image-id="{{ room_image.id }}" data-order="{{ room_image.order }}">
+                            <div class="image-order-badge">{{ forloop.counter }}</div>
+                            <img src="{{ room_image.image.url }}" alt="{{ room_image.caption|default:'Image de chambre' }}">
+                            <div class="image-preview-overlay">
+                                <div class="image-controls">
+                                    <button type="button" class="btn-image-control btn-move-up" title="{% translate 'Déplacer vers le haut' %}">
+                                        <i class="fas fa-chevron-up"></i>
+                                    </button>
+                                    <button type="button" class="btn-image-control btn-move-down" title="{% translate 'Déplacer vers le bas' %}">
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                    <button type="button" class="btn-image-control btn-remove-image" title="{% translate 'Supprimer' %}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="image-caption-input">
+                                <input type="text" placeholder="{% translate 'Légende (optionnel)' %}" 
+                                       value="{{ room_image.caption }}" 
+                                       data-original-caption="{{ room_image.caption }}">
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <a href="{% url 'rooms:room_list' business_location_id  %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>{% translate "Retour" %}
+            </a>
+            <button type="submit" class="btn btn-submit">
+                <i class="fas fa-save me-2"></i>
+                {% if room %}
+                    {% translate "Mettre à jour" %}
+                {% else %}
+                    {% translate "Créer la chambre" %}
+                {% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const imageDropZone = document.getElementById('imageDropZone');
+    const imageInput = document.getElementById('imageInput');
+    const imagePreviewGrid = document.getElementById('imagePreviewGrid');
+    const uploadError = document.getElementById('uploadError');
+    const uploadSuccess = document.getElementById('uploadSuccess');
+    const progressBar = document.querySelector('.upload-progress-bar');
+    const maxImages = 10;
+    
+    // Get room ID and check if it's a new room
+    const roomId = {% if room %}{{ room.id }}{% else %}null{% endif %};
+    const isNewRoom = {% if is_new_room %}true{% else %}false{% endif %};
+    const businessLocationId = {{ business_location_id }};
+    
+    // Image upload functionality
+    imageDropZone.addEventListener('click', () => imageInput.click());
+    
+    imageDropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        imageDropZone.classList.add('dragover');
+    });
+    
+    imageDropZone.addEventListener('dragleave', () => {
+        imageDropZone.classList.remove('dragover');
+    });
+    
+    imageDropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        imageDropZone.classList.remove('dragover');
+        const files = Array.from(e.dataTransfer.files);
+        handleImageFiles(files);
+    });
+    
+    imageInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+        handleImageFiles(files);
+    });
+
+    function handleImageFiles(files) {
+        const imageFiles = files.filter(file => file.type.startsWith('image/'));
+        
+        if (imageFiles.length === 0) {
+            showError('Aucun fichier image valide sélectionné.');
+            return;
+        }
+        
+        const currentCount = imagePreviewGrid.children.length;
+        if (currentCount + imageFiles.length > maxImages) {
+            showError(`Vous ne pouvez pas ajouter plus de ${maxImages} images.`);
+            return;
+        }
+        
+        imageFiles.forEach(file => {
+            if (file.size > 5 * 1024 * 1024) {
+                showError('Les images ne doivent pas dépasser 5MB.');
+                return;
+            }
+            
+            uploadImage(file);
+        });
+    }
+
+    function uploadImage(file) {
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        // Show progress
+        progressBar.style.width = '0%';
+        imageDropZone.querySelector('.upload-progress').style.display = 'block';
+        
+        // Choisir l'endpoint selon le type de chambre
+        const uploadUrl = isNewRoom ? '/rooms/upload-image-temp/' : `/rooms/${roomId}/upload-image/`;
+        
+        fetch(uploadUrl, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                addImageToGrid(data);
+                showSuccess('Image uploadée avec succès!');
+                progressBar.style.width = '100%';
+            } else {
+                showError(data.error);
+            }
+        })
+        .catch(error => {
+            showError('Erreur lors de l\'upload: ' + error.message);
+        })
+        .finally(() => {
+            setTimeout(() => {
+                imageDropZone.querySelector('.upload-progress').style.display = 'none';
+                progressBar.style.width = '0%';
+            }, 2000);
+        });
+    }
+
+    function addImageToGrid(imageData) {
+        const div = document.createElement('div');
+        div.className = 'image-preview-item';
+        div.dataset.imageId = imageData.id || imageData.image_id;
+        div.dataset.order = imageData.order;
+        
+        div.innerHTML = `
+            <div class="image-order-badge">${imageData.order + 1}</div>
+            <img src="${imageData.url || imageData.image_url}" alt="${imageData.caption || 'Image de chambre'}">
+            <div class="image-preview-overlay">
+                <div class="image-controls">
+                    <button type="button" class="btn-image-control btn-move-up" title="Déplacer vers le haut">
+                        <i class="fas fa-chevron-up"></i>
+                    </button>
+                    <button type="button" class="btn-image-control btn-move-down" title="Déplacer vers le bas">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <button type="button" class="btn-image-control btn-remove-image" title="Supprimer">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="image-caption-input">
+                <input type="text" placeholder="Légende (optionnel)" value="${imageData.caption || ''}" data-original-caption="${imageData.caption || ''}">
+            </div>
+        `;
+        
+        // Add event listeners
+        addImageEventListeners(div);
+        imagePreviewGrid.appendChild(div);
+        updateImageOrder();
+    }
+
+    function addImageEventListeners(imageElement) {
+        // Remove image
+        imageElement.querySelector('.btn-remove-image').addEventListener('click', function() {
+            const imageId = imageElement.dataset.imageId;
+            if (confirm('Êtes-vous sûr de vouloir supprimer cette image ?')) {
+                deleteImage(imageId, imageElement);
+            }
+        });
+        
+        // Move up
+        imageElement.querySelector('.btn-move-up').addEventListener('click', function() {
+            moveImage(imageElement, 'up');
+        });
+        
+        // Move down
+        imageElement.querySelector('.btn-move-down').addEventListener('click', function() {
+            moveImage(imageElement, 'down');
+        });
+        
+        // Caption change
+        const captionInput = imageElement.querySelector('.image-caption-input input');
+        captionInput.addEventListener('blur', function() {
+            const newCaption = this.value;
+            const originalCaption = this.dataset.originalCaption;
+            if (newCaption !== originalCaption) {
+                updateImageCaption(imageElement.dataset.imageId, newCaption);
+                this.dataset.originalCaption = newCaption;
+            }
+        });
+    }
+
+    function deleteImage(imageId, imageElement) {
+        // Choisir l'endpoint selon le type de chambre
+        const deleteUrl = isNewRoom ? `/rooms/delete-image-temp/${imageId}/` : `/rooms/${roomId}/delete-image/${imageId}/`;
+        
+        fetch(deleteUrl, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                imageElement.remove();
+                updateImageOrder();
+                showSuccess('Image supprimée avec succès!');
+            } else {
+                showError(data.error);
+            }
+        })
+        .catch(error => {
+            showError('Erreur lors de la suppression: ' + error.message);
+        });
+    }
+
+    function moveImage(imageElement, direction) {
+        const currentOrder = parseInt(imageElement.dataset.order);
+        const images = Array.from(imagePreviewGrid.children);
+        
+        if (direction === 'up' && currentOrder > 0) {
+            const prevImage = images.find(img => parseInt(img.dataset.order) === currentOrder - 1);
+            if (prevImage) {
+                swapImages(imageElement, prevImage);
+            }
+        } else if (direction === 'down' && currentOrder < images.length - 1) {
+            const nextImage = images.find(img => parseInt(img.dataset.order) === currentOrder + 1);
+            if (nextImage) {
+                swapImages(imageElement, nextImage);
+            }
+        }
+    }
+
+    function swapImages(img1, img2) {
+        const order1 = parseInt(img1.dataset.order);
+        const order2 = parseInt(img2.dataset.order);
+        
+        img1.dataset.order = order2;
+        img2.dataset.order = order1;
+        
+        // Swap positions in DOM
+        img1.parentNode.insertBefore(img2, img1);
+        
+        updateImageOrder();
+        
+        // Sauvegarder l'ordre seulement pour les chambres existantes
+        if (!isNewRoom && roomId) {
+            saveImageOrder();
+        }
+    }
+
+    function updateImageOrder() {
+        const images = Array.from(imagePreviewGrid.children);
+        images.forEach((image, index) => {
+            image.dataset.order = index;
+            image.querySelector('.image-order-badge').textContent = index + 1;
+        });
+    }
+
+    function saveImageOrder() {
+        // Pour les nouvelles chambres, l'ordre est géré côté client seulement
+        if (isNewRoom) {
+            showSuccess('Ordre des images mis à jour!');
+            return;
+        }
+        
+        // Vérifier que roomId existe
+        if (!roomId) {
+            showError('ID de chambre non disponible');
+            return;
+        }
+        
+        const images = Array.from(imagePreviewGrid.children);
+        const imageOrders = images.map((image, index) => ({
+            image_id: image.dataset.imageId,
+            order: index
+        }));
+        
+        fetch(`/rooms/${roomId}/reorder-images/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({ image_orders: imageOrders })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccess('Ordre des images mis à jour!');
+            } else {
+                showError(data.error);
+            }
+        })
+        .catch(error => {
+            showError('Erreur lors de la mise à jour de l\'ordre: ' + error.message);
+        });
+    }
+
+    function updateImageCaption(imageId, caption) {
+        // This would require an additional endpoint for updating captions
+        // For now, we'll just show a success message
+        showSuccess('Légende mise à jour!');
+    }
+
+    function showError(message) {
+        uploadError.textContent = message;
+        uploadError.style.display = 'block';
+        uploadSuccess.style.display = 'none';
+        setTimeout(() => {
+            uploadError.style.display = 'none';
+        }, 5000);
+    }
+
+    function showSuccess(message) {
+        uploadSuccess.textContent = message;
+        uploadSuccess.style.display = 'block';
+        uploadError.style.display = 'none';
+        setTimeout(() => {
+            uploadSuccess.style.display = 'none';
+        }, 3000);
+    }
+
+    // Add event listeners to existing images
+    document.querySelectorAll('.image-preview-item').forEach(addImageEventListeners);
+    
+    // Charger les images temporaires existantes pour les nouvelles chambres
+    if (isNewRoom) {
+        loadTempImages();
+    }
+    
+    // Initialiser l'ordre des images existantes
+    updateImageOrder();
+    
+    // Validation du formulaire avant soumission
+    document.getElementById('roomForm').addEventListener('submit', function(e) {
+        const roomNumber = document.getElementById('room_number').value.trim();
+        const roomType = document.getElementById('room_type').value;
+        const pricePerNight = document.getElementById('price_per_night').value;
+        const maxOccupancy = document.getElementById('max_occupancy').value;
+        
+        let hasErrors = false;
+        
+        // Réinitialiser les erreurs
+        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        
+        // Validation du numéro de chambre
+        if (!roomNumber) {
+            document.getElementById('room_number').classList.add('is-invalid');
+            hasErrors = true;
+        }
+        
+        // Validation du type de chambre
+        if (!roomType) {
+            document.getElementById('room_type').classList.add('is-invalid');
+            hasErrors = true;
+        }
+        
+        // Validation du prix
+        if (!pricePerNight || parseFloat(pricePerNight) <= 0) {
+            document.getElementById('price_per_night').classList.add('is-invalid');
+            hasErrors = true;
+        }
+        
+        // Validation de la capacité
+        if (!maxOccupancy || parseInt(maxOccupancy) <= 0) {
+            document.getElementById('max_occupancy').classList.add('is-invalid');
+            hasErrors = true;
+        }
+        
+        if (hasErrors) {
+            e.preventDefault();
+            showError('Veuillez corriger les erreurs dans le formulaire.');
+            return false;
+        }
+        
+        // Si c'est une nouvelle chambre, vérifier qu'il y a au moins une image
+        if (isNewRoom && imagePreviewGrid.children.length === 0) {
+            e.preventDefault();
+            showError('Veuillez ajouter au moins une image pour la chambre.');
+            return false;
+        }
+    });
+});
+
+// Fonction pour charger les images temporaires
+function loadTempImages() {
+    fetch('/rooms/list-image-temp/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.images && data.images.length > 0) {
+                data.images.forEach(imageData => {
+                    const div = document.createElement('div');
+                    div.className = 'image-preview-item';
+                    div.dataset.imageId = imageData.id;
+                    div.dataset.order = imageData.order;
+                    
+                    div.innerHTML = `
+                        <div class="image-order-badge">${imageData.order + 1}</div>
+                        <img src="${imageData.url}" alt="${imageData.caption || 'Image de chambre'}">
+                        <div class="image-preview-overlay">
+                            <div class="image-controls">
+                                <button type="button" class="btn-image-control btn-move-up" title="Déplacer vers le haut">
+                                    <i class="fas fa-chevron-up"></i>
+                                </button>
+                                <button type="button" class="btn-image-control btn-move-down" title="Déplacer vers le bas">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                                <button type="button" class="btn-image-control btn-remove-image" title="Supprimer">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="image-caption-input">
+                            <input type="text" placeholder="Légende (optionnel)" value="${imageData.caption || ''}" data-original-caption="${imageData.caption || ''}">
+                        </div>
+                    `;
+                    
+                    addImageEventListeners(div);
+                    imagePreviewGrid.appendChild(div);
+                });
+                updateImageOrder();
+            }
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des images temporaires:', error);
+        });
+}
+</script>
+{% endblock %} 

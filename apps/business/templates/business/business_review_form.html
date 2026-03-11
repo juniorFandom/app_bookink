@@ -1,0 +1,332 @@
+{% extends "business/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Write Review" %} | {{ business.name }} | {{ block.super }}{% endblock %}
+
+{% block business_content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="h3 mb-0">{% translate "Write a Review" %}</h1>
+                    <a href="{% url 'business:business-detail' business.pk %}" 
+                       class="btn btn-outline-secondary">
+                        {% translate "Back to Business" %}
+                    </a>
+                </div>
+
+                <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Rating Section -->
+                    <div class="mb-4">
+                        <h2 class="h5 mb-3">{% translate "Your Rating" %}</h2>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.overall_rating.id_for_label }}" class="form-label">
+                                    {{ form.overall_rating.label }}
+                                </label>
+                                <div class="rating-input">
+                                    {% for i in "12345" %}
+                                    <input type="radio" name="{{ form.overall_rating.name }}" 
+                                           id="overall_{{ i }}" value="{{ i }}"
+                                           {% if form.overall_rating.value|stringformat:"s" == i %}checked{% endif %}
+                                           required>
+                                    <label for="overall_{{ i }}">
+                                        <i class="far fa-star"></i>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                                {% if form.overall_rating.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.overall_rating.errors|join:", " }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.service_rating.id_for_label }}" class="form-label">
+                                    {{ form.service_rating.label }}
+                                </label>
+                                <div class="rating-input">
+                                    {% for i in "12345" %}
+                                    <input type="radio" name="{{ form.service_rating.name }}" 
+                                           id="service_{{ i }}" value="{{ i }}"
+                                           {% if form.service_rating.value|stringformat:"s" == i %}checked{% endif %}
+                                           required>
+                                    <label for="service_{{ i }}">
+                                        <i class="far fa-star"></i>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                                {% if form.service_rating.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.service_rating.errors|join:", " }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.value_rating.id_for_label }}" class="form-label">
+                                    {{ form.value_rating.label }}
+                                </label>
+                                <div class="rating-input">
+                                    {% for i in "12345" %}
+                                    <input type="radio" name="{{ form.value_rating.name }}" 
+                                           id="value_{{ i }}" value="{{ i }}"
+                                           {% if form.value_rating.value|stringformat:"s" == i %}checked{% endif %}
+                                           required>
+                                    <label for="value_{{ i }}">
+                                        <i class="far fa-star"></i>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                                {% if form.value_rating.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.value_rating.errors|join:", " }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% if form.cleanliness_rating %}
+                            <div class="col-md-6">
+                                <label for="{{ form.cleanliness_rating.id_for_label }}" class="form-label">
+                                    {{ form.cleanliness_rating.label }}
+                                </label>
+                                <div class="rating-input">
+                                    {% for i in "12345" %}
+                                    <input type="radio" name="{{ form.cleanliness_rating.name }}" 
+                                           id="cleanliness_{{ i }}" value="{{ i }}"
+                                           {% if form.cleanliness_rating.value|stringformat:"s" == i %}checked{% endif %}
+                                           required>
+                                    <label for="cleanliness_{{ i }}">
+                                        <i class="far fa-star"></i>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                                {% if form.cleanliness_rating.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.cleanliness_rating.errors|join:", " }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            {% if form.location_rating %}
+                            <div class="col-md-6">
+                                <label for="{{ form.location_rating.id_for_label }}" class="form-label">
+                                    {{ form.location_rating.label }}
+                                </label>
+                                <div class="rating-input">
+                                    {% for i in "12345" %}
+                                    <input type="radio" name="{{ form.location_rating.name }}" 
+                                           id="location_{{ i }}" value="{{ i }}"
+                                           {% if form.location_rating.value|stringformat:"s" == i %}checked{% endif %}
+                                           required>
+                                    <label for="location_{{ i }}">
+                                        <i class="far fa-star"></i>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                                {% if form.location_rating.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.location_rating.errors|join:", " }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Review Details -->
+                    <div class="mb-4">
+                        <h2 class="h5 mb-3">{% translate "Review Details" %}</h2>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label for="{{ form.title.id_for_label }}" class="form-label">
+                                    {{ form.title.label }}
+                                </label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.title.errors|join:", " }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12">
+                                <label for="{{ form.content.id_for_label }}" class="form-label">
+                                    {{ form.content.label }}
+                                </label>
+                                {{ form.content }}
+                                {% if form.content.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.content.errors|join:", " }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.visit_type.id_for_label }}" class="form-label">
+                                    {{ form.visit_type.label }}
+                                </label>
+                                {{ form.visit_type }}
+                                {% if form.visit_type.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.visit_type.errors|join:", " }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.visit_date.id_for_label }}" class="form-label">
+                                    {{ form.visit_date.label }}
+                                </label>
+                                {{ form.visit_date }}
+                                {% if form.visit_date.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.visit_date.errors|join:", " }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Images -->
+                    <div class="mb-4">
+                        <h2 class="h5 mb-3">{% translate "Add Photos" %}</h2>
+                        {{ image_formset.management_form }}
+                        <div id="image-formset">
+                            {% for image_form in image_formset %}
+                            <div class="row g-3 mb-3 image-form">
+                                <div class="col-md-8">
+                                    <label for="{{ image_form.image.id_for_label }}" class="form-label">
+                                        {{ image_form.image.label }}
+                                    </label>
+                                    {{ image_form.image }}
+                                    {% if image_form.image.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ image_form.image.errors|join:", " }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ image_form.caption.id_for_label }}" class="form-label">
+                                        {{ image_form.caption.label }}
+                                    </label>
+                                    {{ image_form.caption }}
+                                    {% if image_form.caption.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ image_form.caption.errors|join:", " }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <button type="button" id="add-image" class="btn btn-outline-secondary">
+                            <i class="fas fa-plus"></i> {% translate "Add Another Image" %}
+                        </button>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-primary">
+                            {% translate "Submit Review" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .rating-input {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+    }
+
+    .rating-input input {
+        display: none;
+    }
+
+    .rating-input label {
+        cursor: pointer;
+        font-size: 1.5rem;
+        padding: 0 0.1em;
+        color: #ddd;
+    }
+
+    .rating-input label:hover,
+    .rating-input label:hover ~ label,
+    .rating-input input:checked ~ label {
+        color: #ffc107;
+    }
+
+    .rating-input label:hover i,
+    .rating-input label:hover ~ label i,
+    .rating-input input:checked ~ label i {
+        font-weight: 900;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add Bootstrap classes to form fields
+        const formFields = document.querySelectorAll('input[type="text"], input[type="date"], select, textarea');
+        formFields.forEach(field => {
+            if (field.type === 'file') {
+                field.classList.add('form-control');
+            } else if (field.tagName === 'SELECT') {
+                field.classList.add('form-select');
+            } else {
+                field.classList.add('form-control');
+            }
+        });
+
+        // Handle image formset
+        const addImageBtn = document.getElementById('add-image');
+        const totalFormsInput = document.querySelector('[name="images-TOTAL_FORMS"]');
+        const imageFormset = document.getElementById('image-formset');
+        const emptyForm = imageFormset.querySelector('.image-form').cloneNode(true);
+        
+        addImageBtn.addEventListener('click', function() {
+            const formCount = parseInt(totalFormsInput.value);
+            const newForm = emptyForm.cloneNode(true);
+            
+            newForm.querySelectorAll('input, select, textarea').forEach(input => {
+                input.name = input.name.replace('-0-', `-${formCount}-`);
+                input.id = input.id.replace('-0-', `-${formCount}-`);
+                input.value = '';
+            });
+            
+            newForm.querySelectorAll('label').forEach(label => {
+                label.setAttribute('for', label.getAttribute('for').replace('-0-', `-${formCount}-`));
+            });
+            
+            imageFormset.appendChild(newForm);
+            totalFormsInput.value = formCount + 1;
+        });
+
+        // Initialize form validation
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+    });
+</script>
+{% endblock %} 

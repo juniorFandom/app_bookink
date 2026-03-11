@@ -1,0 +1,93 @@
+{% load i18n %}
+{% load business_tags %}
+{% load static %}
+<form id="wizardStep4Form" method="post" novalidate autocomplete="off">
+    {% csrf_token %}
+    <div class="form-section mb-4">
+        <div class="section-header mb-3">
+            <i class="fas fa-check-circle"></i>
+            <h3 class="ms-2 mb-0">{% translate "Résumé avant validation" %}</h3>
+        </div>
+        <div class="alert alert-info mb-3">
+            <i class="fas fa-info-circle me-2"></i>
+            {% translate "Vérifiez toutes les informations avant de valider la création/modification de l'établissement." %}
+        </div>
+        <div class="mb-4">
+            <h5><i class="fas fa-info-circle text-primary me-2"></i>{% translate "Informations de base" %}</h5>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><strong>{% translate "Nom" %} :</strong> {{ location.name }}</li>
+                <li class="list-group-item"><strong>{% translate "Type" %} :</strong> {{ location.get_business_location_type_display }}</li>
+                <li class="list-group-item"><strong>{% translate "Téléphone" %} :</strong> {{ location.phone }}</li>
+                <li class="list-group-item"><strong>{% translate "Email" %} :</strong> {{ location.email }}</li>
+                <li class="list-group-item"><strong>{% translate "Numéro d'enregistrement" %} :</strong> {{ location.registration_number }}</li>
+                <li class="list-group-item"><strong>{% translate "Date de création" %} :</strong> {{ location.founded_date|date:'d/m/Y' }}</li>
+                <li class="list-group-item"><strong>{% translate "Description" %} :</strong> {{ location.description }}</li>
+            </ul>
+        </div>
+        <div class="mb-4">
+            <h5><i class="fas fa-map-marker-alt text-success me-2"></i>{% translate "Adresse" %}</h5>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><strong>{% translate "Adresse" %} :</strong> {{ location.street_address }}</li>
+                <li class="list-group-item"><strong>{% translate "Quartier" %} :</strong> {{ location.neighborhood }}</li>
+                <li class="list-group-item"><strong>{% translate "Ville" %} :</strong> {{ location.city }}</li>
+                <li class="list-group-item"><strong>{% translate "Région" %} :</strong> {{ location.region }}</li>
+                <li class="list-group-item"><strong>{% translate "Pays" %} :</strong> {{ location.country }}</li>
+                <li class="list-group-item"><strong>{% translate "Code postal" %} :</strong> {{ location.postal_code }}</li>
+            </ul>
+        </div>
+        <div class="mb-4">
+            <h5><i class="fas fa-clock text-warning me-2"></i>{% translate "Horaires d'ouverture" %}</h5>
+            
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle text-center">
+                    <thead class="table-light">
+                        <tr>
+                            <th>{% translate "Jour" %}</th>
+                            <th>{% translate "Ouvert" %}</th>
+                            <th>{% translate "Heure d'ouverture" %}</th>
+                            <th>{% translate "Heure de fermeture" %}</th>
+                            <th>{% translate "Pause (début)" %}</th>
+                            <th>{% translate "Pause (fin)" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for hours in business_hours %}
+                        <tr>
+                            <td><strong>{% translate hours.get_day_display %}</strong></td>
+                            <td>{% if not hours.is_closed %}<span class="badge bg-success">{% translate "Oui" %}</span>{% else %}<span class="badge bg-danger">{% translate "Non" %}</span>{% endif %}</td>
+                            <td>{{ hours.opening_time|default:'—' }}</td>
+                            <td>{{ hours.closing_time|default:'—' }}</td>
+                            <td>{{ hours.break_start|default:'—' }}</td>
+                            <td>{{ hours.break_end|default:'—' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="mb-4">
+            <h5><i class="fas fa-list text-info me-2"></i>{% translate "Commodités & Équipements" %}</h5>
+            <ul class="list-group list-group-flush">
+                {% for assignment in amenity_assignments %}
+                <li class="list-group-item">
+                    <i class="fas {{ assignment.amenity.icon|default:'fa-check' }} me-1"></i>
+                    <strong>{{ assignment.amenity.name }}</strong>
+                    {% if assignment.details %}<span class="text-muted">— {{ assignment.details }}</span>{% endif %}
+                    <span class="badge bg-light text-dark ms-2">{{ assignment.amenity.category.name }}</span>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted">{% translate "Aucune commodité sélectionnée." %}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mt-4">
+        <button type="button" class="btn btn-outline-secondary btn-prev-step">
+            <i class="fas fa-arrow-left me-2"></i>{% translate "Précédent" %}
+        </button>
+        <button type="button" class="btn btn-primary btn-next-step">
+            {% translate "Suivant" %}
+            <i class="fas fa-arrow-right ms-2"></i>
+        </button>
+    </div>
+</form> 

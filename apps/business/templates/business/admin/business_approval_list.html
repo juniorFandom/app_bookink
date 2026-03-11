@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Approbations Business Locations{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1>Business Locations en attente d'approbation</h1>
+            <p>Gérez les demandes d'approbation des business locations</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% for business in pending_businesses %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-4">
+                            <h5 class="card-title">{{ business.name }}</h5>
+                            <p class="card-text">{{ business.business.name }}</p>
+                            <small class="text-muted">Créé le {{ business.created_at|date:"d/m/Y" }}</small>
+                        </div>
+                        <div class="col-md-3">
+                            <span class="badge bg-primary">{{ business.get_business_location_type_display }}</span>
+                            <br>
+                            <small class="text-muted">Propriétaire: {{ business.owner.get_full_name|default:business.owner.username }}</small>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="mb-1"><strong>{{ business.phone }}</strong></p>
+                            <p class="text-muted mb-0">{{ business.email }}</p>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <button class="btn btn-success btn-sm mb-2 w-100" 
+                                    onclick="approveBusiness({{ business.id }})">
+                                <i class="fas fa-check me-1"></i>Approuver
+                            </button>
+                            <button class="btn btn-danger btn-sm w-100" 
+                                    onclick="rejectBusiness({{ business.id }})">
+                                <i class="fas fa-times me-1"></i>Rejeter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-check-circle fa-3x mb-3 text-success"></i>
+                <h4>Aucune demande d'approbation en attente</h4>
+                <p>Tous les business locations ont été traités !</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+function approveBusiness(businessId) {
+    if (confirm('Êtes-vous sûr de vouloir approuver ce business location ?')) {
+        fetch(`/business/super-admin/approve/${businessId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+}
+
+function rejectBusiness(businessId) {
+    const reason = prompt('Raison du rejet:');
+    if (reason) {
+        fetch(`/business/super-admin/reject/${businessId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `reason=${encodeURIComponent(reason)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+}
+</script>
+{% endblock %} 

@@ -1,0 +1,697 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load widget_tweaks %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    #meetingPointMap {
+        height: 300px;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+    }
+
+    .map-instructions {
+        background: #f8f9fa;
+        border-left: 4px solid #007bff;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 0 8px 8px 0;
+    }
+
+    .tour-form-group {
+        margin-bottom: 2rem;
+    }
+
+    /* Style simple pour les inputs */
+    .tour-form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: #222;
+    }
+
+    .tour-form-field {
+        margin-bottom: 1.2rem;
+    }
+
+    .tour-form-error {
+        color: #dc2626;
+        font-size: 0.95em;
+        margin-top: 0.3rem;
+    }
+
+    .tour-form-help {
+        color: #6b7280;
+        font-size: 0.92em;
+        margin-top: 0.2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tour-form-dashboard-bg py-4">
+    <div class="container-xxl">
+        <!-- HERO SECTION -->
+        <div
+            class="tour-form-hero mb-4 p-4 rounded-4 shadow-sm d-flex flex-wrap align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <div
+                    class="tour-form-hero-icon bg-gradient-primary text-white rounded-3 d-flex align-items-center justify-content-center">
+                    <i class="fas fa-route fa-2x"></i>
+                </div>
+                <div>
+                    <h1 class="tour-form-title mb-1">{% translate "Nouveau tour" %}</h1>
+                    <div class="text-white-50 small">{% translate "Gestion des tours" %}</div>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-3 mt-md-0">
+                <a href="{% url 'tours:tour_list' %}" class="btn btn-outline-light tour-form-btn-action">
+                    <i class="fas fa-arrow-left"></i> {% translate "Retour à la liste" %}
+                </a>
+            </div>
+        </div>
+
+        <!-- MAIN FORM -->
+        <div class="row g-4 justify-content-center">
+            <div class="col-12 col-lg-10 col-xl-8">
+                <div class="tour-form-section-card p-4">
+                    <div class="d-flex align-items-center mb-4 gap-2">
+                        <i class="fas fa-edit text-primary"></i>
+                        <h2 class="h5 mb-0">{% translate "Informations du tour" %}</h2>
+                    </div>
+                    <form method="post" enctype="multipart/form-data" class="tour-form">
+                        {% csrf_token %}
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="tour-form-field">
+                                    <label for="id_nom_balade" class="tour-form-label"><i
+                                            class="fas fa-signature me-2"></i>{% translate "Nom du tour" %}</label>
+                                    {{ form.nom_balade|add_class:'form-control'|attr:'placeholder:Ex: Safari, Balade
+                                    urbaine...' }}
+                                    {% if form.nom_balade.help_text %}<div class="tour-form-help"><i
+                                            class="fas fa-info-circle me-1"></i>{{ form.nom_balade.help_text }}</div>{%
+                                    endif %}
+                                    {% for error in form.nom_balade.errors %}<div class="tour-form-error"><i
+                                            class="fas fa-exclamation-triangle me-1"></i>{{ error }}</div>{% endfor %}
+                                </div>
+                                <div class="tour-form-field">
+                                    <label for="id_type" class="tour-form-label"><i class="fas fa-tags me-2"></i>{%
+                                        translate "Type de tour" %}</label>
+                                    {{ form.type|add_class:'form-control'|attr:'placeholder:Ex: Nature, Culture,
+                                    Aventure...' }}
+                                    {% if form.type.help_text %}<div class="tour-form-help"><i
+                                            class="fas fa-info-circle me-1"></i>{{ form.type.help_text }}</div>{% endif
+                                    %}
+                                    {% for error in form.type.errors %}<div class="tour-form-error"><i
+                                            class="fas fa-exclamation-triangle me-1"></i>{{ error }}</div>{% endfor %}
+                                </div>
+                                <div class="tour-form-field">
+                                    <label for="id_description" class="tour-form-label"><i
+                                            class="fas fa-align-left me-2"></i>{% translate "Description" %}</label>
+                                    {{ form.description|add_class:'form-control'|attr:'placeholder:Décrivez brièvement
+                                    le tour...' }}
+                                    {% if form.description.help_text %}<div class="tour-form-help"><i
+                                            class="fas fa-info-circle me-1"></i>{{ form.description.help_text }}</div>{%
+                                    endif %}
+                                    {% for error in form.description.errors %}<div class="tour-form-error"><i
+                                            class="fas fa-exclamation-triangle me-1"></i>{{ error }}</div>{% endfor %}
+                                </div>
+                                <div class="tour-form-field">
+                                    <label for="id_date_debut" class="tour-form-label"><i
+                                            class="fas fa-calendar-day me-2"></i>{% translate "Date de début" %}</label>
+                                    {{ form.date_debut|add_class:'form-control'|attr:'type:date' }}
+                                    {% if form.date_debut.help_text %}<div class="tour-form-help"><i
+                                            class="fas fa-info-circle me-1"></i>{{ form.date_debut.help_text }}</div>{%
+                                    endif %}
+                                    {% for error in form.date_debut.errors %}<div class="tour-form-error"><i
+                                            class="fas fa-exclamation-triangle me-1"></i>{{ error }}</div>{% endfor %}
+                                </div>
+                                <div class="tour-form-field">
+                                    <label for="id_heure_depart" class="tour-form-label"><i
+                                            class="fas fa-clock me-2"></i>{% translate "Heure de départ" %}</label>
+                                    {{ form.heure_depart|add_class:'form-control'|attr:'type:time' }}
+                                    {% if form.heure_depart.help_text %}<div class="tour-form-help"><i
+                                            class="fas fa-info-circle me-1"></i>{{ form.heure_depart.help_text }}</div>
+                                    {% endif %}
+                                    {% for error in form.heure_depart.errors %}<div class="tour-form-error"><i
+                                            class="fas fa-exclamation-triangle me-1"></i>{{ error }}</div>{% endfor %}
+                                </div>
+                                <div class="tour-form-field">
+                                    <label for="id_exigence" class="tour-form-label"><i
+                                            class="fas fa-exclamation-circle me-2"></i>{% translate "Exigences
+                                        particulières" %}</label>
+                                    {{ form.exigence|add_class:'form-control'|attr:'placeholder:Ex: Bonne condition
+                                    physique...' }}
+                                    {% if form.exigence.help_text %}<div class="tour-form-help"><i
+                                            class="fas fa-info-circle me-1"></i>{{ form.exigence.help_text }}</div>{%
+                                    endif %}
+                                    {% for error in form.exigence.errors %}<div class="tour-form-error"><i
+                                            class="fas fa-exclamation-triangle me-1"></i>{{ error }}</div>{% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="tour-form-field">
+                                    <label for="id_duree" class="tour-form-label"><i class="fas fa-clock me-2"></i>{%
+                                        translate "Durée (jours)" %}</label>
+                                    {{
+                                    form.duree|add_class:'form-control'|attr:'type:number'|attr:'min:1'|attr:'step:1'|attr:'placeholder:1'
+                                    }}
+                                    {% if form.duree.help_text %}<div class="tour-form-help"><i
+                                            class="fas fa-info-circle me-1"></i>{{ form.duree.help_text }}</div>{% endif
+                                    %}
+                                    {% for error in form.duree.errors %}<div class="tour-form-error"><i
+                                            class="fas fa-exclamation-triangle me-1"></i>{{ error }}</div>{% endfor %}
+                                </div>
+                                <div class="tour-form-field">
+                                    <label for="id_prix_par_personne" class="tour-form-label"><i
+                                            class="fas fa-money-bill-wave me-2"></i>{% translate "Prix par personne
+                                        (XAF)" %}</label>
+                                    {{
+                                    form.prix_par_personne|add_class:'form-control'|attr:'type:number'|attr:'min:0'|attr:'step:100'|attr:'placeholder:Ex:
+                                    10000' }}
+                                    {% if form.prix_par_personne.help_text %}<div class="tour-form-help"><i
+                                            class="fas fa-info-circle me-1"></i>{{ form.prix_par_personne.help_text }}
+                                    </div>{% endif %}
+                                    {% for error in form.prix_par_personne.errors %}<div class="tour-form-error"><i
+                                            class="fas fa-exclamation-triangle me-1"></i>{{ error }}</div>{% endfor %}
+                                </div>
+                                <div class="tour-form-field">
+                                    <label for="id_nombre_participant_min" class="tour-form-label"><i
+                                            class="fas fa-user-friends me-2"></i>{% translate "Participants minimum"
+                                        %}</label>
+                                    {{
+                                    form.nombre_participant_min|add_class:'form-control'|attr:'type:number'|attr:'min:1'|attr:'step:1'|attr:'placeholder:1'
+                                    }}
+                                    {% if form.nombre_participant_min.help_text %}<div class="tour-form-help"><i
+                                            class="fas fa-info-circle me-1"></i>{{ form.nombre_participant_min.help_text
+                                        }}</div>{% endif %}
+                                    {% for error in form.nombre_participant_min.errors %}<div class="tour-form-error"><i
+                                            class="fas fa-exclamation-triangle me-1"></i>{{ error }}</div>{% endfor %}
+                                </div>
+                                <div class="tour-form-field">
+                                    <label for="id_nombre_participant_max" class="tour-form-label"><i
+                                            class="fas fa-user-plus me-2"></i>{% translate "Participants maximum"
+                                        %}</label>
+                                    {{
+                                    form.nombre_participant_max|add_class:'form-control'|attr:'type:number'|attr:'min:1'|attr:'step:1'|attr:'placeholder:10'
+                                    }}
+                                    {% if form.nombre_participant_max.help_text %}<div class="tour-form-help"><i
+                                            class="fas fa-info-circle me-1"></i>{{ form.nombre_participant_max.help_text
+                                        }}</div>{% endif %}
+                                    {% for error in form.nombre_participant_max.errors %}<div class="tour-form-error"><i
+                                            class="fas fa-exclamation-triangle me-1"></i>{{ error }}</div>{% endfor %}
+                                </div>
+                                <div class="tour-form-field">
+                                    <label for="id_image" class="tour-form-label"><i class="fas fa-image me-2"></i>{%
+                                        translate "Image principale" %}</label>
+                                    {{
+                                    form.image|add_class:'form-control'|attr:'accept:image/*'|attr:'onchange:previewImage(event)'
+                                    }}
+                                    <div class="tour-form-file-preview" id="preview-id_image"></div>
+                                    {% for error in form.image.errors %}<div class="tour-form-error"><i
+                                            class="fas fa-exclamation-triangle me-1"></i>{{ error }}</div>{% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-4 mt-2">
+                            <div class="col-12">
+                                <div class="tour-form-field">
+                                    <div class="map-instructions">
+                                        <i class="fas fa-info-circle text-primary me-2"></i>
+                                        {% translate "Instructions" %}: {% translate "Cliquez sur la carte pour définir
+                                        le point de rencontre. Vous pouvez également saisir manuellement les
+                                        coordonnées." %}
+                                    </div>
+                                    <div id="meetingPointMap"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tour-form-field">
+                                    <label for="id_point_rencontre_latitude" class="tour-form-label"><i
+                                            class="fas fa-globe-africa me-2"></i>{% translate "Latitude" %}</label>
+                                    {{ form.point_rencontre_latitude|add_class:'form-control' }}
+                                    {% for error in form.point_rencontre_latitude.errors %}<div class="tour-form-error">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>{{ error }}
+                                    </div>{% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tour-form-field">
+                                    <label for="id_point_rencontre_longitude" class="tour-form-label"><i
+                                            class="fas fa-globe-africa me-2"></i>{% translate "Longitude" %}</label>
+                                    {{ form.point_rencontre_longitude|add_class:'form-control' }}
+                                    {% for error in form.point_rencontre_longitude.errors %}<div
+                                        class="tour-form-error"><i class="fas fa-exclamation-triangle me-1"></i>{{ error
+                                        }}</div>{% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="tour-form-field">
+                                    <label for="id_point_rencontre_address" class="tour-form-label"><i
+                                            class="fas fa-map-pin me-2"></i>{% translate "Adresse du point de rencontre"
+                                        %}</label>
+                                    {{ form.point_rencontre_address|add_class:'form-control'|attr:'placeholder:Ex: Place
+                                    de l\'Indépendance, Yaoundé' }}
+                                    {% for error in form.point_rencontre_address.errors %}<div class="tour-form-error">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>{{ error }}
+                                    </div>{% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-4 mt-2">
+                            <div class="col-md-6 d-flex align-items-center">
+                                <div class="form-check form-switch tour-form-field">
+                                    {{ form.is_active|add_class:'form-check-input' }}
+                                    <label class="form-check-label ms-2" for="id_is_active">
+                                        <i class="fas fa-toggle-on me-1"></i>{% translate "Tour actif" %}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tour-form-actions mt-5">
+                            <div class="d-flex gap-3 justify-content-end">
+                                <a href="{% url 'tours:tour_list' %}" class="btn btn-outline-secondary tour-form-btn">
+                                    <i class="fas fa-times me-2"></i>{% translate "Annuler" %}
+                                </a>
+                                <button type="submit" class="btn btn-gradient-primary tour-form-btn">
+                                    <i class="fas fa-save me-2"></i>{% translate "Créer le tour" %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- STYLE TOUR FORM DASHBOARD -->
+<style>
+    .tour-form-dashboard-bg {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        min-height: 100vh;
+    }
+
+    .tour-form-hero {
+        background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
+        color: #fff;
+        box-shadow: 0 4px 24px rgba(37, 99, 235, 0.15);
+    }
+
+    .tour-form-hero-icon {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+    }
+
+    .tour-form-title {
+        font-size: 2.1rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    .tour-form-btn-action {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 0.7rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+        font-weight: 600;
+    }
+
+    .tour-form-btn-action:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 6px 24px rgba(37, 99, 235, 0.2);
+    }
+
+    .btn-gradient-primary {
+        background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
+        border: none;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-gradient-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
+        color: white;
+    }
+
+    .tour-form-section-card {
+        background: #fff;
+        border-radius: 1.1rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .tour-form-section-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    }
+
+    .tour-form-field {
+        margin-bottom: 1.5rem;
+    }
+
+    .tour-form-label {
+        display: block;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.75rem;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
+
+    .tour-form-label:hover {
+        color: #2563eb;
+    }
+
+    .tour-form-input-wrapper {
+        position: relative;
+    }
+
+    .tour-form-input {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 0.7rem;
+        font-size: 0.95rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: #f9fafb;
+    }
+
+    .tour-form-input:focus {
+        outline: none;
+        border-color: #2563eb;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        transform: translateY(-1px);
+    }
+
+    .tour-form-input:hover {
+        border-color: #1d4ed8;
+        background: white;
+    }
+
+    .tour-form-input[type="file"] {
+        padding: 0.75rem;
+        background: linear-gradient(90deg, #f0fdf4 0%, #dbeafe 100%);
+        border: 2px dashed #2563eb;
+        cursor: pointer;
+        text-align: center;
+    }
+
+    .tour-form-input[type="file"]:hover {
+        background: linear-gradient(90deg, #dbeafe 0%, #bfdbfe 100%);
+        border-color: #1d4ed8;
+    }
+
+    .tour-form-input[type="file"]::file-selector-button {
+        background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        margin-right: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .tour-form-input[type="file"]::file-selector-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    .tour-form-input[multiple] {
+        min-height: 120px;
+    }
+
+    .tour-form-input[rows] {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    .tour-form-help {
+        margin-top: 0.5rem;
+        font-size: 0.85rem;
+        color: #6b7280;
+        background: linear-gradient(90deg, #f0fdf4 0%, #dbeafe 100%);
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        border-left: 3px solid #2563eb;
+    }
+
+    .tour-form-error {
+        margin-top: 0.5rem;
+        font-size: 0.85rem;
+        color: #dc2626;
+        background: linear-gradient(90deg, #fef2f2 0%, #fee2e2 100%);
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        border-left: 3px solid #dc2626;
+        animation: shake 0.5s ease-in-out;
+    }
+
+    .tour-form-file-preview {
+        margin-top: 0.75rem;
+        padding: 0.75rem;
+        background: #f9fafb;
+        border-radius: 0.5rem;
+        border: 1px solid #e5e7eb;
+        min-height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6b7280;
+        font-size: 0.85rem;
+    }
+
+    .tour-form-actions {
+        border-top: 2px solid #f3f4f6;
+        padding-top: 2rem;
+        background: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 100%);
+        margin: 0 -1.5rem -1.5rem -1.5rem;
+        padding: 2rem 1.5rem 1.5rem 1.5rem;
+        border-radius: 0 0 1.1rem 1.1rem;
+    }
+
+    .tour-form-btn {
+        padding: 0.875rem 1.5rem;
+        border-radius: 0.7rem;
+        font-weight: 600;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 2px solid transparent;
+    }
+
+    .tour-form-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-outline-secondary {
+        border-color: #d1d5db;
+        color: #6b7280;
+    }
+
+    .btn-outline-secondary:hover {
+        background: #6b7280;
+        border-color: #6b7280;
+        color: white;
+    }
+
+    @keyframes shake {
+
+        0%,
+        100% {
+            transform: translateX(0);
+        }
+
+        25% {
+            transform: translateX(-5px);
+        }
+
+        75% {
+            transform: translateX(5px);
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .tour-form-section-card {
+        animation: fadeInUp 0.7s ease-out;
+    }
+
+    @media (max-width: 991px) {
+        .tour-form-hero {
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .tour-form-title {
+            font-size: 1.5rem;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .tour-form-title {
+            font-size: 1.2rem;
+        }
+
+        .tour-form-actions {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .tour-form-btn {
+            width: 100%;
+        }
+
+        .col-md-6,
+        .col-md-4 {
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // --- Leaflet Map pour le point de rencontre ---
+        var mapDiv = document.getElementById('meetingPointMap');
+        if (mapDiv) {
+            var map = L.map('meetingPointMap').setView([3.848033, 11.502075], 10); // Yaoundé par défaut
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            var marker = null;
+            var latInput = document.getElementById('id_point_rencontre_latitude');
+            var lngInput = document.getElementById('id_point_rencontre_longitude');
+            // Si coordonnées déjà présentes
+            if (latInput && lngInput && latInput.value && lngInput.value) {
+                var initialLat = parseFloat(latInput.value);
+                var initialLng = parseFloat(lngInput.value);
+                if (!isNaN(initialLat) && !isNaN(initialLng)) {
+                    map.setView([initialLat, initialLng], 15);
+                    marker = L.marker([initialLat, initialLng]).addTo(map);
+                }
+            }
+            map.on('click', function (e) {
+                var lat = e.latlng.lat;
+                var lng = e.latlng.lng;
+                if (marker) map.removeLayer(marker);
+                marker = L.marker([lat, lng]).addTo(map);
+                if (latInput) latInput.value = lat.toFixed(6);
+                if (lngInput) lngInput.value = lng.toFixed(6);
+                // Reverse geocoding pour l'adresse
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.display_name) {
+                            var addr = document.getElementById('id_point_rencontre_address');
+                            if (addr) addr.value = data.display_name;
+                        }
+                    });
+            });
+            // Si on modifie manuellement les coordonnées
+            if (latInput) latInput.addEventListener('change', function () {
+                var lat = parseFloat(this.value);
+                var lng = parseFloat(lngInput.value);
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    if (marker) map.removeLayer(marker);
+                    marker = L.marker([lat, lng]).addTo(map);
+                    map.setView([lat, lng], 15);
+                }
+            });
+            if (lngInput) lngInput.addEventListener('change', function () {
+                var lat = parseFloat(latInput.value);
+                var lng = parseFloat(this.value);
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    if (marker) map.removeLayer(marker);
+                    marker = L.marker([lat, lng]).addTo(map);
+                    map.setView([lat, lng], 15);
+                }
+            });
+        }
+        // --- Aperçu image ---
+        const fileInputs = document.querySelectorAll('input[type="file"]');
+        fileInputs.forEach(input => {
+            input.addEventListener('change', function () {
+                const preview = document.getElementById('preview-' + this.id);
+                if (preview && this.files.length > 0) {
+                    const file = this.files[0];
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            preview.innerHTML = `<img src="${e.target.result}" style="max-width: 100%; max-height: 100px; border-radius: 0.5rem;">`;
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        preview.innerHTML = `<i class="fas fa-file me-2"></i>${file.name}`;
+                    }
+                }
+            });
+        });
+        // --- Feedback validation ---
+        const form = document.querySelector('.tour-form');
+        if (form) {
+            const inputs = form.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('blur', function () {
+                    if (this.value.trim() === '' && this.hasAttribute('required')) {
+                        this.classList.add('is-invalid');
+                    } else {
+                        this.classList.remove('is-invalid');
+                        this.classList.add('is-valid');
+                    }
+                });
+                input.addEventListener('input', function () {
+                    if (this.classList.contains('is-invalid')) {
+                        this.classList.remove('is-invalid');
+                    }
+                });
+            });
+        }
+        // --- Animation champs ---
+        const formFields = document.querySelectorAll('.tour-form-field');
+        formFields.forEach((field, index) => {
+            field.style.animationDelay = `${index * 0.1}s`;
+            field.classList.add('animate-fade-in');
+        });
+
+        // Fonction d'aperçu d'image pour le champ image
+        function previewImage(event) {
+            var input = event.target;
+            var preview = document.getElementById('preview-' + input.id);
+            if (preview) {
+                preview.innerHTML = '';
+                if (input.files && input.files[0]) {
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        var img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'img-thumbnail mt-2';
+                        img.style.maxWidth = '220px';
+                        img.style.maxHeight = '180px';
+                        preview.appendChild(img);
+                    }
+                    reader.readAsDataURL(input.files[0]);
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,178 @@
+{% extends "tours/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block tour_content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-hiking me-2"></i>{% trans "Sélectionner les Activités" %}
+                    </h3>
+                    <p class="mb-0 mt-2">{{ tour.name }}</p>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Selected Activities -->
+                        {% if selected_activities %}
+                        <div class="mb-4">
+                            <h5 class="text-success mb-3">
+                                <i class="fas fa-check-circle me-2"></i>{% trans "Activités Sélectionnées" %}
+                            </h5>
+                            <div class="row">
+                                {% for activity in selected_activities %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-success h-100">
+                                        <div class="card-body">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       name="activities" value="{{ activity.id }}" 
+                                                       id="act_{{ activity.id }}" checked>
+                                                <label class="form-check-label fw-bold" for="act_{{ activity.id }}">
+                                                    {{ activity.name }}
+                                                </label>
+                                            </div>
+                                            <p class="text-muted small mb-2">{% trans "Jour" %} {{ activity.day_number }}</p>
+                                            <p class="small">{{ activity.description|truncatewords:15 }}</p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-primary">
+                                                    <i class="fas fa-clock me-1"></i>{{ activity.duration }}h
+                                                </span>
+                                                {% if activity.is_optional %}
+                                                <span class="badge bg-warning">
+                                                    <i class="fas fa-star me-1"></i>{% trans "Optionnelle" %}
+                                                </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Available Activities -->
+                        {% if available_activities %}
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-plus-circle me-2"></i>{% trans "Activités Disponibles" %}
+                            </h5>
+                            <div class="row">
+                                {% for activity in available_activities %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-light h-100">
+                                        <div class="card-body">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       name="activities" value="{{ activity.id }}" 
+                                                       id="act_{{ activity.id }}">
+                                                <label class="form-check-label fw-bold" for="act_{{ activity.id }}">
+                                                    {{ activity.name }}
+                                                </label>
+                                            </div>
+                                            <p class="text-muted small mb-2">{% trans "Jour" %} {{ activity.day_number }}</p>
+                                            <p class="small">{{ activity.description|truncatewords:15 }}</p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-secondary">
+                                                    <i class="fas fa-hiking me-1"></i>{% trans "Activité" %}
+                                                </span>
+                                                {% if activity.is_optional %}
+                                                <span class="badge bg-warning">
+                                                    <i class="fas fa-star me-1"></i>{% trans "Optionnelle" %}
+                                                </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- No Activities Available -->
+                        {% if not selected_activities and not available_activities %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-hiking text-muted" style="font-size: 4rem;"></i>
+                            <h4 class="mt-3">{% trans "Aucune activité disponible" %}</h4>
+                            <p class="text-muted">{% trans "Créez d'abord des activités pour pouvoir les sélectionner." %}</p>
+                            <a href="{% url 'tours:activity_create' %}?tour={{ tour.id }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>{% trans "Créer une activité" %}
+                            </a>
+                        </div>
+                        {% endif %}
+
+                        <!-- Action Buttons -->
+                        {% if selected_activities or available_activities %}
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'tours:tour_detail' tour.slug %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>{% trans "Retour au tour" %}
+                            </a>
+                            <div>
+                                <a href="{% url 'tours:activity_create' %}?tour={{ tour.id }}" class="btn btn-outline-primary me-2">
+                                    <i class="fas fa-plus me-2"></i>{% trans "Créer une activité" %}
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>{% trans "Enregistrer la sélection" %}
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: all 0.3s ease;
+}
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+}
+.form-check-input:checked + .form-check-label {
+    color: var(--bs-success);
+}
+.card.border-success {
+    border-color: var(--bs-success) !important;
+}
+.card.border-success .form-check-input:checked {
+    background-color: var(--bs-success);
+    border-color: var(--bs-success);
+}
+.badge {
+    font-size: 0.75rem;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('input[name="activities"]').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const card = this.closest('.card');
+            if (this.checked) {
+                card.classList.remove('border-light');
+                card.classList.add('border-success');
+            } else {
+                card.classList.remove('border-success');
+                card.classList.add('border-light');
+            }
+        });
+    });
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const checkedBoxes = document.querySelectorAll('input[name="activities"]:checked');
+        if (checkedBoxes.length === 0) {
+            e.preventDefault();
+            alert('{% trans "Veuillez sélectionner au moins une activité." %}');
+        }
+    });
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,1019 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ room.room_type.name }} - Room {{ room.room_number }} | {{ room.business_location.name }}{% endblock %}
+
+{% block content %}
+<!-- Hero Section with Room Header -->
+<div class="hero-section mb-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="hero-content">
+                    <nav aria-label="breadcrumb" class="mb-3">
+                        <ol class="breadcrumb breadcrumb-modern">
+                            <li class="breadcrumb-item">
+                                <a href="{% url 'home:home' %}">
+                                    <i class="fas fa-home me-2"></i>{% trans "Accueil" %}
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item">
+                                <a href="{% url 'rooms:general_room_list' %}">
+                                    <i class="fas fa-bed me-2"></i>{% trans "Chambres" %}
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item">
+                                <a href="{% url 'rooms:room_list' room.business_location.id %}">
+                                    {{ room.business_location.name }}
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item active" aria-current="page">
+                                {{ room.room_type.name }} - {{ room.room_number }}
+                            </li>
+                        </ol>
+                    </nav>
+                    
+                    <h1 class="display-4 fw-bold text-white mb-3 animate-fade-in">
+                        <i class="fas fa-bed me-3 text-gradient"></i>
+                        {{ room.room_type.name }}
+                        <small class="d-block fs-4 text-white-50 mt-2 animate-fade-in-delay">Room {{ room.room_number }}</small>
+                    </h1>
+                    <p class="lead text-white-50 mb-4 animate-fade-in-delay">
+                        <i class="fas fa-building me-2"></i>{{ room.business_location.name }}
+                        {% if room.floor %}
+                            <span class="ms-3">
+                                <i class="fas fa-layer-group me-1"></i>{% trans "Étage" %} {{ room.floor }}
+                            </span>
+                        {% endif %}
+                    </p>
+                    
+                    <div class="hero-stats animate-fade-in-delay-2">
+                        <div class="stat-item">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span class="stat-number">{{ room.price_per_night|floatformat:0 }}</span>
+                            <span class="stat-label">{% trans "FCFA/nuit" %}</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-users"></i>
+                            <span class="stat-number">{{ room.max_occupancy }}</span>
+                            <span class="stat-label">{% trans "personnes" %}</span>
+                        </div>
+                        {% if room.floor %}
+                        <div class="stat-item">
+                            <i class="fas fa-layer-group"></i>
+                            <span class="stat-number">{{ room.floor }}</span>
+                            <span class="stat-label">{% trans "étage" %}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 text-end">
+                <div class="hero-actions animate-fade-in-delay-3">
+                    {% if not room.maintenance_mode and room.is_available %}
+                        <a href="{% url 'rooms:book' room.pk %}" class="btn btn-gradient-primary btn-lg">
+                            <i class="fas fa-calendar-check me-2"></i>{% trans "Réserver maintenant" %}
+                        </a>
+                    {% else %}
+                        <button class="btn btn-secondary btn-lg" disabled>
+                            <i class="fas fa-times me-2"></i>{% trans "Indisponible" %}
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="hero-overlay"></div>
+</div>
+
+<!-- Room Images Carousel -->
+{% if room.images.exists %}
+<div class="container mb-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="room-gallery-container">
+                <!-- Main Carousel -->
+                <div id="roomCarousel" class="carousel slide mb-3" data-bs-ride="carousel">
+                    <div class="carousel-inner rounded-4 overflow-hidden shadow-lg">
+                        {% for image in room.images.all %}
+                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                            <img src="{{ image.image.url }}"
+                                 class="d-block w-100 carousel-image"
+                                 alt="{{ image.caption|default:room.room_type.name }}">
+                            {% if image.caption %}
+                            <div class="carousel-caption d-none d-md-block">
+                                <h5>{{ image.caption }}</h5>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    {% if room.images.count > 1 %}
+                    <button class="carousel-control-prev" type="button"
+                            data-bs-target="#roomCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">{% trans "Précédent" %}</span>
+                    </button>
+                    <button class="carousel-control-next" type="button"
+                            data-bs-target="#roomCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">{% trans "Suivant" %}</span>
+                    </button>
+                    {% endif %}
+                </div>
+                
+                <!-- Thumbnail Gallery -->
+                {% if room.images.count > 1 %}
+                <div class="thumbnail-gallery">
+                    <div class="row g-2">
+                        {% for image in room.images.all %}
+                        <div class="col-2 col-md-1">
+                            <div class="thumbnail-container">
+                                <img src="{{ image.image.url }}"
+                                     class="thumbnail-img"
+                                     alt="{{ image.caption|default:room.room_type.name }}"
+                                     data-bs-target="#roomCarousel"
+                                     data-bs-slide-to="{{ forloop.counter0 }}">
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Main Content -->
+<div class="container">
+    <div class="row g-5">
+        <!-- Left Column - Room Details -->
+        <div class="col-lg-8">
+            <!-- Room Status Alert -->
+            {% if room.maintenance_mode %}
+            <div class="alert alert-warning alert-dismissible fade show mb-4" role="alert">
+                <i class="fas fa-tools me-2"></i>
+                <strong>{% trans "Maintenance en cours" %}</strong> - {% trans "Cette chambre est actuellement en maintenance et n'est pas disponible pour la réservation." %}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% elif not room.is_available %}
+            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                <i class="fas fa-times-circle me-2"></i>
+                <strong>{% trans "Non disponible" %}</strong> - {% trans "Cette chambre n'est pas disponible pour le moment." %}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endif %}
+
+            <!-- Room Description -->
+            <div class="details-card mb-4">
+                <div class="card-header-modern">
+                    <h3 class="section-title">
+                        <i class="fas fa-info-circle text-primary me-2"></i>
+                        {% trans "Description" %}
+                    </h3>
+                </div>
+                <div class="section-content">
+                    <p class="lead">{{ room.description|default:_("Aucune description disponible pour cette chambre.") }}</p>
+                </div>
+            </div>
+
+            <!-- Room Type Details -->
+            <div class="details-card mb-4">
+                <div class="card-header-modern">
+                    <h3 class="section-title">
+                        <i class="fas fa-door-open text-success me-2"></i>
+                        {% trans "Type de Chambre" %}
+                    </h3>
+                </div>
+                <div class="section-content">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="text-primary">{{ room.room_type.name }}</h5>
+                            <p class="text-muted">{{ room.room_type.description|default:_("Aucune description disponible.") }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <i class="fas fa-users text-info"></i>
+                                    <div>
+                                        <span class="info-label">{% trans "Capacité max" %}</span>
+                                        <span class="info-value">{{ room.room_type.max_occupancy }} {% trans "personnes" %}</span>
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-money-bill-wave text-success"></i>
+                                    <div>
+                                        <span class="info-label">{% trans "Prix de base" %}</span>
+                                        <span class="info-value">{{ room.room_type.base_price|floatformat:0 }} FCFA</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Room Amenities -->
+            <div class="details-card mb-4">
+                <div class="card-header-modern">
+                    <h3 class="section-title">
+                        <i class="fas fa-star text-warning me-2"></i>
+                        {% trans "Aménités de la Chambre" %}
+                    </h3>
+                </div>
+                <div class="section-content">
+                    <!-- Room-specific amenities -->
+                    {% if room.amenities %}
+                    <div class="mb-4">
+                        <h5 class="text-primary mb-3">{% trans "Aménités spécifiques" %}</h5>
+                        <div class="amenities-list">
+                            {% for amenity in room.amenities %}
+                            <span class="amenity-tag">
+                                <i class="fas fa-check me-1"></i>{{ amenity }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Room type amenities -->
+                    {% if room.room_type.amenities %}
+                    <div>
+                        <h5 class="text-primary mb-3">{% trans "Aménités incluses" %}</h5>
+                        <div class="amenities-list">
+                            {% for amenity in room.room_type.amenities %}
+                            <span class="amenity-tag">
+                                <i class="fas fa-check me-1"></i>{{ amenity }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if not room.amenities and not room.room_type.amenities %}
+                    <p class="text-muted">{% trans "Aucune information sur les aménités disponible." %}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Business Location Info -->
+            <div class="details-card mb-4">
+                <div class="card-header-modern">
+                    <h3 class="section-title">
+                        <i class="fas fa-building text-info me-2"></i>
+                        {% trans "Établissement" %}
+                    </h3>
+                </div>
+                <div class="section-content">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5 class="text-primary">{{ room.business_location.name }}</h5>
+                            <p class="text-muted mb-2">{{ room.business_location.address|default:_("Adresse non disponible") }}</p>
+                            {% if room.business_location.phone %}
+                            <p class="mb-1">
+                                <i class="fas fa-phone text-success me-2"></i>
+                                {{ room.business_location.phone }}
+                            </p>
+                            {% endif %}
+                            {% if room.business_location.email %}
+                            <p class="mb-0">
+                                <i class="fas fa-envelope text-primary me-2"></i>
+                                {{ room.business_location.email }}
+                            </p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <a href="{% url 'rooms:room_list' room.business_location.id %}" class="btn btn-outline-primary">
+                                <i class="fas fa-bed me-2"></i>{% trans "Voir toutes les chambres" %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Booking Form -->
+        <div class="col-lg-4">
+            <div class="sticky-top" style="top: 2rem;">
+                <!-- Booking Card -->
+                <div class="booking-card mb-4">
+                    <div class="card-header-modern">
+                        <h4 class="section-title">
+                            <i class="fas fa-calendar-check text-primary me-2"></i>{% trans "Réserver cette chambre" %}
+                        </h4>
+                    </div>
+                    <div class="section-content">
+                        {% if not room.maintenance_mode and room.is_available %}
+                            <form method="get" action="{% url 'rooms:book' room.pk %}">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="check_in_date" class="form-label fw-bold">
+                                        <i class="fas fa-calendar-check text-success me-2"></i>{% trans "Date d'arrivée" %}
+                                    </label>
+                                    <input type="date" name="check_in_date" id="check_in_date" 
+                                           class="form-control form-control-lg" 
+                                           value="{{ search_form.check_in_date.value|default:'' }}"
+                                           min="{{ today|date:'Y-m-d' }}" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="check_out_date" class="form-label fw-bold">
+                                        <i class="fas fa-calendar-times text-danger me-2"></i>{% trans "Date de départ" %}
+                                    </label>
+                                    <input type="date" name="check_out_date" id="check_out_date" 
+                                           class="form-control form-control-lg" 
+                                           value="{{ search_form.check_out_date.value|default:'' }}"
+                                           min="{{ today|date:'Y-m-d' }}" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="guests" class="form-label fw-bold">
+                                        <i class="fas fa-user-friends text-primary me-2"></i>{% trans "Nombre de voyageurs" %}
+                                    </label>
+                                    <input type="number" name="guests" id="guests" 
+                                           class="form-control form-control-lg" 
+                                           min="1" max="{{ room.max_occupancy }}"
+                                           value="{{ search_form.guests.value|default:room.max_occupancy }}"
+                                           required>
+                                    <small class="text-muted">{% trans "Maximum" %} {{ room.max_occupancy }} {% trans "personnes" %}</small>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-gradient-primary btn-lg w-100 mb-3">
+                                    <i class="fas fa-search me-2"></i>{% trans "Vérifier la disponibilité" %}
+                                </button>
+                            </form>
+                        {% else %}
+                            <div class="alert alert-warning text-center">
+                                <i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i>
+                                <h5>{% trans "Non disponible" %}</h5>
+                                <p class="mb-0">{% trans "Cette chambre n'est pas disponible pour la réservation." %}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Room Quick Info -->
+                <div class="details-card">
+                    <div class="card-header-modern">
+                        <h5 class="section-title">
+                            <i class="fas fa-info-circle text-info me-2"></i>{% trans "Informations rapides" %}
+                        </h5>
+                    </div>
+                    <div class="section-content">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <i class="fas fa-hashtag text-primary"></i>
+                                <div>
+                                    <span class="info-label">{% trans "Numéro" %}</span>
+                                    <span class="info-value">{{ room.room_number }}</span>
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-users text-info"></i>
+                                <div>
+                                    <span class="info-label">{% trans "Capacité" %}</span>
+                                    <span class="info-value">{{ room.max_occupancy }} {% trans "personnes" %}</span>
+                                </div>
+                            </div>
+                            {% if room.floor %}
+                            <div class="info-item">
+                                <i class="fas fa-layer-group text-warning"></i>
+                                <div>
+                                    <span class="info-label">{% trans "Étage" %}</span>
+                                    <span class="info-value">{{ room.floor }}</span>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <div class="info-item">
+                                <i class="fas fa-money-bill-wave text-success"></i>
+                                <div>
+                                    <span class="info-label">{% trans "Prix" %}</span>
+                                    <span class="info-value">{{ room.price_per_night|floatformat:0 }} FCFA</span>
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-circle text-{% if room.is_available and not room.maintenance_mode %}success{% elif room.maintenance_mode %}warning{% else %}danger{% endif %}"></i>
+                                <div>
+                                    <span class="info-label">{% trans "Statut" %}</span>
+                                    <span class="info-value">
+                                        {% if room.is_available and not room.maintenance_mode %}
+                                            {% trans "Disponible" %}
+                                        {% elif room.maintenance_mode %}
+                                            {% trans "Maintenance" %}
+                                        {% else %}
+                                            {% trans "Occupée" %}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Similar Rooms Section -->
+{% if similar_rooms %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="section-title mb-4">
+                <i class="fas fa-bed text-primary me-2"></i>
+                {% trans "Chambres similaires" %}
+            </h2>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                {% for similar_room in similar_rooms %}
+                <div class="col">
+                    <div class="room-card">
+                        <!-- Room Image -->
+                        <div class="position-relative">
+                            {% if similar_room.images.first %}
+                                <img src="{{ similar_room.images.first.image.url }}" class="room-image" alt="{{ similar_room.room_number }}">
+                            {% else %}
+                                <img src="https://images.unsplash.com/photo-1566665797739-1674de7a421a?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" class="room-image" alt="{{ similar_room.room_number }}">
+                            {% endif %}
+                            
+                            <!-- Price Badge -->
+                            <div class="position-absolute top-0 end-0 m-3">
+                                <span class="badge bg-success fs-6 px-3 py-2">
+                                    <i class="fas fa-money-bill-wave me-1"></i>{{ similar_room.price_per_night|floatformat:0 }} FCFA
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold mb-2">{{ similar_room.room_number }}</h5>
+                            
+                            <div class="room-info mb-3">
+                                <div class="d-flex align-items-center mb-1">
+                                    <i class="fas fa-users text-info me-2"></i>
+                                    <small class="text-muted">{% trans "Max" %} {{ similar_room.max_occupancy }} {% trans "personnes" %}</small>
+                                </div>
+                                {% if similar_room.floor %}
+                                <div class="d-flex align-items-center mb-1">
+                                    <i class="fas fa-layer-group text-warning me-2"></i>
+                                    <small class="text-muted">{% trans "Étage" %} {{ similar_room.floor }}</small>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Card Footer -->
+                        <div class="card-footer bg-transparent border-0 pb-3">
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'rooms:room_detail' similar_room.pk %}" class="btn btn-outline-primary">
+                                    <i class="fas fa-eye me-2"></i>{% trans "Voir détails" %}
+                                </a>
+                                {% if similar_room.is_available and not similar_room.maintenance_mode %}
+                                    <a href="{% url 'rooms:book' similar_room.pk %}" class="btn btn-primary">
+                                        <i class="fas fa-calendar-plus me-2"></i>{% trans "Réserver" %}
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Other Room Types Section -->
+{% if other_room_types %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="section-title mb-4">
+                <i class="fas fa-door-open text-success me-2"></i>
+                {% trans "Autres types de chambres disponibles" %}
+            </h2>
+            <div class="row">
+                {% for room_type in other_room_types %}
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="room-type-card">
+                        {% if room_type.image %}
+                            <img src="{{ room_type.image.url }}" class="room-type-image" alt="{{ room_type.name }}">
+                        {% else %}
+                            <div class="room-type-image-placeholder d-flex align-items-center justify-content-center">
+                                <i class="fas fa-bed fa-3x text-muted"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="card-body text-center">
+                            <h5 class="card-title text-primary">{{ room_type.name }}</h5>
+                            <p class="card-text text-muted small">{{ room_type.description|truncatewords:10 }}</p>
+                            <div class="room-type-stats">
+                                <span class="badge bg-info me-2">
+                                    <i class="fas fa-users me-1"></i>{{ room_type.max_occupancy }}
+                                </span>
+                                <span class="badge bg-success">
+                                    <i class="fas fa-money-bill-wave me-1"></i>{{ room_type.base_price|floatformat:0 }} FCFA
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="card-footer bg-transparent border-0">
+                            <a href="{% url 'rooms:room_list' room.business_location.id %}?room_type={{ room_type.id }}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-search me-2"></i>{% trans "Voir les chambres" %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Modern Design Variables */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        --danger-gradient: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        --border-radius: 1rem;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.15);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Hero Section */
+    .hero-section {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%), 
+                url('https://images.unsplash.com/photo-1566665797739-1674de7a421a?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80') center/cover no-repeat;
+        color: white;
+        padding: 4rem 0;
+        border-radius: 0 0 3rem 3rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.1);
+        z-index: 1;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .hero-stats {
+        display: flex;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .stat-item {
+        text-align: center;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        border-radius: var(--border-radius);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .stat-number {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        opacity: 0.8;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb-modern {
+        background: transparent;
+        padding: 0;
+        margin: 0;
+    }
+
+    .breadcrumb-modern .breadcrumb-item a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: var(--transition);
+    }
+
+    .breadcrumb-modern .breadcrumb-item a:hover {
+        color: white;
+    }
+
+    .breadcrumb-modern .breadcrumb-item.active {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* Details Cards */
+    .details-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .booking-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-lg);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .card-header-modern {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f8f9fa;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0;
+    }
+
+    .section-content {
+        color: #6c757d;
+        line-height: 1.6;
+    }
+
+    /* Info Grid */
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 0.75rem;
+        transition: var(--transition);
+    }
+
+    .info-item:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+    }
+
+    .info-item i {
+        font-size: 1.5rem;
+        margin-right: 1rem;
+        width: 30px;
+        text-align: center;
+    }
+
+    .info-label {
+        display: block;
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+
+    .info-value {
+        display: block;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    /* Amenities */
+    .amenities-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .amenity-tag {
+        background: #e8f5e8;
+        color: #2d5a2d;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border: 1px solid #d4edda;
+    }
+
+    /* Carousel */
+    .carousel-image {
+        height: 500px;
+        object-fit: cover;
+    }
+
+    .thumbnail-gallery {
+        margin-top: 1rem;
+    }
+
+    .thumbnail-container {
+        border-radius: 0.5rem;
+        overflow: hidden;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .thumbnail-container:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+    }
+
+    .thumbnail-img {
+        width: 100%;
+        height: 80px;
+        object-fit: cover;
+        transition: var(--transition);
+        border: 2px solid transparent;
+    }
+
+    .thumbnail-img:hover {
+        transform: scale(1.1);
+    }
+
+    .thumbnail-img.active {
+        border-color: #667eea;
+    }
+
+    /* Room Cards */
+    .room-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        transition: var(--transition);
+        height: 100%;
+    }
+
+    .room-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .room-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        transition: var(--transition);
+    }
+
+    .room-card:hover .room-image {
+        transform: scale(1.05);
+    }
+
+    .room-type-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        transition: var(--transition);
+        height: 100%;
+    }
+
+    .room-type-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .room-type-image {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+    }
+
+    .room-type-image-placeholder {
+        height: 150px;
+        background: #f8f9fa;
+    }
+
+    /* Buttons */
+    .btn-gradient-primary {
+        background: var(--primary-gradient);
+        border: none;
+        color: white;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+
+    .btn-gradient-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .btn-outline-primary {
+        border: 2px solid #667eea;
+        color: #667eea;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+
+    .btn-outline-primary:hover {
+        background: #667eea;
+        border-color: #667eea;
+        transform: translateY(-2px);
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-in {
+        animation: fadeInUp 0.8s ease forwards;
+    }
+
+    .animate-fade-in-delay {
+        animation: fadeInUp 0.8s ease 0.2s forwards;
+        opacity: 0;
+    }
+
+    .animate-fade-in-delay-2 {
+        animation: fadeInUp 0.8s ease 0.4s forwards;
+        opacity: 0;
+    }
+
+    .animate-fade-in-delay-3 {
+        animation: fadeInUp 0.8s ease 0.6s forwards;
+        opacity: 0;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .hero-section {
+            padding: 2rem 0;
+            border-radius: 0 0 2rem 2rem;
+        }
+        
+        .hero-stats {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .carousel-image {
+            height: 300px;
+        }
+        
+        .thumbnail-img {
+            height: 60px;
+        }
+        
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .details-card, .booking-card {
+            padding: 1.5rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .hero-section h1 {
+            font-size: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Thumbnail gallery functionality
+    const thumbnails = document.querySelectorAll('.thumbnail-img');
+    const carousel = document.getElementById('roomCarousel');
+    
+    thumbnails.forEach((thumb, index) => {
+        thumb.addEventListener('click', function() {
+            // Remove active class from all thumbnails
+            thumbnails.forEach(t => t.classList.remove('active'));
+            // Add active class to clicked thumbnail
+            this.classList.add('active');
+            
+            // Trigger carousel slide
+            const carouselInstance = new bootstrap.Carousel(carousel);
+            carouselInstance.to(index);
+        });
+    });
+    
+    // Update active thumbnail when carousel slides
+    if (carousel) {
+        carousel.addEventListener('slid.bs.carousel', function(event) {
+            thumbnails.forEach(t => t.classList.remove('active'));
+            thumbnails[event.to].classList.add('active');
+        });
+        
+        // Set first thumbnail as active on load
+        if (thumbnails.length > 0) {
+            thumbnails[0].classList.add('active');
+        }
+    }
+    
+    // Date validation for booking form
+    const checkInDate = document.getElementById('check_in_date');
+    const checkOutDate = document.getElementById('check_out_date');
+    
+    if (checkInDate && checkOutDate) {
+        checkInDate.addEventListener('change', function() {
+            checkOutDate.min = this.value;
+            if (checkOutDate.value && checkOutDate.value <= this.value) {
+                checkOutDate.value = '';
+            }
+        });
+        
+        checkOutDate.addEventListener('change', function() {
+            if (this.value <= checkInDate.value) {
+                alert('La date de départ doit être postérieure à la date d\'arrivée.');
+                this.value = '';
+            }
+        });
+    }
+
+    // Add hover effects for info items
+    document.querySelectorAll('.info-item').forEach(item => {
+        item.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px) scale(1.02)';
+        });
+
+        item.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+
+    // Add click effects for buttons
+    document.querySelectorAll('.btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            // Create ripple effect
+            const ripple = document.createElement('span');
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+            
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            ripple.classList.add('ripple');
+            
+            this.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    });
+});
+
+// Add ripple effect CSS
+const style = document.createElement('style');
+style.textContent = `
+    .btn {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .ripple {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.6);
+        transform: scale(0);
+        animation: ripple-animation 0.6s linear;
+        pointer-events: none;
+    }
+    
+    @keyframes ripple-animation {
+        to {
+            transform: scale(4);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %} 

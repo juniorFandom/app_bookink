@@ -1,0 +1,220 @@
+{% extends 'business/admin/base.html' %}
+{% load static %}
+
+{% block page_title %}Review Dashboard{% endblock %}
+
+{% block admin_content %}
+<div class="row">
+    <!-- Statistics Cards -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card admin-card stats-card">
+            <div class="card-body text-center">
+                <div class="stats-number">{{ total_reviews }}</div>
+                <div class="text-white-50">Total Reviews</div>
+                <i class="fas fa-star fa-2x mt-2 opacity-75"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card admin-card stats-card">
+            <div class="card-body text-center">
+                <div class="stats-number">{{ recent_reviews }}</div>
+                <div class="text-white-50">This Month</div>
+                <i class="fas fa-calendar-plus fa-2x mt-2 opacity-75"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card admin-card stats-card">
+            <div class="card-body text-center">
+                <div class="stats-number">{{ avg_overall }}</div>
+                <div class="text-white-50">Avg Overall</div>
+                <i class="fas fa-star-half-alt fa-2x mt-2 opacity-75"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card admin-card stats-card">
+            <div class="card-body text-center">
+                <div class="stats-number">{{ avg_service }}</div>
+                <div class="text-white-50">Avg Service</div>
+                <i class="fas fa-concierge-bell fa-2x mt-2 opacity-75"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Reviews -->
+    <div class="col-lg-8 mb-4">
+        <div class="card admin-card">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-clock text-primary"></i>
+                    Recent Reviews
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Reviewer</th>
+                                <th>Location</th>
+                                <th>Rating</th>
+                                <th>Visit Type</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for review in recent_review_list %}
+                            <tr>
+                                <td>
+                                    <strong>{{ review.reviewer.get_full_name|default:review.reviewer.username }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ review.reviewer.email }}</small>
+                                </td>
+                                <td>
+                                    <strong>{{ review.business_location.name }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ review.business_location.business.name }}</small>
+                                </td>
+                                <td>
+                                    <div class="text-warning">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= review.rating %}
+                                                <i class="fas fa-star"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <small class="text-muted">{{ review.rating }}/5</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ review.get_visit_type_display }}</span>
+                                </td>
+                                <td>{{ review.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <a href="{% url 'business:admin:review_detail' review.pk %}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    <i class="fas fa-star fa-2x mb-2"></i>
+                                    <br>No reviews found
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions & Stats -->
+    <div class="col-lg-4 mb-4">
+        <!-- Quick Actions -->
+        <div class="card admin-card mb-4">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt text-warning"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'business:admin:review_list' %}" class="btn btn-primary btn-admin">
+                        <i class="fas fa-list"></i>
+                        View All Reviews
+                    </a>
+                    <a href="{% url 'business:admin:review_analytics' %}" class="btn btn-outline-primary btn-admin">
+                        <i class="fas fa-chart-bar"></i>
+                        View Analytics
+                    </a>
+                    <a href="{% url 'business:admin:location_list' %}" class="btn btn-outline-info btn-admin">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Manage Locations
+                    </a>
+                    <a href="{% url 'business:admin:business_list' %}" class="btn btn-outline-success btn-admin">
+                        <i class="fas fa-building"></i>
+                        Manage Businesses
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Rating Distribution -->
+        <div class="card admin-card mb-4">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie text-success"></i>
+                    Rating Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for rating in rating_distribution %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="d-flex align-items-center">
+                        <span class="text-warning me-2">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= rating.rating %}
+                                    <i class="fas fa-star"></i>
+                                {% else %}
+                                    <i class="far fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </span>
+                    </div>
+                    <span class="badge bg-primary">{{ rating.count }}</span>
+                </div>
+                {% empty %}
+                <p class="text-muted text-center mb-0">No rating data available</p>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Average Ratings -->
+        <div class="card admin-card">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-star text-warning"></i>
+                    Average Ratings
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-warning">{{ avg_overall }}</h4>
+                        <small class="text-muted">Overall</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-info">{{ avg_service }}</h4>
+                        <small class="text-muted">Service</small>
+                    </div>
+                </div>
+                <hr>
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-success">{{ avg_value }}</h4>
+                        <small class="text-muted">Value</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-primary">-</h4>
+                        <small class="text-muted">Cleanliness</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,86 @@
+{% load i18n %}
+{% load business_tags %}
+{% load static %}
+<form id="wizardStep2Form" method="post" novalidate autocomplete="off">
+    {% csrf_token %}
+    
+    {% if errors %}
+    <div class="alert alert-danger mb-3">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>{% translate "Erreurs détectées :" %}</strong>
+        <ul class="mb-0 mt-2">
+            {% for error in errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    
+    <div class="form-section mb-4">
+        <div class="section-header mb-3">
+            <i class="fas fa-clock"></i>
+            <h3 class="ms-2 mb-0">{% translate "Horaires d'ouverture" %}</h3>
+        </div>
+        <div class="alert alert-info mb-3">
+            <i class="fas fa-info-circle me-2"></i>
+            {% translate "Indiquez les horaires d'ouverture pour chaque jour. Vous pouvez dupliquer les horaires d'un jour sur les autres." %}
+        </div>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle text-center">
+                <thead class="table-light">
+                    <tr>
+                        <th>{% translate "Jour" %}</th>
+                        <th>{% translate "Ouvert" %}</th>
+                        <th>{% translate "Heure d'ouverture" %}</th>
+                        <th>{% translate "Heure de fermeture" %}</th>
+                        <th>{% translate "Pause (début)" %}</th>
+                        <th>{% translate "Pause (fin)" %}</th>
+                        <th>{% translate "Actions" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for day_num, day_label in business_hours_model.DAYS_OF_WEEK %}
+                    {% with hours=hours_data|get_item:day_num %}
+                    <tr data-day="{{ day_num }}">
+                        <td><strong>{% translate day_label %}</strong></td>
+                        <td>
+                            <input type="checkbox" class="form-check-input is-open-checkbox" name="is_open_{{ day_num }}" id="is_open_{{ day_num }}" {% if not hours or not hours.is_closed %}checked{% endif %}>
+                        </td>
+                        <td>
+                            <input type="time" class="form-control opening-time" name="opening_time_{{ day_num }}" value="{{ hours.opening_time|default:'' }}" {% if hours and hours.is_closed %}disabled{% endif %}>
+                            <div class="invalid-feedback">{% translate "Heure d'ouverture requise" %}</div>
+                        </td>
+                        <td>
+                            <input type="time" class="form-control closing-time" name="closing_time_{{ day_num }}" value="{{ hours.closing_time|default:'' }}" {% if hours and hours.is_closed %}disabled{% endif %}>
+                            <div class="invalid-feedback">{% translate "Heure de fermeture requise" %}</div>
+                        </td>
+                        <td>
+                            <input type="time" class="form-control break-start" name="break_start_{{ day_num }}" value="{{ hours.break_start|default:'' }}" {% if hours and hours.is_closed %}disabled{% endif %}>
+                            <div class="invalid-feedback">{% translate "Pause incomplète" %}</div>
+                        </td>
+                        <td>
+                            <input type="time" class="form-control break-end" name="break_end_{{ day_num }}" value="{{ hours.break_end|default:'' }}" {% if hours and hours.is_closed %}disabled{% endif %}>
+                            <div class="invalid-feedback">{% translate "Pause incomplète" %}</div>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-outline-secondary btn-sm btn-duplicate" data-day="{{ day_num }}" title="{% translate 'Dupliquer sur les autres jours' %}">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endwith %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mt-4">
+        <button type="button" class="btn btn-outline-secondary btn-prev-step">
+            <i class="fas fa-arrow-left me-2"></i>{% translate "Précédent" %}
+        </button>
+        <button type="button" class="btn btn-primary btn-next-step">
+            {% translate "Suivant" %}
+            <i class="fas fa-arrow-right ms-2"></i>
+        </button>
+    </div>
+</form> 

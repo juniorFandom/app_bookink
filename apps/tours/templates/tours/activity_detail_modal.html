@@ -1,0 +1,50 @@
+<div class="container-fluid">
+    <h4 class="mb-3"><i class="fas fa-hiking me-2"></i>{{ activity.name }}</h4>
+    <div class="row mb-2">
+        <div class="col-md-6">
+            <p><strong>Jour :</strong> {{ activity.day_number }}</p>
+            <p><strong>Durée :</strong> {{ activity.duration }} h</p>
+            <p><strong>Prix :</strong> {{ activity.price|floatformat:0 }} XAF</p>
+            <p><strong>Statut :</strong> {% if activity.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-danger">Inactive</span>{% endif %}</p>
+        </div>
+        <div class="col-md-6">
+            {% if activity.main_image %}
+                <img src="{{ activity.main_image.url }}" class="img-fluid rounded mb-2" alt="Image activité">
+            {% endif %}
+        </div>
+    </div>
+    <div class="mb-2">
+        <strong>Description :</strong>
+        <p>{{ activity.description }}</p>
+    </div>
+    {% if activity.requirements %}
+    <div class="mb-2">
+        <strong>Exigences :</strong>
+        <ul>
+            {% for req in activity.requirements %}
+                <li>{{ req }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    {% if activity.included %}
+    <div class="mb-2">
+        <strong>Inclus :</strong>
+        <ul>
+            {% for inc in activity.included %}
+                <li>{{ inc }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    {% if activity.not_included %}
+    <div class="mb-2">
+        <strong>Non inclus :</strong>
+        <ul>
+            {% for ninc in activity.not_included %}
+                <li>{{ ninc }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</div> 

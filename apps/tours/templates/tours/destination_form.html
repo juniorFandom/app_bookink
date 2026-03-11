@@ -1,0 +1,315 @@
+{% extends "tours/base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{{ title }} - {{ tour.name }}{% endblock %}
+
+{% block tour_content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-map-marker-alt me-2"></i>{{ title }}
+                    </h3>
+                    <p class="mb-0 text-white-50">Tour: {{ tour.name }}</p>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <!-- Informations de base -->
+                            <div class="col-md-6">
+                                <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i>{% translate "Informations de base" %}</h5>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.name.id_for_label }}" class="form-label">{% translate "Nom de la destination" %} *</label>
+                                    {{ form.name }}
+                                    {% if form.name.errors %}
+                                        <div class="text-danger small">{{ form.name.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.day_number.id_for_label }}" class="form-label">{% translate "Jour du tour" %} *</label>
+                                    {{ form.day_number }}
+                                    {% if form.day_number.errors %}
+                                        <div class="text-danger small">{{ form.day_number.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.duration.id_for_label }}" class="form-label">{% translate "Durée du séjour" %} *</label>
+                                    {{ form.duration }}
+                                    {% if form.duration.errors %}
+                                        <div class="text-danger small">{{ form.duration.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.best_time_to_visit.id_for_label }}" class="form-label">{% translate "Meilleure période pour visiter" %}</label>
+                                    {{ form.best_time_to_visit }}
+                                    {% if form.best_time_to_visit.errors %}
+                                        <div class="text-danger small">{{ form.best_time_to_visit.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Adresse -->
+                            <div class="col-md-6">
+                                <h5 class="mb-3"><i class="fas fa-map me-2"></i>{% translate "Adresse" %}</h5>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.city.id_for_label }}" class="form-label">{% translate "Ville" %} *</label>
+                                    {{ form.city }}
+                                    {% if form.city.errors %}
+                                        <div class="text-danger small">{{ form.city.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.region.id_for_label }}" class="form-label">{% translate "Région" %} *</label>
+                                    {{ form.region }}
+                                    {% if form.region.errors %}
+                                        <div class="text-danger small">{{ form.region.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.country.id_for_label }}" class="form-label">{% translate "Pays" %} *</label>
+                                    {{ form.country }}
+                                    {% if form.country.errors %}
+                                        <div class="text-danger small">{{ form.country.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.postal_code.id_for_label }}" class="form-label">{% translate "Code postal" %}</label>
+                                    {{ form.postal_code }}
+                                    {% if form.postal_code.errors %}
+                                        <div class="text-danger small">{{ form.postal_code.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Coordonnées GPS -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.latitude.id_for_label }}" class="form-label">{% translate "Latitude" %}</label>
+                                    {{ form.latitude }}
+                                    {% if form.latitude.errors %}
+                                        <div class="text-danger small">{{ form.latitude.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.longitude.id_for_label }}" class="form-label">{% translate "Longitude" %}</label>
+                                    {{ form.longitude }}
+                                    {% if form.longitude.errors %}
+                                        <div class="text-danger small">{{ form.longitude.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Carte interactive -->
+                        <div class="mb-4">
+                            <h5 class="mb-3"><i class="fas fa-map-marked-alt me-2"></i>{% translate "Sélectionner l'emplacement sur la carte" %}</h5>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                {% translate "Cliquez sur la carte pour définir l'emplacement de la destination. Les coordonnées GPS seront automatiquement remplies." %}
+                            </div>
+                            <div id="destinationMap" style="height: 400px; border-radius: 8px; border: 2px solid #dee2e6;"></div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">{% translate "Description" %} *</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Points forts -->
+                        <div class="mb-3">
+                            <label for="{{ form.highlights.id_for_label }}" class="form-label">{% translate "Points forts" %}</label>
+                            {{ form.highlights }}
+                            <div class="form-text">{% translate "Points forts de la destination (un par ligne)" %}</div>
+                            {% if form.highlights.errors %}
+                                <div class="text-danger small">{{ form.highlights.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Caractéristiques -->
+                        <div class="mb-3">
+                            <label for="{{ form.features.id_for_label }}" class="form-label">{% translate "Caractéristiques" %}</label>
+                            {{ form.features }}
+                            <div class="form-text">{% translate "Caractéristiques et attractions (une par ligne)" %}</div>
+                            {% if form.features.errors %}
+                                <div class="text-danger small">{{ form.features.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Informations pratiques -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.climate.id_for_label }}" class="form-label">{% translate "Climat" %}</label>
+                                    {{ form.climate }}
+                                    {% if form.climate.errors %}
+                                        <div class="text-danger small">{{ form.climate.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.how_to_get_there.id_for_label }}" class="form-label">{% translate "Comment s'y rendre" %}</label>
+                                    {{ form.how_to_get_there }}
+                                    {% if form.how_to_get_there.errors %}
+                                        <div class="text-danger small">{{ form.how_to_get_there.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Options -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mb-3">
+                                    {{ form.is_active }}
+                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                        {% translate "Destination active" %}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mb-3">
+                                    {{ form.is_featured }}
+                                    <label class="form-check-label" for="{{ form.is_featured.id_for_label }}">
+                                        {% translate "Destination en vedette" %}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Boutons d'action -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'tours:tour_detail' tour.slug %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>{% translate "Retour au tour" %}
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>{% translate "Enregistrer la destination" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialiser la carte
+    var map = L.map('destinationMap').setView([7.3697, 12.3547], 6); // Centre du Cameroun
+    
+    // Ajouter la couche de tuiles OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+    
+    var marker = null;
+    var latInput = document.getElementById('{{ form.latitude.id_for_label }}');
+    var lngInput = document.getElementById('{{ form.longitude.id_for_label }}');
+    
+    // Fonction pour mettre à jour les coordonnées
+    function updateCoordinates(lat, lng) {
+        latInput.value = lat.toFixed(8);
+        lngInput.value = lng.toFixed(8);
+    }
+    
+    // Fonction pour ajouter/mettre à jour le marqueur
+    function updateMarker(lat, lng) {
+        if (marker) {
+            map.removeLayer(marker);
+        }
+        marker = L.marker([lat, lng]).addTo(map);
+        marker.bindPopup("{% translate 'Emplacement sélectionné'|escapejs %}<br>Lat: " + lat.toFixed(6) + "<br>Lng: " + lng.toFixed(6)).openPopup();
+    }
+    
+    // Gestionnaire de clic sur la carte
+    map.on('click', function(e) {
+        var lat = e.latlng.lat;
+        var lng = e.latlng.lng;
+        updateCoordinates(lat, lng);
+        updateMarker(lat, lng);
+    });
+    
+    // Initialiser avec les valeurs existantes si disponibles
+    if (latInput.value && lngInput.value) {
+        var lat = parseFloat(latInput.value);
+        var lng = parseFloat(lngInput.value);
+        if (!isNaN(lat) && !isNaN(lng)) {
+            map.setView([lat, lng], 12);
+            updateMarker(lat, lng);
+        }
+    }
+    
+    // Gestionnaire pour la recherche d'adresse (optionnel)
+    var searchInput = document.createElement('input');
+    searchInput.type = 'text';
+    searchInput.placeholder = "{% translate 'Rechercher une adresse...'|escapejs %}";
+    searchInput.className = 'form-control mb-3';
+    searchInput.style.width = '100%';
+    
+    // Insérer le champ de recherche avant la carte
+    var mapContainer = document.getElementById('destinationMap');
+    mapContainer.parentNode.insertBefore(searchInput, mapContainer);
+    
+    // Fonction de recherche d'adresse (utilise Nominatim)
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            var query = searchInput.value;
+            if (query.trim()) {
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            var result = data[0];
+                            var lat = parseFloat(result.lat);
+                            var lng = parseFloat(result.lon);
+                            map.setView([lat, lng], 15);
+                            updateCoordinates(lat, lng);
+                            updateMarker(lat, lng);
+                        } else {
+                            alert("{% translate 'Adresse non trouvée'|escapejs %}");
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erreur de recherche:', error);
+                        alert("{% translate "Erreur lors de la recherche d'adresse"|escapejs %}");
+                    });
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

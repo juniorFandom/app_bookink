@@ -1,0 +1,277 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-hand-paper me-2"></i>{{ title }}
+                    </h1>
+                    <p class="text-muted mb-0">{% translate "Demandez une permission pour accéder à un établissement" %}</p>
+                </div>
+                <a href="{% url 'business:my_permissions' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> {% translate "Retour à mes permissions" %}
+                </a>
+            </div>
+
+            <!-- Form Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>{% translate "Détails de la demande" %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Business Location Selection -->
+                        <div class="mb-4">
+                            <label for="{{ form.business_location.id_for_label }}" class="form-label">
+                                <i class="fas fa-building me-2"></i>{% translate "Établissement" %}
+                            </label>
+                            {{ form.business_location }}
+                            {% if form.business_location.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.business_location.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">
+                                {% translate "Sélectionnez l'établissement pour lequel vous souhaitez demander une permission." %}
+                            </div>
+                        </div>
+
+                        <!-- Permission Type -->
+                        <div class="mb-4">
+                            <label for="{{ form.permission_type.id_for_label }}" class="form-label">
+                                <i class="fas fa-key me-2"></i>{% translate "Type de permission" %}
+                            </label>
+                            {{ form.permission_type }}
+                            {% if form.permission_type.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.permission_type.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">
+                                {% translate "Choisissez le type de permission que vous souhaitez obtenir." %}
+                            </div>
+                        </div>
+
+                        <!-- Requested Expiration Date -->
+                        <div class="mb-4">
+                            <label for="{{ form.requested_expires_at.id_for_label }}" class="form-label">
+                                <i class="fas fa-calendar-times me-2"></i>{% translate "Date d'expiration souhaitée" %}
+                            </label>
+                            {{ form.requested_expires_at }}
+                            {% if form.requested_expires_at.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.requested_expires_at.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">
+                                {% translate "Laissez vide pour une permission permanente. Le propriétaire peut modifier cette date." %}
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'business:my_permissions' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> {% translate "Annuler" %}
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> {% translate "Envoyer la demande" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Help Card -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>{% translate "Types de permissions disponibles" %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-bed text-primary me-2 mt-1"></i>
+                                <div>
+                                    <strong>{% translate "Gérer les chambres" %}</strong>
+                                    <br>
+                                    <small class="text-muted">{% translate "Accès à la gestion des chambres et leur disponibilité" %}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-calendar-check text-success me-2 mt-1"></i>
+                                <div>
+                                    <strong>{% translate "Gérer les réservations" %}</strong>
+                                    <br>
+                                    <small class="text-muted">{% translate "Accès à la gestion des réservations et bookings" %}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-utensils text-warning me-2 mt-1"></i>
+                                <div>
+                                    <strong>{% translate "Gérer le menu" %}</strong>
+                                    <br>
+                                    <small class="text-muted">{% translate "Accès à la gestion du menu et des plats" %}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-shopping-cart text-info me-2 mt-1"></i>
+                                <div>
+                                    <strong>{% translate "Gérer les commandes" %}</strong>
+                                    <br>
+                                    <small class="text-muted">{% translate "Accès à la gestion des commandes" %}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-car text-secondary me-2 mt-1"></i>
+                                <div>
+                                    <strong>{% translate "Gérer les véhicules" %}</strong>
+                                    <br>
+                                    <small class="text-muted">{% translate "Accès à la gestion des véhicules" %}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-route text-danger me-2 mt-1"></i>
+                                <div>
+                                    <strong>{% translate "Gérer les tours" %}</strong>
+                                    <br>
+                                    <small class="text-muted">{% translate "Accès à la gestion des tours et excursions" %}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-star text-warning me-2 mt-1"></i>
+                                <div>
+                                    <strong>{% translate "Gérer les avis" %}</strong>
+                                    <br>
+                                    <small class="text-muted">{% translate "Accès à la gestion des avis et commentaires" %}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-clock text-info me-2 mt-1"></i>
+                                <div>
+                                    <strong>{% translate "Gérer les horaires" %}</strong>
+                                    <br>
+                                    <small class="text-muted">{% translate "Accès à la gestion des heures d'ouverture" %}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-chart-bar text-success me-2 mt-1"></i>
+                                <div>
+                                    <strong>{% translate "Voir les analyses" %}</strong>
+                                    <br>
+                                    <small class="text-muted">{% translate "Accès aux statistiques et analyses" %}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-crown text-warning me-2 mt-1"></i>
+                                <div>
+                                    <strong>{% translate "Accès complet" %}</strong>
+                                    <br>
+                                    <small class="text-muted">{% translate "Accès complet à toutes les fonctionnalités" %}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Process Info Card -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>{% translate "Comment ça marche ?" %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 50px; height: 50px;">
+                                <i class="fas fa-paper-plane"></i>
+                            </div>
+                            <h6>{% translate "1. Envoyez votre demande" %}</h6>
+                            <small class="text-muted">{% translate "Remplissez le formulaire ci-dessus" %}</small>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 50px; height: 50px;">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <h6>{% translate "2. Attendez la réponse" %}</h6>
+                            <small class="text-muted">{% translate "Le propriétaire examine votre demande" %}</small>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 50px; height: 50px;">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <h6>{% translate "3. Accédez à l'établissement" %}</h6>
+                            <small class="text-muted">{% translate "Une fois approuvée, vous avez accès" %}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-control, .form-select {
+    border-radius: 0.375rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.invalid-feedback {
+    display: block;
+}
+
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %} 

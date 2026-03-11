@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Mettre à jour le statut de la commande</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Valider</button>
+    <a href="{% url 'orders:order_detail' order.order_number %}" class="btn btn-secondary">Annuler</a>
+  </form>
+{% endblock %} 
