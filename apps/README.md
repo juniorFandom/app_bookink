@@ -1,6 +1,7 @@
 # Projet Tourisme
 
-Application web de gestion touristique développée avec Django et Django REST Framework.
+
+**ExploreMboa** est une solution web développée avec Python/Django qui centralise et simplifie la réservation de services touristiques en connectant les voyageurs à un écosystème diversifié de prestataires (guides, hôtels, agences de location de véhicules et restaurants). La plateforme intègre un système d'authentification multi-rôles, un moteur de réservation unifié couvrant les visites guidées, l'hébergement, la location de véhicules et la restauration, ainsi qu'un système de paiement sécurisé avec gestion des commissions et des remboursements. Elle propose également un système d'évaluation et de notation pour garantir la qualité des services, un portefeuille électronique pour les utilisateurs, et des fonctionnalités avancées de signalement des zones à risque, le tout reposant sur une base de données PostgreSQL optimisée avec une architecture scalable déployable via Docker.
 
 ## Prérequis
 
