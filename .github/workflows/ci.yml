@@ -1,22 +1,48 @@
-# .github/workflows/hello.yml
-name: Hello World CI
+name: Premier Workflow
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   hello:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Dire bonjour
-        run: echo "👋 Hello World !"
+      # Étape 1 : Bonjour
+      - name: 👋 Bonjour
+        run: echo "👋 Bonjour depuis GitHub Actions !"
       
-      - name: Afficher la date
-        run: date
+      # Étape 2 : Date
+      - name: 📅 Date
+        run: |
+          echo "📅 Date : $(date)"
+          echo "🕐 Heure : $(date +%H:%M:%S)"
       
-      - name: Afficher les variables d'environnement
-        run: env
+      # Étape 3 : Infos du dépôt
+      - name: 📁 Infos dépôt
+        run: |
+          echo "📁 Repository : ${{ github.repository }}"
+          echo "🌿 Branche : ${{ github.ref_name }}"
+          echo "🔑 Commit : ${{ github.sha }}"
+          echo "👤 Auteur : ${{ github.actor }}"
+      
+      # Étape 4 : Variables d'environnement
+      - name: 🔧 Variables
+        run: |
+          echo "🐍 Python : $(python --version 2>/dev/null || echo 'Non installé')"
+          echo "📦 Node : $(node --version 2>/dev/null || echo 'Non installé')"
+      
+      # Étape 5 : Structure du projet
+      - name: 📂 Structure
+        run: |
+          echo "## 📂 Structure du projet" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          ls -la >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+      
+      # Étape 6 : Succès
+      - name: ✅ Terminé
+        run: echo "🎉 Workflow terminé avec succès !"
